@@ -15,16 +15,101 @@ green on CI; merge whenever you're ready.
 
 ---
 
+## Tooling install (do this once)
+
+### macOS
+
+Install [Homebrew](https://brew.sh) first if you don't have it, then:
+
+```bash
+brew install --cask docker
+brew install awscli terraform node@20 python@3.11 xcodegen
+```
+
+Open Docker Desktop from Applications once and accept the prompts.
+
+For iOS development: install Xcode 15.4+ from the Mac App Store, then:
+
+```bash
+sudo xcode-select --install
+sudo xcodebuild -license accept
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Docker
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER  # log out and back in for this to take effect
+
+# AWS CLI v2
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip awscliv2.zip && sudo ./aws/install
+
+# Terraform
+wget -O- https://apt.releases.hashicorp.com/gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+  https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+  sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install -y terraform
+
+# Node 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Python 3.11
+sudo apt install -y python3.11 python3.11-venv python3-pip
+```
+
+iOS development requires a Mac; not available on Linux.
+
+### Windows
+
+Use WSL2 + Ubuntu and follow the Linux instructions inside WSL:
+
+```powershell
+# In PowerShell as Administrator:
+wsl --install -d Ubuntu-22.04
+```
+
+iOS development requires a Mac.
+
+### Verify
+
+```bash
+docker info && \
+aws --version && \
+terraform --version && \
+node --version && \
+python3.11 --version && \
+echo "✅ all tools ready"
+```
+
+### Configure AWS (Path B only)
+
+You need an IAM user with admin rights in your dedicated WoundScan AWS
+account. From the AWS Console: IAM → Users → Create user → attach
+`AdministratorAccess` policy → Security credentials → Create access key.
+
+```bash
+aws configure
+# AWS Access Key ID:     <paste>
+# AWS Secret Access Key: <paste>
+# Default region name:   us-east-1
+# Default output format: json
+
+aws sts get-caller-identity   # should print your account ID
+```
+
+---
+
 ## Path A — local dev (30 minutes)
 
 ### Prerequisites
 
-- macOS or Linux laptop
-- Docker Desktop (or `docker` + `docker compose`)
-- Node 20+
-- Python 3.11+
-- Xcode 15.4+ if you want to build the iOS app
-- An iPhone 12 Pro or later running iOS 17+
+- macOS or Linux laptop with the tooling above installed
+- An iPhone 12 Pro or later running iOS 17+ (iOS step only)
 
 ### Step 1: Clone and start the engine
 
@@ -121,16 +206,13 @@ shortcuts here.
 
 ### Prerequisites
 
-- AWS account dedicated to WoundScan (no PHI in shared accounts)
-- Signed BAA with AWS (request from AWS Console → Support → Contracts)
-- AWS CLI v2 installed and authenticated (`aws configure` with credentials
-  for an admin role in that account)
-- Terraform 1.7+ installed (`brew install terraform` or download from
-  hashicorp.com/terraform/install)
-- Docker Desktop running (for the `docker build`/`docker push` steps)
-- Domain name (e.g. `woundscan.albacetemed.com`)
+- All tooling from "Tooling install" above (Docker, AWS CLI, Terraform, Node, Python)
+- AWS account **dedicated to WoundScan** (no PHI in shared accounts)
+- **Signed BAA with AWS** (Console → Support → Contracts → request BAA;
+  takes 1-2 business days to come back)
+- AWS CLI configured (`aws configure`, see "Tooling install" above)
+- Domain name you control (e.g. `woundscan.albacetemed.com`)
 - Apple Developer Program enrollment ($99/yr) for TestFlight distribution
-- Access to a Postgres backup utility (we use `pg_dump`; covered automatically by RDS)
 
 > **Note on working directory**: every command block in Path B starts with
 > `cd <repo-root>` so you can copy-paste from any prior shell state.
