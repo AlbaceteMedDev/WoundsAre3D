@@ -123,14 +123,24 @@ shortcuts here.
 
 - AWS account dedicated to WoundScan (no PHI in shared accounts)
 - Signed BAA with AWS (request from AWS Console → Support → Contracts)
+- AWS CLI v2 installed and authenticated (`aws configure` with credentials
+  for an admin role in that account)
+- Terraform 1.7+ installed (`brew install terraform` or download from
+  hashicorp.com/terraform/install)
+- Docker Desktop running (for the `docker build`/`docker push` steps)
 - Domain name (e.g. `woundscan.albacetemed.com`)
 - Apple Developer Program enrollment ($99/yr) for TestFlight distribution
 - Access to a Postgres backup utility (we use `pg_dump`; covered automatically by RDS)
 
+> **Note on working directory**: every command block in Path B starts with
+> `cd <repo-root>` so you can copy-paste from any prior shell state.
+> `<repo-root>` is the directory containing this `RUNBOOK.md` (where you
+> ran `git clone`).
+
 ### Step 1: Bootstrap AWS (1-2 days)
 
 ```bash
-cd infrastructure/terraform/environments/dev
+cd <repo-root>/infrastructure/terraform/environments/dev
 # First, create the state bucket and lock table out of band:
 aws s3api create-bucket --bucket woundscan-tf-state-dev --region us-east-1
 aws s3api put-bucket-versioning --bucket woundscan-tf-state-dev \
@@ -166,7 +176,7 @@ your pilot is satisfied.
 
 ```bash
 # Build
-cd woundscan-engine
+cd <repo-root>/woundscan-engine
 docker build -t woundscan-engine:0.1.0 .
 
 # Tag for ECR
@@ -182,7 +192,7 @@ aws ecr get-login-password --region $REGION | \
 docker push $ECR/woundscan-engine:0.1.0
 
 # Re-apply Terraform with the real image
-cd ../../infrastructure/terraform/environments/dev
+cd <repo-root>/infrastructure/terraform/environments/dev
 terraform apply -var image=$ECR/woundscan-engine:0.1.0
 ```
 
@@ -206,7 +216,7 @@ aws ecs run-task --cluster woundscan-dev-api \
 
 b) **Generate Alembic migrations** (better, ~2 hours of work):
 ```bash
-cd woundscan-engine
+cd <repo-root>/woundscan-engine
 alembic init migrations
 # Edit migrations/env.py to point at woundscan.storage.postgres.Base.metadata
 alembic revision --autogenerate -m "initial schema"
@@ -221,7 +231,7 @@ I recommend option (b) before any data lands in the DB.
 The simplest path: Vercel.
 
 ```bash
-cd woundscan-web
+cd <repo-root>/woundscan-web
 npm install -g vercel
 vercel login
 vercel link
@@ -238,7 +248,7 @@ audit reasons.
 ### Step 5: TestFlight the iOS app (1-2 days, mostly Apple review)
 
 ```bash
-cd woundscan-ios
+cd <repo-root>/woundscan-ios
 xcodegen generate
 # Open in Xcode, set release config to point at your prod API URL
 # Product → Archive → Distribute App → App Store Connect → Upload
