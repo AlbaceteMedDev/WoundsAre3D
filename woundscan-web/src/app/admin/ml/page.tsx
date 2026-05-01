@@ -19,8 +19,8 @@ export default async function MLMetricsPage() {
         <section className="mt-8">
           <h2 className="text-lg font-semibold">Drift alerts</h2>
           <p className="text-sm text-gray-500">
-            None at present. Alerts trigger when a model's rolling validation
-            metric drops &gt;3% from the deployed baseline.
+            None at present. Alerts trigger when a model&apos;s rolling
+            validation metric drops &gt;3% from the deployed baseline.
           </p>
         </section>
       </main>
