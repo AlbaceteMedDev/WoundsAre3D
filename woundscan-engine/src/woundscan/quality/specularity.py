@@ -7,6 +7,7 @@ luminance AND low chroma (white-ish) and mark them as low-confidence.
 Output is a per-pixel "specularity" score in [0, 1]. Higher = more
 specular = lower confidence.
 """
+
 from __future__ import annotations
 
 import numpy as np

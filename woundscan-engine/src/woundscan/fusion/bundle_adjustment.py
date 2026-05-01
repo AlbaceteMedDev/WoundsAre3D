@@ -12,6 +12,7 @@ reconstruction. The depth surface is parameterized as a sum of
 ARKit-provided per-view depth maps weighted by per-view confidence,
 with pose corrections as the optimization variables.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -80,7 +81,9 @@ def run_bundle_adjustment(
     from scipy.optimize import least_squares
     from scipy.spatial.transform import Rotation as R
 
-    def residuals_for_view(params6: np.ndarray, init_pose: np.ndarray, K: np.ndarray, pts2d: np.ndarray) -> np.ndarray:
+    def residuals_for_view(
+        params6: np.ndarray, init_pose: np.ndarray, K: np.ndarray, pts2d: np.ndarray
+    ) -> np.ndarray:
         rvec = params6[:3]
         tvec = params6[3:]
         rot = R.from_rotvec(rvec).as_matrix()

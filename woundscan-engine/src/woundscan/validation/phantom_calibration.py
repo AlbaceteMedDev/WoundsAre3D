@@ -4,6 +4,7 @@ Each clinician scans a known silicone phantom monthly. Results feed into
 a longitudinal accuracy database. We compute drift over time and alert
 when measured error exceeds the validated tolerance budget.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -36,15 +37,19 @@ class PhantomScan:
 
     @property
     def volume_error_pct(self) -> float:
-        return abs(self.measured_volume_cm3 - self.true_volume_cm3) / max(
-            abs(self.true_volume_cm3), 1e-9
-        ) * 100.0
+        return (
+            abs(self.measured_volume_cm3 - self.true_volume_cm3)
+            / max(abs(self.true_volume_cm3), 1e-9)
+            * 100.0
+        )
 
     @property
     def surface_area_error_pct(self) -> float:
-        return abs(self.measured_surface_area_cm2 - self.true_surface_area_cm2) / max(
-            abs(self.true_surface_area_cm2), 1e-9
-        ) * 100.0
+        return (
+            abs(self.measured_surface_area_cm2 - self.true_surface_area_cm2)
+            / max(abs(self.true_surface_area_cm2), 1e-9)
+            * 100.0
+        )
 
 
 @dataclass
@@ -78,9 +83,7 @@ class PhantomCalibration:
         return sum(s.volume_error_pct for s in recent) / n
 
 
-def record_phantom_scan(
-    calibration: PhantomCalibration, scan: PhantomScan
-) -> PhantomCalibration:
+def record_phantom_scan(calibration: PhantomCalibration, scan: PhantomScan) -> PhantomCalibration:
     """Append a scan to a calibration record."""
     calibration.scans.append(scan)
     return calibration

@@ -9,6 +9,7 @@ Each product carries:
 The default DB ships with a representative set of products. Production
 deployments load the actual contracted product list from the admin UI.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -1,6 +1,8 @@
 """FastAPI app factory and entry point."""
+
 from __future__ import annotations
 
+import contextlib
 import time
 
 from fastapi import FastAPI, Request
@@ -39,14 +41,12 @@ def create_app() -> FastAPI:
         start = time.monotonic()
         response = await call_next(request)
         duration = time.monotonic() - start
-        try:
+        with contextlib.suppress(Exception):
             METRIC_REQUEST_DURATION_S.labels(
                 method=request.method,
                 route=request.url.path,
                 status=str(response.status_code),
             ).observe(duration)
-        except Exception:
-            pass
         return response
 
     @app.get("/metrics")

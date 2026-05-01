@@ -5,6 +5,7 @@ LiDAR; pixels in the center are more reliable. We compute a per-pixel
 distance-to-edge in mm and convert to a confidence score [0, 1] that
 increases away from the edge up to a saturation distance.
 """
+
 from __future__ import annotations
 
 import numpy as np

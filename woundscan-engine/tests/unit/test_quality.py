@@ -1,4 +1,5 @@
 """Tests for quality components and confidence map."""
+
 import numpy as np
 import pytest
 

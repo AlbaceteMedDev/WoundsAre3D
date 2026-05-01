@@ -1,4 +1,5 @@
 """Synthesis: synthetic wound generators for validation and ML training."""
+
 from __future__ import annotations
 
 from woundscan.synthesis.analytic_shapes import (

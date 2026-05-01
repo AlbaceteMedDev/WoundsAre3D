@@ -12,11 +12,11 @@ The fallback is INTENTIONALLY WEAK so it cannot be confused with the
 trained model. It exists only so the rest of the engine can run end-
 to-end during development. Production deployments load real weights.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -116,7 +116,7 @@ class BoundarySegmentationModel:
 
     def __init__(
         self,
-        weights_path: Optional[Path | str] = None,
+        weights_path: Path | str | None = None,
         device: str = "cpu",
     ):
         self.weights_path = Path(weights_path) if weights_path else None
@@ -127,11 +127,11 @@ class BoundarySegmentationModel:
     @classmethod
     def from_weights(
         cls, weights_path: Path | str, device: str = "cpu"
-    ) -> "BoundarySegmentationModel":
+    ) -> BoundarySegmentationModel:
         return cls(weights_path=weights_path, device=device)
 
     @classmethod
-    def fallback(cls) -> "BoundarySegmentationModel":
+    def fallback(cls) -> BoundarySegmentationModel:
         return cls(weights_path=None)
 
     @property

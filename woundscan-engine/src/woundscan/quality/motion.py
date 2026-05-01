@@ -1,4 +1,5 @@
 """Motion artifact detection from frame-to-frame ARKit pose deltas."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -48,9 +49,7 @@ def compute_motion_artifact(
     max_r_deg = 0.0
     for p1, p2 in zip(poses[:-1], poses[1:], strict=False):
         dt = max(p2.timestamp_s - p1.timestamp_s, 1e-3)
-        translation_mm = (
-            np.linalg.norm(np.subtract(p2.position_m, p1.position_m)) * 1000.0 / dt
-        )
+        translation_mm = np.linalg.norm(np.subtract(p2.position_m, p1.position_m)) * 1000.0 / dt
         rotation_deg = _angular_delta_deg(p1.rotation_quat, p2.rotation_quat) / dt
         max_t_mm = max(max_t_mm, float(translation_mm))
         max_r_deg = max(max_r_deg, float(rotation_deg))

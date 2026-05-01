@@ -15,6 +15,7 @@ Conventions
 - Units: configurable. All shapes expect consistent units throughout
   (e.g., everything in cm).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

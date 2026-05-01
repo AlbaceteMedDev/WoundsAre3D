@@ -1,7 +1,8 @@
 """Wound CRUD endpoints."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends
@@ -42,7 +43,7 @@ def create_wound(req: CreateWoundRequest, identity: Identity = Depends(get_ident
         anatomic_location=req.anatomic_location,
         wound_type=req.wound_type,
         onset_at=req.onset_at,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         notes=req.notes,
     )
     _WOUNDS[wid] = out.model_dump()

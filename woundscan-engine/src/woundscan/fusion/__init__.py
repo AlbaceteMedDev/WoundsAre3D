@@ -1,4 +1,5 @@
 """Fusion: combine LiDAR, RGB, and probe measurements into a single depth surface."""
+
 from __future__ import annotations
 
 from woundscan.fusion.bundle_adjustment import (

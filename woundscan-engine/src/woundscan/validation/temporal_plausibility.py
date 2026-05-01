@@ -9,6 +9,7 @@ Compare current measurement to:
 - Trend from last 3 visits
 - Population-typical rates for the wound type
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

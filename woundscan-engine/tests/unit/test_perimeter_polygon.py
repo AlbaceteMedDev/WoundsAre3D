@@ -1,4 +1,5 @@
 """Tests for polygon-based perimeter and rasterization."""
+
 import numpy as np
 import pytest
 

@@ -5,6 +5,7 @@ spatially registering the frames (via ARKit pose), we average them. This
 reduces sensor noise by approximately sqrt(N) and is the single most
 effective accuracy improvement we can apply at the capture stage.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -47,9 +48,7 @@ def temporal_average_depth(
     stack = np.full((len(frames),) + shape, np.nan, dtype=np.float32)
     for i, frame in enumerate(frames):
         if frame.depth_cm.shape != shape:
-            raise ValueError(
-                f"Frame {i} shape {frame.depth_cm.shape} != reference {shape}"
-            )
+            raise ValueError(f"Frame {i} shape {frame.depth_cm.shape} != reference {shape}")
         valid = (frame.confidence >= min_confidence) & np.isfinite(frame.depth_cm)
         stack[i, valid] = frame.depth_cm[valid]
 

@@ -11,6 +11,7 @@ Examples of plausibility failures:
 - Surface area < footprint area (contradicts the gradient integral lower bound)
 - Depth > 10 cm (extremely rare; likely a sensor reading from beyond bed)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

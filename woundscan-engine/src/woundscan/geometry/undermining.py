@@ -10,10 +10,11 @@ of width u(theta), where u is the radial extent of undermining at clock
 position theta. Annulus depth equals the wound bed depth at that azimuth
 (approximation; refined by sidewall fitting downstream).
 """
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -86,9 +87,7 @@ def integrate_undermining(
         # Approximate as a uniform annulus
         return float(np.pi * u_mean**2 * h), float(2.0 * np.pi * u_mean * h * 2.0)
 
-    thetas = np.array(
-        [_clock_to_theta(m.clock_position_hours) for m in measurements]
-    )
+    thetas = np.array([_clock_to_theta(m.clock_position_hours) for m in measurements])
     extents = np.array([m.radial_extent_mm for m in measurements])
 
     order = np.argsort(thetas)

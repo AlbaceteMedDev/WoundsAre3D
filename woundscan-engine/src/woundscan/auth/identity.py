@@ -1,12 +1,13 @@
 """User identity, password hashing."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     CLINICIAN = "clinician"
     REVIEWER = "reviewer"
     ADMIN = "admin"

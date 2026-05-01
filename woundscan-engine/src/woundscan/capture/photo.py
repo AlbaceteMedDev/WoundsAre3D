@@ -1,9 +1,9 @@
 """RGB photo ingestion for the wound capture session."""
+
 from __future__ import annotations
 
 import io
 from dataclasses import dataclass
-from typing import Union
 
 import numpy as np
 
@@ -30,7 +30,7 @@ class PhotoFrame:
 
 
 def load_photo(
-    image: Union[bytes, np.ndarray, str],
+    image: bytes | np.ndarray | str,
     intrinsics: CameraIntrinsics,
     timestamp_s: float,
     iso: int = 100,

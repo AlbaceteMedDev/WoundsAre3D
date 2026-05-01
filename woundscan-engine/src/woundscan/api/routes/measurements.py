@@ -1,7 +1,8 @@
 """Measurement endpoints: create, get, list, sign-off, exports."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -81,7 +82,7 @@ def sign_off_measurement(
         organization_id=identity.organization_id,
         resource_type="measurement",
         resource_id=str(measurement_id),
-        metadata={"signed_off_at": datetime.now(timezone.utc).isoformat()},
+        metadata={"signed_off_at": datetime.now(UTC).isoformat()},
     )
     return {"status": "signed_off"}
 

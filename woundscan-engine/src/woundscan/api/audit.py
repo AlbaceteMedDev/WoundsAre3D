@@ -1,4 +1,5 @@
 """Audit logger dependency."""
+
 from __future__ import annotations
 
 from woundscan.auth.audit_log import AuditLogger

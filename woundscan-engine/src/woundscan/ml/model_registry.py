@@ -10,6 +10,7 @@ in its provenance. The registry enforces:
 This is what enables regulatory defense of any specific output: given a
 provenance record we can reconstruct exactly which weights produced it.
 """
+
 from __future__ import annotations
 
 import hashlib

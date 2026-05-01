@@ -5,10 +5,10 @@ used as the regression target in the validation harness. Includes the
 analytic value (when available) and the numerical reference computed on
 a high-resolution grid.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -50,7 +50,7 @@ def compute_ground_truth(
     *,
     analytic: bool = True,
     grid_n: int = 0,
-    notes: Optional[tuple[str, ...]] = None,
+    notes: tuple[str, ...] | None = None,
 ) -> GroundTruth:
     """Wrap an AnalyticWound's true_* fields into a GroundTruth record."""
     return GroundTruth(

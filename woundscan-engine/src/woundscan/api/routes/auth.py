@@ -1,8 +1,9 @@
 """Auth endpoints: login (password+TOTP), logout."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from datetime import datetime
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel

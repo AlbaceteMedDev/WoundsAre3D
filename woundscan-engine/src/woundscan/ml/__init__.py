@@ -1,4 +1,5 @@
 """ML: trained neural networks for boundary, tissue, and probe detection."""
+
 from __future__ import annotations
 
 from woundscan.ml.boundary_segmentation import (

@@ -1,4 +1,5 @@
 """Tests for undermining integration."""
+
 import numpy as np
 import pytest
 

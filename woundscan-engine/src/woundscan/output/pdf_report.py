@@ -9,6 +9,7 @@ Produces the clinician-facing PDF for each measurement. Sections:
 - Provenance: engine version, model versions, input hashes
 - Disclaimer: clinical decision support, not diagnostic
 """
+
 from __future__ import annotations
 
 import io
@@ -50,10 +51,12 @@ def build_pdf_report(data: ReportData) -> bytes:
     """Render the report. Returns the raw PDF bytes."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import LETTER
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
     from reportlab.platypus import (
         Image as RLImage,
+    )
+    from reportlab.platypus import (
         Paragraph,
         SimpleDocTemplate,
         Spacer,
@@ -72,7 +75,9 @@ def build_pdf_report(data: ReportData) -> bytes:
         bottomMargin=0.5 * inch,
     )
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name="Mono", parent=styles["BodyText"], fontName="Courier", fontSize=8))
+    styles.add(
+        ParagraphStyle(name="Mono", parent=styles["BodyText"], fontName="Courier", fontSize=8)
+    )
 
     story = []
     story.append(Paragraph(f"WoundScan Measurement {data.measurement_id}", styles["Title"]))
@@ -144,7 +149,12 @@ def build_pdf_report(data: ReportData) -> bytes:
 
     if data.photo_thumbnail_png is not None:
         try:
-            img = RLImage(io.BytesIO(data.photo_thumbnail_png), width=3 * inch, height=3 * inch, kind="proportional")
+            img = RLImage(
+                io.BytesIO(data.photo_thumbnail_png),
+                width=3 * inch,
+                height=3 * inch,
+                kind="proportional",
+            )
             story.append(img)
         except Exception:
             pass

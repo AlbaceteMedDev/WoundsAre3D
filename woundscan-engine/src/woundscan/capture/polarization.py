@@ -9,6 +9,7 @@ The iOS app captures a paired (cross_polarized, parallel_polarized) image
 when the polarizer is detected. We diff and recombine to extract diffuse
 (skin/tissue interior) and specular (surface gloss) channels.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

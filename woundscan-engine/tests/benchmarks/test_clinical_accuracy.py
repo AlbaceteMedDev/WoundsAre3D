@@ -4,6 +4,7 @@ Each test runs the geometry chain on a clinically representative wound
 generator. The values asserted are the current best-known regression
 targets; if the engine slips outside, CI fails.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -18,7 +19,6 @@ from woundscan.synthesis.clinical_morphologies import (
     surgical_dehiscence,
     venous_leg_ulcer,
 )
-
 
 pytestmark = pytest.mark.benchmark
 

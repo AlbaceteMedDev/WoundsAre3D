@@ -12,12 +12,12 @@ Architecture: U-Net++ or DeepLabV3, multichannel input (RGB + depth).
 This module provides the wrapper. A heuristic fallback is included for
 development.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -59,16 +59,16 @@ class TissueClassificationModel:
 
     DEFAULT_VERSION = "fallback-heuristic-v0"
 
-    def __init__(self, weights_path: Optional[Path | str] = None, device: str = "cpu"):
+    def __init__(self, weights_path: Path | str | None = None, device: str = "cpu"):
         self.weights_path = Path(weights_path) if weights_path else None
         self.device = device
 
     @classmethod
-    def from_weights(cls, p: Path | str, device: str = "cpu") -> "TissueClassificationModel":
+    def from_weights(cls, p: Path | str, device: str = "cpu") -> TissueClassificationModel:
         return cls(weights_path=p, device=device)
 
     @classmethod
-    def fallback(cls) -> "TissueClassificationModel":
+    def fallback(cls) -> TissueClassificationModel:
         return cls(weights_path=None)
 
     @property

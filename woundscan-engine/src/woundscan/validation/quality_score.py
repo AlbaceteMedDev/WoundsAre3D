@@ -14,13 +14,14 @@ Output:
 - Per-component sub-score
 - Recommended action (proceed / review / recapture)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class QualityGrade(str, Enum):
+class QualityGrade(StrEnum):
     A = "A"
     B = "B"
     C = "C"

@@ -1,4 +1,5 @@
 """Prometheus metrics. Scraped by /metrics endpoint."""
+
 from __future__ import annotations
 
 from prometheus_client import Counter, Histogram

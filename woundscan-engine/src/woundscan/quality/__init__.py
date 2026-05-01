@@ -1,4 +1,5 @@
 """Quality: per-pixel and aggregate confidence components."""
+
 from __future__ import annotations
 
 from woundscan.quality.confidence import (

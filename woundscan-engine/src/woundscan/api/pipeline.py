@@ -8,12 +8,12 @@ graft -> validation -> provenance -> outputs), returns a
 The pipeline is deterministic given the same inputs and same model
 weights. Each step records timing into the provenance record.
 """
+
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import numpy as np
@@ -157,7 +157,9 @@ def run_measurement_pipeline(
         )
         for p in request.probe_measurements
     ]
-    corrected_probe = [apply_force_correction(p, "granulation", correction_table) for p in probe_meas]
+    corrected_probe = [
+        apply_force_correction(p, "granulation", correction_table) for p in probe_meas
+    ]
 
     # 3. Synthesize camera anchors (in production these come from S3-fetched depth)
     cam_x, cam_y, cam_d, cam_c = _synthetic_camera_anchors(X_mm, Y_mm, mask, n_samples=200)
@@ -199,9 +201,7 @@ def run_measurement_pipeline(
 
     V = compute_volume(depth_cm, dx_cm, dy_cm, mask=mask)
     SA = compute_surface_area(depth_cm, dx_cm, dy_cm, mask=mask)
-    perimeter_mm = compute_perimeter_polygon(
-        [(p[0], p[1]) for p in request.boundary.vertices_mm]
-    )
+    perimeter_mm = compute_perimeter_polygon([(p[0], p[1]) for p in request.boundary.vertices_mm])
     perimeter_cm = perimeter_mm / 10.0
     footprint_cm2 = float(np.sum(mask) * dx_cm * dy_cm)
     max_depth_cm = float(np.max(depth_cm)) if mask.any() else 0.0
@@ -247,7 +247,11 @@ def run_measurement_pipeline(
     # 8. Quality grade
     cp_max_z = 0.0  # populated by consistency check in production
     fid_count = len(request.fiducials)
-    fid_reproj = float(np.mean([f.reprojection_error_pix for f in request.fiducials])) if request.fiducials else 5.0
+    fid_reproj = (
+        float(np.mean([f.reprojection_error_pix for f in request.fiducials]))
+        if request.fiducials
+        else 5.0
+    )
     quality = compute_quality_grade(
         mean_confidence=0.7,
         n_probe_anchors=len(probe_meas),
@@ -283,7 +287,7 @@ def run_measurement_pipeline(
             )
 
     # 10. Provenance
-    processed_at = datetime.now(timezone.utc)
+    processed_at = datetime.now(UTC)
     duration_ms = (time.monotonic() - t_start) * 1000.0
     intermediate = [
         InputHash(name="fused_depth_mm", **_hash_field(fused_depth_mm)),
@@ -291,7 +295,10 @@ def run_measurement_pipeline(
     ]
     input_hashes = [
         InputHash(name="boundary", **_hash_field(np.asarray(request.boundary.vertices_mm))),
-        InputHash(name="probe", **_hash_field(np.asarray([(p.x_mm, p.y_mm, p.depth_mm) for p in probe_meas]))),
+        InputHash(
+            name="probe",
+            **_hash_field(np.asarray([(p.x_mm, p.y_mm, p.depth_mm) for p in probe_meas])),
+        ),
     ]
     provenance = build_provenance_record(
         measurement_id=str(measurement_id),
@@ -374,7 +381,7 @@ def _empty_response(
         measurement_id=measurement_id,
         wound_id=request.wound_id,
         captured_at=request.captured_at,
-        processed_at=datetime.now(timezone.utc),
+        processed_at=datetime.now(UTC),
         processing_duration_ms=duration,
         volume=zero,
         surface_area=zero,

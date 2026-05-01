@@ -1,4 +1,5 @@
 """Tests for shape descriptors."""
+
 import numpy as np
 import pytest
 

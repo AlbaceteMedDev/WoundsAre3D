@@ -1,4 +1,5 @@
 """Capture: ingestion of multimodal sensor data from iOS app."""
+
 from __future__ import annotations
 
 from woundscan.capture.depth_map import DepthFrame, load_depth_frame

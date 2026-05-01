@@ -9,10 +9,10 @@ Each degradation function operates on (depth_map, rgb_image) pairs and
 returns a degraded copy with the same shape. Functions are pure and
 seed-controlled for reproducibility.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -131,10 +131,7 @@ def add_lighting_variation(
     hi = 1.0 + gradient / 2.0
     pmin = float(proj.min())
     pmax = float(proj.max())
-    if pmax > pmin:
-        ramp = lo + (hi - lo) * (proj - pmin) / (pmax - pmin)
-    else:
-        ramp = np.ones_like(proj)
+    ramp = lo + (hi - lo) * (proj - pmin) / (pmax - pmin) if pmax > pmin else np.ones_like(proj)
     out = rgb_image.astype(float) * ramp[..., np.newaxis]
     if rgb_image.dtype == np.uint8:
         out = np.clip(out, 0, 255).astype(np.uint8)
@@ -145,9 +142,9 @@ def add_lighting_variation(
 
 def degrade_synthetic_wound(
     wound: AnalyticWound,
-    rgb_image: Optional[np.ndarray] = None,
-    config: Optional[DegradationConfig] = None,
-) -> tuple[np.ndarray, Optional[np.ndarray], np.ndarray]:
+    rgb_image: np.ndarray | None = None,
+    config: DegradationConfig | None = None,
+) -> tuple[np.ndarray, np.ndarray | None, np.ndarray]:
     """Run the full degradation pipeline.
 
     Returns

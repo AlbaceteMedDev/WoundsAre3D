@@ -1,4 +1,5 @@
 """FastAPI auth dependency: extract identity from JWT bearer."""
+
 from __future__ import annotations
 
 import os
@@ -26,9 +27,7 @@ def get_identity(
     creds: HTTPAuthorizationCredentials | None = Depends(_security),
 ) -> Identity:
     if creds is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
     claims = verify_jwt(creds.credentials, _signing_key())
     if claims is None:
         raise HTTPException(

@@ -1,4 +1,5 @@
 """Tests for validation: consistency, plausibility, quality grade, phantom calibration."""
+
 import numpy as np
 import pytest
 from datetime import datetime, timezone
@@ -115,8 +116,14 @@ class TestConsistency:
         probe_s = np.array([0.5, 0.5, 0.5])
 
         result = check_camera_probe_agreement(
-            probe_x, probe_y, probe_d, probe_s,
-            X, Y, depth, sigma,
+            probe_x,
+            probe_y,
+            probe_d,
+            probe_s,
+            X,
+            Y,
+            depth,
+            sigma,
         )
         assert result.overall_passed
 

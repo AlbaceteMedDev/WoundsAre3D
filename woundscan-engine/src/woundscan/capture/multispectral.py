@@ -9,6 +9,7 @@ This module receives a captured IR image and a wavelength tag; it does
 NOT perform classification or perfusion estimation (deferred until we
 have validation data).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

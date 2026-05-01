@@ -1,4 +1,5 @@
 """Tests for synthesis: irregular beds, clinical morphologies, degradation."""
+
 import numpy as np
 import pytest
 
@@ -47,9 +48,7 @@ class TestIrregularBeds:
 
 
 class TestClinicalMorphologies:
-    @pytest.mark.parametrize(
-        "fn", [diabetic_foot_ulcer, venous_leg_ulcer, pressure_injury_stage_3]
-    )
+    @pytest.mark.parametrize("fn", [diabetic_foot_ulcer, venous_leg_ulcer, pressure_injury_stage_3])
     def test_all_produce_valid_wounds(self, fn):
         w = fn(seed=0)
         assert w.mask.any()

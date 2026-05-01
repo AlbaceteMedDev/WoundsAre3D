@@ -6,6 +6,7 @@ sanitized through the structlog pipeline and emitted to stdout, where
 the AWS log infrastructure ingests them into a HIPAA-compliant log
 group with retention and access control.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

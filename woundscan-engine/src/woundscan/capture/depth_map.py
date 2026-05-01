@@ -6,6 +6,7 @@ and a per-pixel confidence channel (0 = low, 1 = medium, 2 = high).
 We convert to centimeters and store both arrays plus the camera
 intrinsics that Apple ships per-frame.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

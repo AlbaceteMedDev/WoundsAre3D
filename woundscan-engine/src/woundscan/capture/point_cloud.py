@@ -4,13 +4,14 @@ Project depth pixels through camera intrinsics into world coordinates,
 build a (N, 3) point cloud. Used by bundle adjustment, fiducial pose
 recovery, and PLY archival for review.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 import numpy as np
 
-from woundscan.capture.depth_map import CameraIntrinsics, DepthFrame
+from woundscan.capture.depth_map import DepthFrame
 
 
 @dataclass(frozen=True)
@@ -71,9 +72,7 @@ def depth_to_point_cloud(
     colors_out = None
     if rgb is not None:
         if rgb.shape[:2] != (h, w):
-            raise ValueError(
-                f"rgb shape {rgb.shape[:2]} doesn't match depth shape ({h}, {w})"
-            )
+            raise ValueError(f"rgb shape {rgb.shape[:2]} doesn't match depth shape ({h}, {w})")
         colors_out = rgb[valid].astype(np.uint8)
 
     return PointCloud(
@@ -99,5 +98,5 @@ def write_ply(point_cloud: PointCloud, path: str) -> None:
             for (x, y, z), (r, g, b) in zip(pts, colors, strict=True):
                 f.write(f"{x:.6f} {y:.6f} {z:.6f} {int(r)} {int(g)} {int(b)}\n")
         else:
-            for (x, y, z) in pts:
+            for x, y, z in pts:
                 f.write(f"{x:.6f} {y:.6f} {z:.6f}\n")

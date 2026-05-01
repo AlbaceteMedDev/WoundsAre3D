@@ -8,9 +8,8 @@ Discretized using composite Simpson's rule along both axes
 smooth integrands and is the standard choice when grid spacing is fine
 enough to resolve the wound bed topography.
 """
-from __future__ import annotations
 
-from typing import Optional
+from __future__ import annotations
 
 import numpy as np
 from scipy import integrate
@@ -20,7 +19,7 @@ def compute_volume(
     depth_map: np.ndarray,
     dx: float,
     dy: float,
-    mask: Optional[np.ndarray] = None,
+    mask: np.ndarray | None = None,
 ) -> float:
     """Compute wound volume from a regularly gridded depth field.
 
@@ -68,8 +67,7 @@ def compute_volume(
     if mask is not None:
         if mask.shape != depth_map.shape:
             raise ValueError(
-                f"mask shape {mask.shape} doesn't match depth_map shape "
-                f"{depth_map.shape}"
+                f"mask shape {mask.shape} doesn't match depth_map shape " f"{depth_map.shape}"
             )
         d = np.where(mask, depth_map, 0.0)
 
@@ -83,7 +81,7 @@ def compute_volume_trapezoid(
     depth_map: np.ndarray,
     dx: float,
     dy: float,
-    mask: Optional[np.ndarray] = None,
+    mask: np.ndarray | None = None,
 ) -> float:
     """Trapezoidal-rule volume integration.
 

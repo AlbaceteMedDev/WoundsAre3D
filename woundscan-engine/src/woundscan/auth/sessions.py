@@ -1,9 +1,10 @@
 """Sessions, JWTs, idle timeout."""
+
 from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -43,7 +44,7 @@ class SessionStore:
         s = self.sessions.get(session_id)
         if s is None:
             return None
-        if s.expires_at < datetime.now(timezone.utc):
+        if s.expires_at < datetime.now(UTC):
             self.sessions.pop(session_id, None)
             return None
         return s
@@ -55,13 +56,13 @@ class SessionStore:
         s = self.get(session_id)
         if s is None:
             return
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         s.last_activity_at = now
         s.expires_at = now + timedelta(minutes=SESSION_TIMEOUT_MINUTES)
 
 
 def create_session(user_id: UUID, role: str, organization_id: UUID) -> Session:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return Session(
         session_id=secrets.token_urlsafe(32),
         user_id=user_id,

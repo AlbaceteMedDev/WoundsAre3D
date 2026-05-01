@@ -3,11 +3,12 @@
 Used in the web dashboard wound detail page and in the PDF report when
 prior measurements exist.
 """
+
 from __future__ import annotations
 
 import io
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence
 
 
 def render_trajectory_png(
@@ -26,8 +27,8 @@ def render_trajectory_png(
     import matplotlib
 
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(3, 1, figsize=(width_inches, height_inches), sharex=True, dpi=dpi)
     axes[0].plot(timestamps, volume_cm3, marker="o")

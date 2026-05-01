@@ -3,14 +3,15 @@
 Roles -> Permissions matrix. Checked in API route dependencies and at the
 Postgres row-level security policies (defense in depth).
 """
+
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from woundscan.auth.identity import Role
 
 
-class Permission(str, Enum):
+class Permission(StrEnum):
     READ_OWN_PATIENTS = "read_own_patients"
     READ_ORG_PATIENTS = "read_org_patients"
     READ_ALL_PATIENTS = "read_all_patients"

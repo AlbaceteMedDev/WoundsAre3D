@@ -18,11 +18,12 @@ Categories
 - surgical_dehiscence: linear, deep, narrow
 - traumatic_wound: irregular, variable depth
 """
+
 from __future__ import annotations
 
 import numpy as np
 
-from woundscan.synthesis.analytic_shapes import AnalyticWound, _circular_grid
+from woundscan.synthesis.analytic_shapes import AnalyticWound
 from woundscan.synthesis.irregular_beds import IrregularConfig, add_perlin_noise
 
 
@@ -105,9 +106,7 @@ def venous_leg_ulcer(
     b = float(rng.uniform(0.4, 0.6) * a)
     h = float(rng.uniform(0.2, 0.8))
     base = _elliptical_paraboloid(a, b, h, n_grid=251)
-    return add_perlin_noise(
-        base, IrregularConfig(amplitude_mm=0.8, octaves=5, seed=seed)
-    )
+    return add_perlin_noise(base, IrregularConfig(amplitude_mm=0.8, octaves=5, seed=seed))
 
 
 def pressure_injury_stage_3(
@@ -120,9 +119,7 @@ def pressure_injury_stage_3(
     b = float(rng.uniform(0.7, 1.0) * a)
     h = float(rng.uniform(1.0, 2.5))
     base = _elliptical_paraboloid(a, b, h, n_grid=251)
-    return add_perlin_noise(
-        base, IrregularConfig(amplitude_mm=1.2, octaves=4, seed=seed)
-    )
+    return add_perlin_noise(base, IrregularConfig(amplitude_mm=1.2, octaves=4, seed=seed))
 
 
 def pressure_injury_stage_4(
@@ -135,9 +132,7 @@ def pressure_injury_stage_4(
     b = float(rng.uniform(0.7, 1.0) * a)
     h = float(rng.uniform(2.5, 5.0))
     base = _elliptical_paraboloid(a, b, h, n_grid=251)
-    return add_perlin_noise(
-        base, IrregularConfig(amplitude_mm=2.0, octaves=5, seed=seed)
-    )
+    return add_perlin_noise(base, IrregularConfig(amplitude_mm=2.0, octaves=5, seed=seed))
 
 
 def surgical_dehiscence(
@@ -153,9 +148,7 @@ def surgical_dehiscence(
     W = width_cm if width_cm is not None else float(rng.uniform(0.8, 2.0))
     h = depth_cm if depth_cm is not None else float(rng.uniform(1.5, 3.0))
     base = _elliptical_paraboloid(L / 2.0, W / 2.0, h, n_grid=301)
-    return add_perlin_noise(
-        base, IrregularConfig(amplitude_mm=0.5, octaves=3, seed=seed)
-    )
+    return add_perlin_noise(base, IrregularConfig(amplitude_mm=0.5, octaves=3, seed=seed))
 
 
 def traumatic_wound(
@@ -168,6 +161,4 @@ def traumatic_wound(
     b = float(rng.uniform(0.5, 1.0) * a)
     h = float(rng.uniform(0.5, 2.5))
     base = _elliptical_paraboloid(a, b, h, n_grid=251)
-    return add_perlin_noise(
-        base, IrregularConfig(amplitude_mm=1.5, octaves=6, seed=seed)
-    )
+    return add_perlin_noise(base, IrregularConfig(amplitude_mm=1.5, octaves=6, seed=seed))

@@ -1,4 +1,5 @@
 """Validation: consistency, plausibility, quality grading, phantom calibration."""
+
 from __future__ import annotations
 
 from woundscan.validation.consistency import (

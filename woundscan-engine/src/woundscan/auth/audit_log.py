@@ -6,16 +6,17 @@ include who/what/when/where but never PHI content (only resource IDs).
 
 We keep audit logs 6 years minimum (HIPAA Security Rule retention).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
 
-class AuditAction(str, Enum):
+class AuditAction(StrEnum):
     LOGIN = "login"
     LOGIN_FAILED = "login_failed"
     LOGOUT = "logout"
@@ -57,7 +58,7 @@ class AuditLogger:
 
         entry_payload = {
             "id": str(uuid4()),
-            "occurred_at": datetime.now(timezone.utc).isoformat(),
+            "occurred_at": datetime.now(UTC).isoformat(),
             "action": action.value,
             "user_id": str(user_id) if user_id else None,
             "organization_id": str(organization_id) if organization_id else None,

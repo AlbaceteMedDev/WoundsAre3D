@@ -8,6 +8,7 @@ a job_id; the iOS app polls for status.
 Production deployments use a Redis broker. The dev path uses an
 in-process eager mode so jobs run synchronously without Redis.
 """
+
 from __future__ import annotations
 
 import os

@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 function Card({ title, value, href }: { title: string; value: string; href: string }) {
   return (
     <Link
-      href={href as `/${string}`}
+      href={href}
       className="block rounded-lg border bg-white p-4 shadow-sm hover:shadow-md"
     >
       <div className="text-sm text-gray-500">{title}</div>

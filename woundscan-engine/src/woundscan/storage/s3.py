@@ -8,12 +8,12 @@ cannot be deleted within a retention window.
 The PutObject metadata includes the SHA-256 of the object so a later
 verification step can re-hash and compare.
 """
+
 from __future__ import annotations
 
 import hashlib
-import io
 from dataclasses import dataclass
-from typing import Optional
+from datetime import UTC
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,9 +27,9 @@ class S3Settings(BaseSettings):
 
     region: str = "us-east-1"
     bucket: str = "woundscan-artifacts"
-    endpoint_url: Optional[str] = None
-    access_key_id: Optional[str] = None
-    secret_access_key: Optional[str] = None
+    endpoint_url: str | None = None
+    access_key_id: str | None = None
+    secret_access_key: str | None = None
     enable_object_lock: bool = True
     retention_days: int = 365 * 6  # 6-year HIPAA minimum
 
@@ -55,7 +55,9 @@ class S3Storage:
             aws_secret_access_key=self.settings.secret_access_key,
         )
 
-    def put_object(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    def put_object(
+        self, key: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         """Upload bytes with SHA-256 metadata. Returns the SHA-256 hex digest."""
         sha = hashlib.sha256(data).hexdigest()
         client = self._client()
@@ -67,11 +69,11 @@ class S3Storage:
             "Metadata": {"sha256": sha},
         }
         if self.settings.enable_object_lock:
-            from datetime import datetime, timedelta, timezone
+            from datetime import datetime, timedelta
 
             params["ObjectLockMode"] = "GOVERNANCE"
-            params["ObjectLockRetainUntilDate"] = (
-                datetime.now(timezone.utc) + timedelta(days=self.settings.retention_days)
+            params["ObjectLockRetainUntilDate"] = datetime.now(UTC) + timedelta(
+                days=self.settings.retention_days
             )
         client.put_object(**params)
         return sha

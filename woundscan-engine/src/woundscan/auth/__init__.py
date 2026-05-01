@@ -1,4 +1,5 @@
 """Auth: identity, MFA, sessions, RBAC, audit logging."""
+
 from __future__ import annotations
 
 from woundscan.auth.audit_log import AuditAction, AuditLogger

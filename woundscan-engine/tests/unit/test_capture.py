@@ -1,4 +1,5 @@
 """Tests for capture: depth_map, point_cloud, multiframe, photo, polarization."""
+
 import numpy as np
 import pytest
 

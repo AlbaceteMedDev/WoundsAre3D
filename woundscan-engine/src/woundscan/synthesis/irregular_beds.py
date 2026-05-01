@@ -14,10 +14,10 @@ the validated geometry math; the irregular wound carries this as
 "true_volume" / "true_surface_area" with explicit notation that they are
 high-resolution numerical truth, not analytic.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -90,8 +90,8 @@ def _perlin_2d(
         ky = np.fft.fftfreq(ny, d=dy_cm)
         KX, KY = np.meshgrid(kx, ky)
         K = np.sqrt(KX**2 + KY**2)
-        cutoff = config.base_frequency_per_cm * (2.0 ** config.octaves)
-        spectrum_filter = np.where(K > 0, np.exp(-(K / cutoff) ** 2), 0.0)
+        cutoff = config.base_frequency_per_cm * (2.0**config.octaves)
+        spectrum_filter = np.where(K > 0, np.exp(-((K / cutoff) ** 2)), 0.0)
         smoothed = np.real(np.fft.ifft2(np.fft.fft2(white) * spectrum_filter))
         s = smoothed.std()
         if s > 0:
@@ -101,7 +101,7 @@ def _perlin_2d(
 
 def add_perlin_noise(
     base: AnalyticWound,
-    config: Optional[IrregularConfig] = None,
+    config: IrregularConfig | None = None,
 ) -> AnalyticWound:
     """Add Perlin noise to an analytic wound's depth map, restricted to the mask.
 

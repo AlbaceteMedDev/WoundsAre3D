@@ -8,11 +8,11 @@ fails or its confidence is low. We expose a simple `ProbeDetection`
 result and a fallback that returns no detections (so the iOS app prompts
 for manual entry).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -40,15 +40,15 @@ class ProbeDetectionModel:
 
     DEFAULT_VERSION = "fallback-none-v0"
 
-    def __init__(self, weights_path: Optional[Path | str] = None):
+    def __init__(self, weights_path: Path | str | None = None):
         self.weights_path = Path(weights_path) if weights_path else None
 
     @classmethod
-    def from_weights(cls, p: Path | str) -> "ProbeDetectionModel":
+    def from_weights(cls, p: Path | str) -> ProbeDetectionModel:
         return cls(weights_path=p)
 
     @classmethod
-    def fallback(cls) -> "ProbeDetectionModel":
+    def fallback(cls) -> ProbeDetectionModel:
         return cls(weights_path=None)
 
     @property

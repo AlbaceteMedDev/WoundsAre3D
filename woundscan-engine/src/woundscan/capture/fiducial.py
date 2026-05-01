@@ -8,6 +8,7 @@ detect the markers, recover the marker-to-camera pose, and use this to:
 2. Define a wound-local coordinate frame anchored to the patient
 3. Cross-check ARKit pose drift across the burst capture
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

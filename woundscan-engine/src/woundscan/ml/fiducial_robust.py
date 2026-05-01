@@ -10,10 +10,10 @@ for distance robustness) and combines the OpenCV detection with a
 contour-based fallback that finds black-bordered quadrilaterals and
 classifies their internal pattern by template matching.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -37,7 +37,7 @@ class RobustFiducialDetector:
         rgb: np.ndarray,
         intrinsic_matrix: np.ndarray,
         marker_side_mm: float,
-        dist_coeffs: Optional[np.ndarray] = None,
+        dist_coeffs: np.ndarray | None = None,
     ) -> list:
         """Detect markers with robustness pre-processing."""
         from woundscan.capture.fiducial import detect_aruco

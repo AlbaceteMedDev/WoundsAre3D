@@ -14,26 +14,26 @@ clinician's session as a Postgres session variable.
 
 Migrations are managed by Alembic (see migrations/ directory).
 """
+
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import Iterator
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     Float,
     ForeignKey,
-    Integer,
     String,
     Text,
+)
+from sqlalchemy import (
     create_engine as sa_create_engine,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker, relationship
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
 class DatabaseSettings(BaseSettings):

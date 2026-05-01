@@ -11,6 +11,7 @@ wrong location, or LiDAR confidence overstated.
 We compute a per-anchor disagreement (in mm and in z-score units) and
 flag the measurement if any anchor exceeds threshold.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -11,13 +11,14 @@ point they enter:
 Force category is required to apply the empirical compression correction
 in `fusion/force_correction.py`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class ForceCategory(str, Enum):
+class ForceCategory(StrEnum):
     """Categorical clinician force input. Mapped to mm-correction in fusion."""
 
     LIGHT = "light"
@@ -25,7 +26,7 @@ class ForceCategory(str, Enum):
     FIRM = "firm"
 
 
-class ProbeType(str, Enum):
+class ProbeType(StrEnum):
     """Type of probe used; affects systematic bias."""
 
     COTTON_TIP = "cotton_tip"

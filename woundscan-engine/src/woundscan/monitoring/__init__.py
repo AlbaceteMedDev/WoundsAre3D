@@ -1,4 +1,5 @@
 """Monitoring: metrics, tracing, error reporting."""
+
 from __future__ import annotations
 
 from woundscan.monitoring.error_reporting import (

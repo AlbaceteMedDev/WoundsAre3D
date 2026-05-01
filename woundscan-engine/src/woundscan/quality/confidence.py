@@ -16,10 +16,10 @@ must be documented and re-validated. The weights live in this module
 constant `DEFAULT_WEIGHTS` and are recorded in every measurement's
 provenance.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -77,7 +77,7 @@ def compute_quality_components(
     poses: list,  # list[CameraPose]
     dx_cm: float,
     dy_cm: float,
-    boundary_confidence: Optional[np.ndarray] = None,
+    boundary_confidence: np.ndarray | None = None,
 ) -> QualityComponents:
     """Run all quality component computations from raw inputs."""
     from woundscan.quality.edge_proximity import compute_edge_distance

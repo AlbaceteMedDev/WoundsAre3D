@@ -8,6 +8,7 @@ This is the FALLBACK fusion method, used when the Gaussian process is
 not available (e.g., insufficient compute, missing GPyTorch). It does
 NOT produce uncertainty estimates — for that, use `fuse_gaussian_process`.
 """
+
 from __future__ import annotations
 
 import numpy as np

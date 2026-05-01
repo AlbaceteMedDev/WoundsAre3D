@@ -23,9 +23,8 @@ For wounds with these features, supplemental physical measurements are
 required and are added to the gradient-integral surface area downstream.
 This module computes only the open-bowl portion.
 """
-from __future__ import annotations
 
-from typing import Optional
+from __future__ import annotations
 
 import numpy as np
 from scipy import integrate
@@ -35,7 +34,7 @@ def compute_surface_area(
     depth_map: np.ndarray,
     dx: float,
     dy: float,
-    mask: Optional[np.ndarray] = None,
+    mask: np.ndarray | None = None,
 ) -> float:
     """3D surface area of the wound bed via gradient integral.
 
@@ -67,10 +66,7 @@ def compute_surface_area(
     if depth_map.ndim != 2:
         raise ValueError(f"depth_map must be 2D, got shape {depth_map.shape}")
     if depth_map.shape[0] < 3 or depth_map.shape[1] < 3:
-        raise ValueError(
-            "depth_map needs at least 3 points per axis, "
-            f"got {depth_map.shape}"
-        )
+        raise ValueError("depth_map needs at least 3 points per axis, " f"got {depth_map.shape}")
     if dx <= 0 or dy <= 0:
         raise ValueError(f"Grid spacings must be positive, got dx={dx}, dy={dy}")
 
@@ -84,8 +80,7 @@ def compute_surface_area(
     if mask is not None:
         if mask.shape != depth_map.shape:
             raise ValueError(
-                f"mask shape {mask.shape} doesn't match depth_map shape "
-                f"{depth_map.shape}"
+                f"mask shape {mask.shape} doesn't match depth_map shape " f"{depth_map.shape}"
             )
         integrand = np.where(mask, integrand, 0.0)
 

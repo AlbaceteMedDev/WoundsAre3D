@@ -4,12 +4,12 @@ Writes a flat CSV row per measurement. Columns are stable; new columns
 appended at the end so consumers can rely on column names but not
 positions.
 """
+
 from __future__ import annotations
 
 import csv
 import io
-from typing import Iterable, Sequence
-
+from collections.abc import Iterable, Sequence
 
 COLUMNS = (
     "measurement_id",
@@ -37,7 +37,9 @@ COLUMNS = (
 )
 
 
-def write_measurement_csv(rows: Iterable[dict[str, object]], columns: Sequence[str] = COLUMNS) -> str:
+def write_measurement_csv(
+    rows: Iterable[dict[str, object]], columns: Sequence[str] = COLUMNS
+) -> str:
     """Serialize rows to CSV string. Missing columns are blanked."""
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=list(columns), extrasaction="ignore")

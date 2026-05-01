@@ -1,4 +1,5 @@
 """TOTP-based multi-factor authentication."""
+
 from __future__ import annotations
 
 import secrets

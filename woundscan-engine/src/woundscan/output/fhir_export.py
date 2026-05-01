@@ -8,6 +8,7 @@ deployment partner do their own integration.
 Only includes the Observation resources; Patient and Encounter
 references are placeholders the integration partner fills in.
 """
+
 from __future__ import annotations
 
 from datetime import datetime

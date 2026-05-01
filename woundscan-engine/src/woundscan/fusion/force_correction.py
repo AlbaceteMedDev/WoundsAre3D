@@ -17,6 +17,7 @@ refined post-deployment from saline cross-checks.
 The default table is conservative: errs on the side of *under-correcting*
 so we never claim a wound is shallower than it is.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

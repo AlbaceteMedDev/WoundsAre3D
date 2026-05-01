@@ -4,6 +4,7 @@ Strong gradients in scene illumination cause systematic depth bias from
 ARKit and color bias in tissue classification. We compute the smoothness
 of the luminance field; flat = good, gradient = degraded.
 """
+
 from __future__ import annotations
 
 import numpy as np

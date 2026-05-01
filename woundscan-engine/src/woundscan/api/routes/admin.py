@@ -1,10 +1,11 @@
 """Admin endpoints: products, audit log, ML metrics."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from woundscan.api.auth import get_identity
-from woundscan.auth.identity import Identity, Role
+from woundscan.auth.identity import Identity
 from woundscan.auth.rbac import Permission, has_permission
 from woundscan.graft.product_db import default_product_db
 

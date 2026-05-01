@@ -1,4 +1,5 @@
 """Geometry: validated 3D math for wound volume, surface area, perimeter."""
+
 from __future__ import annotations
 
 from woundscan.geometry.perimeter import compute_perimeter_polygon

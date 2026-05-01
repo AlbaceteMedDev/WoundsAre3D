@@ -14,6 +14,7 @@ optionally use GPyTorch via the `_gpytorch_backend` switch when available
 for sparse approximation; the fallback NumPy implementation is exact and
 suitable for grids up to ~100x100 and a few hundred anchor points.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

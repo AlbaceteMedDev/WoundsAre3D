@@ -4,10 +4,11 @@ These are dimensionless features used in the per-measurement provenance
 record and in temporal trajectory analysis. They are NOT used in the
 clinical decision logic but inform clinicians about wound morphology.
 """
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 import numpy as np
 

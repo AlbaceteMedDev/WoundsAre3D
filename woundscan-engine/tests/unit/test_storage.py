@@ -1,4 +1,5 @@
 """Tests for storage tamper-evidence."""
+
 import pytest
 
 from woundscan.storage.tamper_evidence import (

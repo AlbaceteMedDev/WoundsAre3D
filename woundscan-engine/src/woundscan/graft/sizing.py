@@ -12,6 +12,7 @@ Recommendation uses a 2-sigma upper bound to ensure adequate coverage:
 
     A_graft_recommended = mean(A_graft) + 2 * std(A_graft)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

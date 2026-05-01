@@ -4,6 +4,7 @@ Per the brief: translation invariance, rotation invariance, scale
 equivariance, monotonicity, CI calibration. These are framework-level
 properties that any volume/surface-area computation must satisfy.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -14,7 +15,6 @@ from woundscan.geometry.surface_area import compute_surface_area
 from woundscan.geometry.uncertainty import compute_volume_with_uncertainty
 from woundscan.geometry.volume import compute_volume
 from woundscan.synthesis.analytic_shapes import cone, paraboloid
-
 
 pytestmark = pytest.mark.regulatory
 
@@ -29,9 +29,9 @@ class TestInvariants:
         V_a = compute_volume(w_a.depth_map, w_a.dx, w_a.dy, mask=w_a.mask)
         V_b = compute_volume(w_b.depth_map, w_b.dx, w_b.dy, mask=w_b.mask)
         ratio = V_b / V_a
-        assert abs(ratio - scale**3) / scale**3 < 0.02, (
-            f"V_b/V_a = {ratio:.4f}, expected {scale**3:.4f}"
-        )
+        assert (
+            abs(ratio - scale**3) / scale**3 < 0.02
+        ), f"V_b/V_a = {ratio:.4f}, expected {scale**3:.4f}"
 
     @given(scale=st.floats(min_value=0.5, max_value=4.0))
     @settings(max_examples=20, deadline=None)

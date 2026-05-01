@@ -16,11 +16,10 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-RUN pip install --upgrade pip wheel setuptools \
-    && pip install -e .
-
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
+RUN pip install --upgrade pip wheel setuptools \
+    && pip install .
 
 EXPOSE 8000
 

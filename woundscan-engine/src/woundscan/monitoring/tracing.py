@@ -3,6 +3,7 @@
 Traces are exported to an OTLP collector in production. In dev/test the
 exporter is a no-op so traces don't pollute logs.
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager

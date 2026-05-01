@@ -13,6 +13,7 @@ Logic:
 The recommendation always shows multiple options so the clinician can
 choose; never auto-selects.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

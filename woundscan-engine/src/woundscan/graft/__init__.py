@@ -1,4 +1,5 @@
 """Graft sizing and product recommendation."""
+
 from __future__ import annotations
 
 from woundscan.graft.product_db import GraftProduct, ProductDatabase, default_product_db

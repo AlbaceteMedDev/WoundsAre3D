@@ -1,4 +1,5 @@
 """Output: PDF reports, CSV exports, FHIR bundles, trajectory plots."""
+
 from __future__ import annotations
 
 from woundscan.output.csv_export import write_measurement_csv

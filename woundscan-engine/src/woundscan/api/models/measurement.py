@@ -1,8 +1,8 @@
 """Pydantic models for measurement requests / responses."""
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -75,13 +75,13 @@ class CreateMeasurementRequest(BaseModel):
     fiducial_separation_mm: float
     boundary: WoundBoundaryInput
     probe_measurements: list[ProbeMeasurementInput]
-    overlap_delta_cm: Optional[float] = None
+    overlap_delta_cm: float | None = None
     selected_product_ids: list[str] = Field(default_factory=list)
-    polarized_capture_s3_key: Optional[str] = None
+    polarized_capture_s3_key: str | None = None
     multispectral_capture_s3_keys: list[str] = Field(default_factory=list)
-    days_since_last_visit: Optional[float] = None
-    last_volume_cm3: Optional[float] = None
-    last_area_cm2: Optional[float] = None
+    days_since_last_visit: float | None = None
+    last_volume_cm3: float | None = None
+    last_area_cm2: float | None = None
 
 
 class UncertaintyValue(BaseModel):
@@ -96,7 +96,7 @@ class GraftRecommendationOut(BaseModel):
     product_name: str
     overlap_delta_cm: float
     required_cm2: float
-    selected_size_cm2: Optional[float]
+    selected_size_cm2: float | None
     rationale: str
 
 

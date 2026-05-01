@@ -1,8 +1,8 @@
 """Phantom calibration submission endpoint."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from uuid import UUID
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -21,13 +21,11 @@ class PhantomScanIn(BaseModel):
     measured_surface_area_cm2: float
     true_volume_cm3: float
     true_surface_area_cm2: float
-    captured_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 @router.post("")
-def submit_phantom_scan(
-    scan: PhantomScanIn, identity: Identity = Depends(get_identity)
-) -> dict:
+def submit_phantom_scan(scan: PhantomScanIn, identity: Identity = Depends(get_identity)) -> dict:
     record = scan.model_dump()
     record["clinician_id"] = str(identity.user_id)
     _PHANTOM_RECORDS.append(record)

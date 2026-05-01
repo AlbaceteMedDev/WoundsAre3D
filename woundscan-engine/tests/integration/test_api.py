@@ -1,4 +1,5 @@
 """FastAPI endpoint tests using TestClient."""
+
 from __future__ import annotations
 
 import os
@@ -87,9 +88,7 @@ class TestWounds:
         wound = resp.json()
         wound_id = wound["id"]
 
-        listed = client.get(
-            "/wounds", headers={"Authorization": f"Bearer {auth_token}"}
-        ).json()
+        listed = client.get("/wounds", headers={"Authorization": f"Bearer {auth_token}"}).json()
         assert any(w["id"] == wound_id for w in listed)
 
 
@@ -113,8 +112,6 @@ class TestPhantom:
 
 class TestAdmin:
     def test_products(self, client: TestClient, auth_token: str) -> None:
-        resp = client.get(
-            "/admin/products", headers={"Authorization": f"Bearer {auth_token}"}
-        )
+        resp = client.get("/admin/products", headers={"Authorization": f"Bearer {auth_token}"})
         assert resp.status_code == 200
         assert len(resp.json()["products"]) > 0

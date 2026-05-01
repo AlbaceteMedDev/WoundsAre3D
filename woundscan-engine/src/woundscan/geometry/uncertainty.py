@@ -33,10 +33,10 @@ Returns
 -------
 UncertaintyResult dataclass with mean, std, 95% CI, median, sample count.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -83,9 +83,9 @@ class UncertaintyResult:
 
 def _sample_depth_fields(
     depth_mean: np.ndarray,
-    depth_std: Optional[np.ndarray],
-    depth_cov: Optional[np.ndarray],
-    correlation_length: Optional[float],
+    depth_std: np.ndarray | None,
+    depth_cov: np.ndarray | None,
+    correlation_length: float | None,
     dx: float,
     dy: float,
     n_samples: int,
@@ -121,9 +121,7 @@ def _sample_depth_fields(
     samples : np.ndarray, shape (n_samples, Ny, Nx)
     """
     if (depth_std is None) == (depth_cov is None):
-        raise ValueError(
-            "Provide exactly one of depth_std or depth_cov, not both or neither"
-        )
+        raise ValueError("Provide exactly one of depth_std or depth_cov, not both or neither")
 
     shape = depth_mean.shape
 
@@ -131,27 +129,21 @@ def _sample_depth_fields(
         flat_mean = depth_mean.ravel()
         n = flat_mean.size
         if depth_cov.shape != (n, n):
-            raise ValueError(
-                f"depth_cov must have shape ({n}, {n}), got {depth_cov.shape}"
-            )
+            raise ValueError(f"depth_cov must have shape ({n}, {n}), got {depth_cov.shape}")
         samples_flat = rng.multivariate_normal(flat_mean, depth_cov, size=n_samples)
         samples = samples_flat.reshape((n_samples,) + shape)
     else:
         # Pointwise std with optional spatial correlation.
         if depth_std.shape != shape:
             raise ValueError(
-                f"depth_std shape {depth_std.shape} doesn't match "
-                f"depth_mean shape {shape}"
+                f"depth_std shape {depth_std.shape} doesn't match " f"depth_mean shape {shape}"
             )
         if np.any(depth_std < 0):
             raise ValueError("depth_std contains negative values")
 
         if correlation_length is None or correlation_length <= 0:
             # Independent pointwise noise.
-            noise = (
-                rng.standard_normal(size=(n_samples,) + shape)
-                * depth_std[np.newaxis, ...]
-            )
+            noise = rng.standard_normal(size=(n_samples,) + shape) * depth_std[np.newaxis, ...]
         else:
             # Correlated noise via Gaussian smoothing of white noise.
             # The smoothing reduces variance, so we rescale to preserve the
@@ -187,12 +179,12 @@ def compute_volume_with_uncertainty(
     depth_mean: np.ndarray,
     dx: float,
     dy: float,
-    depth_std: Optional[np.ndarray] = None,
-    depth_cov: Optional[np.ndarray] = None,
-    correlation_length_cm: Optional[float] = None,
-    mask: Optional[np.ndarray] = None,
+    depth_std: np.ndarray | None = None,
+    depth_cov: np.ndarray | None = None,
+    correlation_length_cm: float | None = None,
+    mask: np.ndarray | None = None,
     n_samples: int = 1000,
-    rng: Optional[np.random.Generator] = None,
+    rng: np.random.Generator | None = None,
 ) -> UncertaintyResult:
     """Wound volume with Monte Carlo uncertainty propagation.
 
@@ -235,9 +227,7 @@ def compute_volume_with_uncertainty(
         enforce_nonneg=True,
     )
 
-    volumes = np.array(
-        [compute_volume(samples[i], dx, dy, mask=mask) for i in range(n_samples)]
-    )
+    volumes = np.array([compute_volume(samples[i], dx, dy, mask=mask) for i in range(n_samples)])
 
     return UncertaintyResult(
         mean=float(np.mean(volumes)),
@@ -253,12 +243,12 @@ def compute_surface_area_with_uncertainty(
     depth_mean: np.ndarray,
     dx: float,
     dy: float,
-    depth_std: Optional[np.ndarray] = None,
-    depth_cov: Optional[np.ndarray] = None,
-    correlation_length_cm: Optional[float] = None,
-    mask: Optional[np.ndarray] = None,
+    depth_std: np.ndarray | None = None,
+    depth_cov: np.ndarray | None = None,
+    correlation_length_cm: float | None = None,
+    mask: np.ndarray | None = None,
     n_samples: int = 1000,
-    rng: Optional[np.random.Generator] = None,
+    rng: np.random.Generator | None = None,
 ) -> UncertaintyResult:
     """3D surface area with Monte Carlo uncertainty propagation.
 
@@ -306,10 +296,7 @@ def compute_surface_area_with_uncertainty(
     )
 
     areas = np.array(
-        [
-            compute_surface_area(samples[i], dx, dy, mask=mask)
-            for i in range(n_samples)
-        ]
+        [compute_surface_area(samples[i], dx, dy, mask=mask) for i in range(n_samples)]
     )
 
     return UncertaintyResult(

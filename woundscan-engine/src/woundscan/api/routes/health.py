@@ -1,4 +1,5 @@
 """Health and version endpoints (unauthenticated)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter

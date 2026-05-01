@@ -14,6 +14,7 @@ This is the regulatory audit chain that allows any output to be
 reconstructed and reviewed years later. Stored alongside the result and
 in the audit log.
 """
+
 from __future__ import annotations
 
 import hashlib

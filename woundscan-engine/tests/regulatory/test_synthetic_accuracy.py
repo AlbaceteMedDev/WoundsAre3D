@@ -6,6 +6,7 @@ violated, invalidates downstream accuracy claims.
 
 These are mapped to requirements in docs/regulatory_traceability.md.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -21,7 +22,6 @@ from woundscan.synthesis.analytic_shapes import (
     paraboloid,
 )
 from woundscan.synthesis.irregular_beds import IrregularConfig, add_perlin_noise
-
 
 pytestmark = pytest.mark.regulatory
 
@@ -42,9 +42,7 @@ def test_REQ_ACC_001_hemisphere_volume(radius: float) -> None:
 
 
 # REQ-ACC-002: Cone volume <1%, surface area <3%
-@pytest.mark.parametrize(
-    "radius,depth", [(1.0, 0.5), (2.0, 1.0), (3.0, 2.0)]
-)
+@pytest.mark.parametrize("radius,depth", [(1.0, 0.5), (2.0, 1.0), (3.0, 2.0)])
 def test_REQ_ACC_002_cone_volume_and_sa(radius: float, depth: float) -> None:
     w = cone(radius=radius, depth_max=depth, n_grid=301)
     V = compute_volume(w.depth_map, w.dx, w.dy, mask=w.mask)

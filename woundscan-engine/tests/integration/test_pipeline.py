@@ -5,6 +5,7 @@ asserting that the expected outputs are produced and within reasonable
 ranges. Uses the synthetic-camera-anchors path; binary upload is not
 exercised here.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

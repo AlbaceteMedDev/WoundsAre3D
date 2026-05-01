@@ -1,4 +1,5 @@
 """Tests for auth: passwords, MFA, sessions, RBAC."""
+
 import pytest
 
 from woundscan.auth.audit_log import AuditAction, AuditLogger

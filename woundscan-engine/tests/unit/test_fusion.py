@@ -1,4 +1,5 @@
 """Tests for fusion: GP, TPS, force correction, temporal Kalman."""
+
 import numpy as np
 import pytest
 
@@ -75,9 +76,17 @@ class TestGPFusion:
         X, Y = np.meshgrid(x_axis, y_axis)
 
         result = fuse_gaussian_process(
-            probe_x, probe_y, probe_d, probe_s,
-            cam_x, cam_y, cam_d, cam_c,
-            X, Y, optimize_lengthscale=False,
+            probe_x,
+            probe_y,
+            probe_d,
+            probe_s,
+            cam_x,
+            cam_y,
+            cam_d,
+            cam_c,
+            X,
+            Y,
+            optimize_lengthscale=False,
         )
         # Posterior mean should be near 5.0 in the convex hull of anchors
         center = result.depth_mean_mm[10, 10]
@@ -93,9 +102,17 @@ class TestGPFusion:
         probe_s = np.full(5, 0.5)
         X, Y = np.meshgrid(np.linspace(-5, 5, 11), np.linspace(-5, 5, 11))
         result = fuse_gaussian_process(
-            probe_x, probe_y, probe_d, probe_s,
-            np.zeros(0), np.zeros(0), np.zeros(0), np.zeros(0),
-            X, Y, optimize_lengthscale=False,
+            probe_x,
+            probe_y,
+            probe_d,
+            probe_s,
+            np.zeros(0),
+            np.zeros(0),
+            np.zeros(0),
+            np.zeros(0),
+            X,
+            Y,
+            optimize_lengthscale=False,
         )
         assert result.correlation_length_mm > 0
 
@@ -103,16 +120,22 @@ class TestGPFusion:
 class TestTemporalKalman:
     def test_initial_state(self):
         s = initialize_temporal_state(
-            initial_volume=10.0, initial_area=20.0, initial_depth=2.0,
-            initial_uncertainty=(1.0, 2.0, 0.2), timestamp_s=0.0,
+            initial_volume=10.0,
+            initial_area=20.0,
+            initial_depth=2.0,
+            initial_uncertainty=(1.0, 2.0, 0.2),
+            timestamp_s=0.0,
         )
         assert s.mean[0] == 10.0
         assert s.cov[0, 0] == 1.0**2
 
     def test_update_pulls_toward_observation(self):
         prior = initialize_temporal_state(
-            initial_volume=10.0, initial_area=20.0, initial_depth=2.0,
-            initial_uncertainty=(1.0, 2.0, 0.2), timestamp_s=0.0,
+            initial_volume=10.0,
+            initial_area=20.0,
+            initial_depth=2.0,
+            initial_uncertainty=(1.0, 2.0, 0.2),
+            timestamp_s=0.0,
         )
         R = np.diag([0.5**2, 1.0**2, 0.1**2])
         update = kalman_update(prior, 12.0, 22.0, 2.5, R, new_timestamp_s=86400.0)
@@ -121,8 +144,11 @@ class TestTemporalKalman:
 
     def test_outlier_flagged(self):
         prior = initialize_temporal_state(
-            initial_volume=10.0, initial_area=20.0, initial_depth=2.0,
-            initial_uncertainty=(0.1, 0.1, 0.05), timestamp_s=0.0,
+            initial_volume=10.0,
+            initial_area=20.0,
+            initial_depth=2.0,
+            initial_uncertainty=(0.1, 0.1, 0.05),
+            timestamp_s=0.0,
         )
         R = np.diag([0.1**2, 0.1**2, 0.05**2])
         update = kalman_update(prior, 100.0, 200.0, 50.0, R, new_timestamp_s=86400.0)

@@ -19,6 +19,7 @@ Tolerance budgets
 - Cylindrical pit (degenerate vertical walls): volume <5%, surface area
   not validated by gradient method
 """
+
 import numpy as np
 import pytest
 
@@ -44,7 +45,6 @@ from woundscan.synthesis.analytic_shapes import (
     hemispheroid,
     paraboloid,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helper for relative-error reporting in pytest output
@@ -263,7 +263,9 @@ class TestUncertainty:
             w.depth_map, w.dx, w.dy, depth_std=std_field, n_samples=50
         )
         assert result.std < 1e-9
-        assert _rel_err(result.mean, w.true_volume) < 0.05  # n_grid=51 so larger discretization error
+        assert (
+            _rel_err(result.mean, w.true_volume) < 0.05
+        )  # n_grid=51 so larger discretization error
 
     def test_volume_uncertainty_scales_with_noise(self):
         # Doubling pointwise noise should roughly double the volume std.

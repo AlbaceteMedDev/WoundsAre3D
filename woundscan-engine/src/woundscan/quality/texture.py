@@ -7,6 +7,7 @@ texture regions have reliable feature matches and higher confidence.
 We use local standard deviation in luminance, normalized to [0, 1] over
 the wound region.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -27,7 +28,7 @@ def compute_texture_contrast(
         lum = rgb.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
         lum /= 255.0
     else:
-        lum = (rgb.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))
+        lum = rgb.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
 
     from scipy.ndimage import uniform_filter
 
