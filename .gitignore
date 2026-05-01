@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.mypy_cache/
+.ruff_cache/
+.tox/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+.next/
+.turbo/
+out/
+*.log
+.env.local
+.env*.local
+
+# Swift / Xcode
+WoundScan.xcodeproj/
+WoundScan.xcworkspace/
+DerivedData/
+*.xcuserstate
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tfvars
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Local config
+.env
