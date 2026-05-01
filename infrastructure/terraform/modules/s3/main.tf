@@ -4,6 +4,11 @@ variable "retention_days" {
   type    = number
   default = 2190 # 6 years
 }
+variable "transition_to_glacier_after_days" {
+  type        = number
+  default     = null
+  description = "Transition objects to GLACIER_IR after N days. Must be < retention_days. null disables the transition rule."
+}
 
 resource "aws_s3_bucket" "artifacts" {
   bucket              = "${var.name}-artifacts"
@@ -56,12 +61,15 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
   bucket = aws_s3_bucket.artifacts.id
 
   rule {
-    id     = "transition-cold"
+    id     = "expire-and-optionally-transition"
     status = "Enabled"
     filter {}
-    transition {
-      days          = 30
-      storage_class = "GLACIER_IR"
+    dynamic "transition" {
+      for_each = var.transition_to_glacier_after_days == null ? [] : [var.transition_to_glacier_after_days]
+      content {
+        days          = transition.value
+        storage_class = "GLACIER_IR"
+      }
     }
     expiration {
       days = var.retention_days

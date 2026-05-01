@@ -44,9 +44,10 @@ module "vpc" {
 }
 
 module "s3" {
-  source      = "../../modules/s3"
-  name        = "woundscan-prod"
-  kms_key_arn = aws_kms_key.data.arn
+  source                           = "../../modules/s3"
+  name                             = "woundscan-prod"
+  kms_key_arn                      = aws_kms_key.data.arn
+  transition_to_glacier_after_days = 30
 }
 
 resource "aws_secretsmanager_secret" "db_password" {
