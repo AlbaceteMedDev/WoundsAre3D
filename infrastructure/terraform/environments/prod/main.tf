@@ -63,6 +63,7 @@ module "rds" {
   subnet_ids             = module.vpc.private_subnet_ids
   kms_key_arn            = aws_kms_key.data.arn
   db_password_secret_arn = aws_secretsmanager_secret.db_password.arn
+  app_security_group_ids = [module.ecs.task_security_group_id]
 }
 
 module "ecs" {

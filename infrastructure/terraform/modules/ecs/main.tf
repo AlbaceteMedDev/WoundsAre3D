@@ -10,6 +10,11 @@ variable "secret_arns" {
   type    = map(string)
   default = {}
 }
+variable "environment" {
+  type        = map(string)
+  default     = {}
+  description = "Plain (non-secret) environment variables for the container."
+}
 variable "desired_count" {
   type    = number
   default = 2
@@ -21,6 +26,16 @@ variable "min_capacity" {
 variable "max_capacity" {
   type    = number
   default = 10
+}
+variable "target_group_arn" {
+  type        = string
+  default     = null
+  description = "If set, register the ECS service with this ALB target group on container_port."
+}
+variable "lb_security_group_id" {
+  type        = string
+  default     = null
+  description = "If set, the task ingress is restricted to this LB SG. Otherwise falls back to 10.0.0.0/8."
 }
 
 resource "aws_ecs_cluster" "this" {
@@ -80,19 +95,32 @@ resource "aws_security_group" "task" {
   name   = "${var.name}-task"
   vpc_id = var.vpc_id
 
-  ingress {
-    from_port   = var.container_port
-    to_port     = var.container_port
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/8"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group_rule" "task_ingress_from_lb" {
+  count                    = var.lb_security_group_id == null ? 0 : 1
+  type                     = "ingress"
+  from_port                = var.container_port
+  to_port                  = var.container_port
+  protocol                 = "tcp"
+  source_security_group_id = var.lb_security_group_id
+  security_group_id        = aws_security_group.task.id
+}
+
+resource "aws_security_group_rule" "task_ingress_from_vpc" {
+  count             = var.lb_security_group_id == null ? 1 : 0
+  type              = "ingress"
+  from_port         = var.container_port
+  to_port           = var.container_port
+  protocol          = "tcp"
+  cidr_blocks       = ["10.0.0.0/8"]
+  security_group_id = aws_security_group.task.id
 }
 
 resource "aws_ecs_task_definition" "this" {
@@ -121,7 +149,8 @@ resource "aws_ecs_task_definition" "this" {
           awslogs-stream-prefix = "api"
         }
       }
-      secrets = [for k, arn in var.secret_arns : { name = k, valueFrom = arn }]
+      environment = [for k, v in var.environment : { name = k, value = v }]
+      secrets     = [for k, arn in var.secret_arns : { name = k, valueFrom = arn }]
       healthCheck = {
         command     = ["CMD-SHELL", "curl -fsS http://localhost:${var.container_port}/healthz || exit 1"]
         interval    = 30
@@ -145,6 +174,15 @@ resource "aws_ecs_service" "this" {
   network_configuration {
     subnets         = var.subnet_ids
     security_groups = [aws_security_group.task.id]
+  }
+
+  dynamic "load_balancer" {
+    for_each = var.target_group_arn == null ? [] : [var.target_group_arn]
+    content {
+      target_group_arn = load_balancer.value
+      container_name   = "api"
+      container_port   = var.container_port
+    }
   }
 
   deployment_circuit_breaker {
@@ -177,5 +215,7 @@ resource "aws_appautoscaling_policy" "cpu" {
   }
 }
 
-output "service_name" { value = aws_ecs_service.this.name }
-output "task_role_arn" { value = aws_iam_role.task.arn }
+output "service_name"             { value = aws_ecs_service.this.name }
+output "task_role_arn"            { value = aws_iam_role.task.arn }
+output "task_role_name"           { value = aws_iam_role.task.name }
+output "task_security_group_id"   { value = aws_security_group.task.id }

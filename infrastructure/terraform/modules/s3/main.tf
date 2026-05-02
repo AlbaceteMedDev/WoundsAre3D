@@ -82,3 +82,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
 
 output "bucket_arn"  { value = aws_s3_bucket.artifacts.arn }
 output "bucket_name" { value = aws_s3_bucket.artifacts.id }
+output "kms_key_arn" { value = var.kms_key_arn }
