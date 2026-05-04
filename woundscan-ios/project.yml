@@ -1,0 +1,48 @@
+name: WoundScan
+options:
+  bundleIdPrefix: com.albacetemed
+  deploymentTarget:
+    iOS: "17.0"
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    DEVELOPMENT_TEAM: "PLACEHOLDER"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_BITCODE: NO
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    OTHER_SWIFT_FLAGS: "-warnings-as-errors"
+
+targets:
+  WoundScan:
+    type: application
+    platform: iOS
+    sources:
+      - path: WoundScan
+    info:
+      path: WoundScan/Info.plist
+      properties:
+        NSCameraUsageDescription: "Required to capture wound photos and LiDAR depth."
+        NSPhotoLibraryUsageDescription: "Required to save and review captured wound images."
+        NSLocationWhenInUseUsageDescription: "Optional; used to tag scans with clinic location."
+        UIRequiredDeviceCapabilities:
+          - arkit
+          - armv7
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIBackgroundModes: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.albacetemed.woundscan
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_FILE: WoundScan/Info.plist
+
+  WoundScanTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [WoundScanTests]
+    dependencies:
+      - target: WoundScan
