@@ -46,16 +46,99 @@ resource "aws_secretsmanager_secret" "db_password" {
   name = "woundscan/dev/db-password"
 }
 
+data "aws_secretsmanager_secret" "jwt_signing" {
+  name = "woundscan/dev/jwt-signing"
+}
+
+module "rds" {
+  source                  = "../../modules/rds"
+  name                    = "woundscan-dev"
+  vpc_id                  = module.vpc.vpc_id
+  subnet_ids              = module.vpc.private_subnet_ids
+  kms_key_arn             = aws_kms_key.data.arn
+  db_password_secret_arn  = aws_secretsmanager_secret.db_password.arn
+  app_security_group_ids  = [module.ecs.task_security_group_id]
+  instance_class          = "db.t4g.micro"
+  allocated_storage       = 20
+  max_allocated_storage   = 100
+  multi_az                = false
+  deletion_protection     = false
+  backup_retention_period = 1
+}
+
+module "alb" {
+  source            = "../../modules/alb"
+  name              = "woundscan-dev"
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+}
+
 module "ecs" {
-  source        = "../../modules/ecs"
-  name          = "woundscan-dev-api"
-  vpc_id        = module.vpc.vpc_id
-  subnet_ids    = module.vpc.private_subnet_ids
-  image         = var.image
-  desired_count = 1
-  min_capacity  = 1
-  max_capacity  = 2
+  source               = "../../modules/ecs"
+  name                 = "woundscan-dev-api"
+  vpc_id               = module.vpc.vpc_id
+  subnet_ids           = module.vpc.private_subnet_ids
+  image                = var.image
+  desired_count        = 1
+  min_capacity         = 1
+  max_capacity         = 2
+  target_group_arn     = module.alb.target_group_arn
+  enable_lb            = true
+  lb_security_group_id = module.alb.security_group_id
   secret_arns = {
-    WS_DB_PASSWORD = aws_secretsmanager_secret.db_password.arn
+    WS_DB_PASSWORD       = aws_secretsmanager_secret.db_password.arn
+    WS_JWT_SIGNING_KEY   = data.aws_secretsmanager_secret.jwt_signing.arn
   }
+  environment = {
+    WS_DB_HOST           = module.rds.host
+    WS_DB_PORT           = tostring(module.rds.port)
+    WS_DB_DATABASE       = "woundscan"
+    WS_DB_USER           = "woundscan"
+    WS_S3_REGION         = "us-east-1"
+    WS_S3_BUCKET         = "woundscan-dev-artifacts"
+    WS_S3_RETENTION_DAYS = "30"
+    WS_CELERY_EAGER      = "1"
+  }
+}
+
+resource "aws_iam_role_policy" "task_s3" {
+  name = "woundscan-dev-api-task-s3"
+  role = module.ecs.task_role_name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetObjectLegalHold",
+          "s3:PutObjectLegalHold",
+          "s3:GetObjectRetention",
+          "s3:PutObjectRetention",
+        ]
+        Resource = [
+          module.s3.bucket_arn,
+          "${module.s3.bucket_arn}/*",
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = aws_kms_key.data.arn
+      },
+    ]
+  })
+}
+
+output "alb_dns_name" {
+  value       = module.alb.dns_name
+  description = "Public hostname for the dev API. Hit it with: curl http://<this>/healthz"
 }
