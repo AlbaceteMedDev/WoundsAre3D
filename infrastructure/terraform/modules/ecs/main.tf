@@ -37,6 +37,11 @@ variable "lb_security_group_id" {
   default     = null
   description = "If set, the task ingress is restricted to this LB SG. Otherwise falls back to 10.0.0.0/8."
 }
+variable "enable_lb" {
+  type        = bool
+  default     = false
+  description = "Whether a load balancer is attached. Controls ingress rule selection at plan time."
+}
 
 resource "aws_ecs_cluster" "this" {
   name = var.name
@@ -104,7 +109,7 @@ resource "aws_security_group" "task" {
 }
 
 resource "aws_security_group_rule" "task_ingress_from_lb" {
-  count                    = var.lb_security_group_id == null ? 0 : 1
+  count                    = var.enable_lb ? 1 : 0
   type                     = "ingress"
   from_port                = var.container_port
   to_port                  = var.container_port
@@ -114,7 +119,7 @@ resource "aws_security_group_rule" "task_ingress_from_lb" {
 }
 
 resource "aws_security_group_rule" "task_ingress_from_vpc" {
-  count             = var.lb_security_group_id == null ? 1 : 0
+  count             = var.enable_lb ? 0 : 1
   type              = "ingress"
   from_port         = var.container_port
   to_port           = var.container_port

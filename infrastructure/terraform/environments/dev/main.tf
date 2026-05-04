@@ -83,6 +83,7 @@ module "ecs" {
   min_capacity         = 1
   max_capacity         = 2
   target_group_arn     = module.alb.target_group_arn
+  enable_lb            = true
   lb_security_group_id = module.alb.security_group_id
   secret_arns = {
     WS_DB_PASSWORD       = aws_secretsmanager_secret.db_password.arn
