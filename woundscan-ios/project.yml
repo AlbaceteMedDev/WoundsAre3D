@@ -28,12 +28,18 @@ targets:
         NSCameraUsageDescription: "Required to capture wound photos and LiDAR depth."
         NSPhotoLibraryUsageDescription: "Required to save and review captured wound images."
         NSLocationWhenInUseUsageDescription: "Optional; used to tag scans with clinic location."
+        CFBundleIconName: AppIcon
+        LSApplicationCategoryType: "public.app-category.medical"
         UIRequiredDeviceCapabilities:
+          - arm64
           - arkit
-          - armv7
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIBackgroundModes: []
+        # Restrict to iOS only — ARKit is unavailable on visionOS, and the
+        # capture pipeline is iPhone-specific (LiDAR + back camera).
+        UIDeviceFamily:
+          - 1
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.albacetemeddev.woundscan
