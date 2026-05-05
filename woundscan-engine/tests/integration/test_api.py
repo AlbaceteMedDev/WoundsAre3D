@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture(scope="module")
 def client() -> TestClient:
     os.environ["WS_JWT_SIGNING_KEY"] = "test-key"
+    os.environ["WS_ALLOW_DEV_LOGIN"] = "1"
     os.environ["WS_DEV_USER"] = "dev@local"
     os.environ["WS_DEV_PASSWORD"] = "dev"
     os.environ["WS_DEV_TOTP"] = "000000"
