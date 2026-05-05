@@ -34,19 +34,23 @@ struct PortalWebView: UIViewRepresentable {
         context.coordinator.lastLoadedURL = url
 
         if let token = sessionCookie {
-            seedSessionCookie(into: view, host: url.host ?? "localhost", token: token) {
-                view.load(URLRequest(url: url))
+            let target = url
+            seedSessionCookie(into: view, host: url.host ?? "localhost", token: token) { [weak view] in
+                Task { @MainActor [weak view] in
+                    view?.load(URLRequest(url: target))
+                }
             }
         } else {
             view.load(URLRequest(url: url))
         }
     }
 
+    @MainActor
     private func seedSessionCookie(
         into view: WKWebView,
         host: String,
         token: String,
-        then: @escaping () -> Void
+        then: @escaping @Sendable () -> Void
     ) {
         let cookie = HTTPCookie(properties: [
             .domain: host,
