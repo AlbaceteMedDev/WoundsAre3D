@@ -68,7 +68,17 @@ def login(
 
 
 def _is_dev_user(email: str, password: str, totp: str) -> bool:
+    """Dev-only credential check.
+
+    Disabled by default. To enable in a development environment, set
+    ``WS_ALLOW_DEV_LOGIN=1``. Production deployments must leave the
+    flag unset so a misconfigured release can't accidentally accept
+    the default ``dev/dev/000000`` triple.
+    """
     import os
+
+    if os.environ.get("WS_ALLOW_DEV_LOGIN") != "1":
+        return False
 
     expected_email = os.environ.get("WS_DEV_USER", "dev@local")
     expected_password = os.environ.get("WS_DEV_PASSWORD", "dev")
