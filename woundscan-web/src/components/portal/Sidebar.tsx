@@ -14,6 +14,7 @@ const NAV: Item[] = [
   { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
   { label: "Patient Roster", href: "/patients", icon: <RosterIcon /> },
   { label: "3D Wound Intelligence", href: "/wounds", icon: <MeshIcon /> },
+  { label: "Capture from phone", href: "/capture/handoff", icon: <PhoneCaptureIcon /> },
   { label: "Audit-Safe Notes", href: "/notes", icon: <NotesIcon /> },
   { label: "Inventory & Grafts", href: "/inventory", icon: <InventoryIcon /> },
   { label: "Route Planner", href: "/routes", icon: <RouteIcon /> },
@@ -160,6 +161,15 @@ function ReportsIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 3v18h18" />
       <path d="M7 14l4-4 4 4 5-7" />
+    </svg>
+  );
+}
+function PhoneCaptureIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <circle cx="12" cy="13" r="3.5" />
+      <path d="M12 17.5v.01" />
     </svg>
   );
 }
