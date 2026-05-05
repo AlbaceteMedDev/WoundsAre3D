@@ -10,7 +10,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from woundscan import ENGINE_VERSION
-from woundscan.api.routes import admin, auth, health, measurements, phantom, uploads, wounds
+from woundscan.api.routes import (
+    admin,
+    auth,
+    billing,
+    grafts,
+    health,
+    measurements,
+    notes,
+    phantom,
+    uploads,
+    wounds,
+)
 from woundscan.monitoring.error_reporting import init_error_reporting
 from woundscan.monitoring.metrics import METRIC_REQUEST_DURATION_S, init_metrics
 from woundscan.monitoring.tracing import init_tracing
@@ -62,6 +73,9 @@ def create_app() -> FastAPI:
     app.include_router(measurements.router)
     app.include_router(phantom.router)
     app.include_router(admin.router)
+    app.include_router(grafts.router)
+    app.include_router(billing.router)
+    app.include_router(notes.router)
 
     return app
 
