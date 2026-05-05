@@ -162,9 +162,9 @@ class GraftApplication(Base):
 
     # FDA UDI fields (21 CFR 830). DI = device identifier (product code);
     # PI = production identifier (the serial / lot / expiration triplet).
-    product_id = Column(String, nullable=False)        # internal product code
+    product_id = Column(String, nullable=False)  # internal product code
     product_name = Column(String, nullable=False)
-    udi_di = Column(String, nullable=True)             # GS1 / HIBCC DI
+    udi_di = Column(String, nullable=True)  # GS1 / HIBCC DI
     serial_number = Column(String, nullable=False)
     lot_number = Column(String, nullable=False)
     expiration_date = Column(Date, nullable=False)
@@ -191,8 +191,10 @@ class ReimbursementSetting(Base):
     __tablename__ = "reimbursement_settings"
     id = Column(UUID(as_uuid=True), primary_key=True)
     organization_id = Column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
-    pos_code = Column(String(2), nullable=False)        # CMS Place-of-Service ("11" office, "22" outpt, "31" SNF, etc.)
-    locality_id = Column(String(8), nullable=False)     # CMS locality e.g. "01112"
+    pos_code = Column(
+        String(2), nullable=False
+    )  # CMS Place-of-Service ("11" office, "22" outpt, "31" SNF, etc.)
+    locality_id = Column(String(8), nullable=False)  # CMS locality e.g. "01112"
     wage_index = Column(Float, nullable=False)
     geographic_practice_cost_index = Column(Float, nullable=False, default=1.0)
     last_updated = Column(DateTime, nullable=False)

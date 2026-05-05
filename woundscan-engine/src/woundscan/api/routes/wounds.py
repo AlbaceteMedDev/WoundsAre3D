@@ -137,10 +137,18 @@ def get_progression(
 def _compute_trend(points: list[ProgressionPoint]) -> ProgressionTrend:
     if not points:
         return ProgressionTrend(
-            first_capture_at=None, last_capture_at=None, days_observed=0,
-            initial_area_cm2=None, latest_area_cm2=None, pct_area_change=None,
-            initial_volume_cm3=None, latest_volume_cm3=None, pct_volume_change=None,
-            healing_rate_cm2_per_week=None, is_healing=False, is_stalled=False,
+            first_capture_at=None,
+            last_capture_at=None,
+            days_observed=0,
+            initial_area_cm2=None,
+            latest_area_cm2=None,
+            pct_area_change=None,
+            initial_volume_cm3=None,
+            latest_volume_cm3=None,
+            pct_volume_change=None,
+            healing_rate_cm2_per_week=None,
+            is_healing=False,
+            is_stalled=False,
         )
     first, last = points[0], points[-1]
     days = max((last.captured_at - first.captured_at).days, 0)
@@ -162,7 +170,8 @@ def _compute_trend(points: list[ProgressionPoint]) -> ProgressionTrend:
         if recent_window_days >= 21 and points[-2].surface_area_cm2 > 0:
             recent_pct = (
                 (last.surface_area_cm2 - points[-2].surface_area_cm2)
-                / points[-2].surface_area_cm2 * 100.0
+                / points[-2].surface_area_cm2
+                * 100.0
             )
             if abs(recent_pct) < 5.0:
                 is_stalled = True

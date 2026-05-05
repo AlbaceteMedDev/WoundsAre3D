@@ -71,7 +71,7 @@ def _check_expiration(exp: date) -> None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Graft is expired (expiration_date={exp.isoformat()}); "
-                   "applying expired skin substitute is not billable.",
+            "applying expired skin substitute is not billable.",
         )
 
 
@@ -144,8 +144,11 @@ def list_applications(
     identity: Identity = Depends(get_identity),
 ) -> list[GraftApplicationOut]:
     """List graft applications, optionally filtered by wound."""
-    rows = [GraftApplicationOut(**g) for g in _GRAFTS.values()
-            if g["organization_id"] == identity.organization_id]
+    rows = [
+        GraftApplicationOut(**g)
+        for g in _GRAFTS.values()
+        if g["organization_id"] == identity.organization_id
+    ]
     if wound_id is not None:
         rows = [r for r in rows if r.wound_id == wound_id]
     return sorted(rows, key=lambda r: r.applied_at, reverse=True)
@@ -176,7 +179,8 @@ def list_expiring_inventory(
     """
     today = date.today()
     soon = [
-        g for g in _GRAFTS.values()
+        g
+        for g in _GRAFTS.values()
         if g["organization_id"] == identity.organization_id
         and (g["expiration_date"] - today).days <= days
     ]

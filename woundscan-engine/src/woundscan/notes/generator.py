@@ -75,10 +75,10 @@ class NoteContext:
     quality_grade: str
 
     # Subjective wound bed characteristics — clinician-entered
-    tissue_types: dict[str, float]   # {"granulation": 0.7, "slough": 0.2, "eschar": 0.1}
-    drainage_amount: str             # "none" | "scant" | "moderate" | "heavy"
-    drainage_quality: str            # "serous" | "serosanguineous" | "purulent" | "sanguineous"
-    odor: str                        # "none" | "mild" | "foul"
+    tissue_types: dict[str, float]  # {"granulation": 0.7, "slough": 0.2, "eschar": 0.1}
+    drainage_amount: str  # "none" | "scant" | "moderate" | "heavy"
+    drainage_quality: str  # "serous" | "serosanguineous" | "purulent" | "sanguineous"
+    odor: str  # "none" | "mild" | "foul"
     periwound_status: str
     pain_level_0_10: int
 
@@ -99,7 +99,9 @@ def generate_progression_note(ctx: NoteContext) -> tuple[str, str, dict]:
     lines: list[str] = []
 
     # ---- Header ----
-    lines.append(f"WOUND CARE PROGRESS NOTE — {ctx.captured_at.strftime('%Y-%m-%d %H:%M %Z').rstrip()}")
+    lines.append(
+        f"WOUND CARE PROGRESS NOTE — {ctx.captured_at.strftime('%Y-%m-%d %H:%M %Z').rstrip()}"
+    )
     lines.append(f"Patient: {ctx.patient_token}")
     lines.append(f"Wound: {ctx.wound_id} | {ctx.anatomic_location} | {ctx.wound_type}")
     lines.append("")

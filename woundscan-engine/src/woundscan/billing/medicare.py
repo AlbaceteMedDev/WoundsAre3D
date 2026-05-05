@@ -29,13 +29,13 @@ from enum import StrEnum
 class PlaceOfService(StrEnum):
     """CMS Place-of-Service codes relevant for wound care."""
 
-    OFFICE = "11"           # Physician office — non-facility rate (higher PE)
-    OUTPATIENT = "22"       # Hospital outpatient — facility rate
-    EMERGENCY = "23"        # Emergency dept — facility rate
+    OFFICE = "11"  # Physician office — non-facility rate (higher PE)
+    OUTPATIENT = "22"  # Hospital outpatient — facility rate
+    EMERGENCY = "23"  # Emergency dept — facility rate
     HOSPITAL_INPATIENT = "21"
-    SNF = "31"              # Skilled Nursing Facility
-    HOME = "12"             # Home — non-facility rate
-    URGENT_CARE = "20"      # Urgent care — non-facility rate
+    SNF = "31"  # Skilled Nursing Facility
+    HOME = "12"  # Home — non-facility rate
+    URGENT_CARE = "20"  # Urgent care — non-facility rate
 
     @property
     def is_facility(self) -> bool:

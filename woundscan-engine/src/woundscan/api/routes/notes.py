@@ -246,7 +246,8 @@ def list_notes(
     identity: Identity = Depends(get_identity),
 ) -> list[NoteOut]:
     rows = [
-        NoteOut(**n) for n in _NOTES.values()
+        NoteOut(**n)
+        for n in _NOTES.values()
         if n["organization_id"] == identity.organization_id
         and (wound_id is None or n["wound_id"] == wound_id)
     ]
