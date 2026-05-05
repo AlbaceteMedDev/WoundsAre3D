@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# One-shot iOS shipper: bumps CFBundleVersion, archives, exports, uploads.
+#
+# Usage:
+#   bin/ship-ios               # bump build, archive, export .ipa, open Transporter
+#   bin/ship-ios --auto        # same, but auto-upload via altool (needs API key)
+#   bin/ship-ios --skip-bump   # don't touch the build number
+#   bin/ship-ios --bump-marketing 1.1   # also bump CFBundleShortVersionString
+#
+# App Store Connect API key auth (optional, only for --auto):
+#   export ASC_API_KEY_ID=ABCDE12345
+#   export ASC_API_ISSUER_ID=69a6de70-...
+#   export ASC_API_KEY_PATH=~/.appstoreconnect/AuthKey_ABCDE12345.p8
+#
+# Without --auto, the .ipa is left in build/ and Transporter opens with
+# the file pre-loaded so you only have to click "Deliver".
+
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+IOS_DIR="$REPO/woundscan-ios"
+PROJECT="$IOS_DIR/WoundScan.xcodeproj"
+SCHEME="WoundScan"
+INFO_PLIST="$IOS_DIR/WoundScan/Info.plist"
+EXPORT_OPTIONS="$IOS_DIR/ExportOptions.plist"
+BUILD_DIR="$REPO/build/ios"
+ARCHIVE_PATH="$BUILD_DIR/WoundScan.xcarchive"
+EXPORT_PATH="$BUILD_DIR/export"
+
+AUTO=0
+SKIP_BUMP=0
+BUMP_MARKETING=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --auto) AUTO=1; shift ;;
+        --skip-bump) SKIP_BUMP=1; shift ;;
+        --bump-marketing) BUMP_MARKETING="$2"; shift 2 ;;
+        *) echo "Unknown flag: $1" >&2; exit 64 ;;
+    esac
+done
+
+say() { printf '\033[1;36m▸ %s\033[0m\n' "$*"; }
+ok() { printf '\033[1;32m✓ %s\033[0m\n' "$*"; }
+fail() { printf '\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
+
+# ─── Bump CFBundleVersion ────────────────────────────────────────────
+if [[ $SKIP_BUMP -eq 0 ]]; then
+    current="$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST")"
+    next=$((current + 1))
+    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $next" "$INFO_PLIST"
+    say "bumped CFBundleVersion: $current → $next"
+else
+    next="$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST")"
+    say "using existing CFBundleVersion: $next"
+fi
+
+if [[ -n "$BUMP_MARKETING" ]]; then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $BUMP_MARKETING" "$INFO_PLIST"
+    say "set CFBundleShortVersionString: $BUMP_MARKETING"
+fi
+
+# ─── Archive ─────────────────────────────────────────────────────────
+mkdir -p "$BUILD_DIR"
+rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
+
+say "archiving (this is the slow step — ~2–4 min)…"
+xcodebuild \
+    -project "$PROJECT" \
+    -scheme "$SCHEME" \
+    -configuration Release \
+    -destination "generic/platform=iOS" \
+    -archivePath "$ARCHIVE_PATH" \
+    archive \
+    | xcbeautify --quiet 2>/dev/null \
+    || xcodebuild \
+        -project "$PROJECT" \
+        -scheme "$SCHEME" \
+        -configuration Release \
+        -destination "generic/platform=iOS" \
+        -archivePath "$ARCHIVE_PATH" \
+        archive
+
+[[ -d "$ARCHIVE_PATH" ]] || fail "archive failed"
+ok "archive: $ARCHIVE_PATH"
+
+# ─── Export .ipa ─────────────────────────────────────────────────────
+say "exporting .ipa…"
+xcodebuild \
+    -exportArchive \
+    -archivePath "$ARCHIVE_PATH" \
+    -exportPath "$EXPORT_PATH" \
+    -exportOptionsPlist "$EXPORT_OPTIONS"
+
+IPA="$(ls "$EXPORT_PATH"/*.ipa 2>/dev/null | head -n 1)"
+[[ -f "$IPA" ]] || fail "no .ipa produced in $EXPORT_PATH"
+ok "ipa: $IPA"
+
+# ─── Upload ──────────────────────────────────────────────────────────
+if [[ $AUTO -eq 1 ]]; then
+    : "${ASC_API_KEY_ID:?need ASC_API_KEY_ID for --auto}"
+    : "${ASC_API_ISSUER_ID:?need ASC_API_ISSUER_ID for --auto}"
+    : "${ASC_API_KEY_PATH:?need ASC_API_KEY_PATH for --auto}"
+    say "uploading via App Store Connect API…"
+    xcrun altool --upload-app \
+        --type ios \
+        --file "$IPA" \
+        --apiKey "$ASC_API_KEY_ID" \
+        --apiIssuer "$ASC_API_ISSUER_ID"
+    ok "uploaded build $next to App Store Connect"
+else
+    say "opening Transporter with the .ipa pre-loaded…"
+    open -a "Transporter" "$IPA"
+    ok "Transporter is open. Click Deliver."
+    echo
+    echo "  Build $next is ready. To skip Transporter next time:"
+    echo "    export ASC_API_KEY_ID=… ASC_API_ISSUER_ID=… ASC_API_KEY_PATH=…"
+    echo "    bin/ship-ios --auto"
+fi
