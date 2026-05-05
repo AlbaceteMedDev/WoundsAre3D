@@ -9,32 +9,38 @@ export default async function WoundsPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-7xl p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Wounds</h1>
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <span className="eyebrow">Cases</span>
+            <h1 className="mt-2 font-display text-3xl font-bold text-ink">Wounds</h1>
+          </div>
           <input
-            placeholder="Filter by patient token, clinician, or wound type..."
-            className="w-80 rounded border p-2 text-sm"
+            placeholder="Filter by patient token, clinician, or wound type…"
+            className="input w-80"
           />
         </div>
-        <table className="mt-6 w-full divide-y rounded border bg-white">
-          <thead className="bg-gray-100">
-            <tr className="text-left text-sm text-gray-600">
-              <th className="p-2">Patient</th>
-              <th className="p-2">Wound</th>
-              <th className="p-2">Type</th>
-              <th className="p-2">Last measurement</th>
-              <th className="p-2">Quality</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="text-sm">
-              <td className="p-2" colSpan={5}>
-                No wounds yet. Captures from the iOS app will appear here.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+        <div className="card mt-6 overflow-hidden">
+          <table className="table-base">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Wound</th>
+                <th>Type</th>
+                <th>Last measurement</th>
+                <th>Quality</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="text-center text-ink-muted" colSpan={5}>
+                  No wounds yet. Captures from the iOS app will appear here.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </main>
     </>
   );

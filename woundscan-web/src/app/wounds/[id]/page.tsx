@@ -1,64 +1,205 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TrajectoryChart } from "@/components/TrajectoryChart";
+import { GraftPanel } from "@/components/GraftPanel";
+import { ReimbursementPanel } from "@/components/ReimbursementPanel";
+import { TrendBadge } from "@/components/TrendBadge";
+import { NotesPanel } from "@/components/NotesPanel";
+import { fmtDateTime } from "@/lib/format";
+import {
+  GraftApplicationListSchema,
+  NoteListSchema,
+  ProgressionResponseSchema,
+  type GraftApplication,
+  type NoteOut,
+  type ProgressionResponse,
+} from "@/lib/api";
+
+const API_BASE = process.env.API_URL ?? "http://localhost:8000";
+
+async function fetchJson<T>(
+  path: string,
+  token: string,
+  parse: (json: unknown) => T,
+  fallback: T,
+): Promise<T> {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return fallback;
+    return parse(await res.json());
+  } catch {
+    return fallback;
+  }
+}
 
 export default async function WoundDetailPage({ params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // In production: fetch /wounds/{id} and /measurements?wound_id={id}
-  const sampleSeries = [
-    { date: "2026-04-01", volume: 4.5, surfaceArea: 8.0, maxDepth: 1.0 },
-    { date: "2026-04-08", volume: 3.8, surfaceArea: 7.4, maxDepth: 0.9 },
-    { date: "2026-04-15", volume: 3.0, surfaceArea: 6.5, maxDepth: 0.7 },
-    { date: "2026-04-22", volume: 2.4, surfaceArea: 5.8, maxDepth: 0.6 },
-  ];
+  const [progression, grafts, notes] = await Promise.all([
+    fetchJson<ProgressionResponse | null>(
+      `/wounds/${params.id}/progression`,
+      session.token,
+      (j) => ProgressionResponseSchema.parse(j),
+      null,
+    ),
+    fetchJson<GraftApplication[]>(
+      `/grafts/applications?wound_id=${params.id}`,
+      session.token,
+      (j) => GraftApplicationListSchema.parse(j),
+      [],
+    ),
+    fetchJson<NoteOut[]>(
+      `/notes?wound_id=${params.id}`,
+      session.token,
+      (j) => NoteListSchema.parse(j),
+      [],
+    ),
+  ]);
+
+  const points = progression?.points ?? [];
+  const series = points.map((p) => ({
+    date: p.captured_at.slice(0, 10),
+    volume: p.volume_cm3,
+    surfaceArea: p.surface_area_cm2,
+    maxDepth: p.max_depth_cm,
+  }));
+  const latest = points[0];
+  const latestGraft = grafts[0];
 
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-7xl p-6">
-        <h1 className="text-2xl font-bold">Wound {params.id}</h1>
-        <p className="text-sm text-gray-500">Patient: opaque-token</p>
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        <nav className="mb-4 text-sm text-ink-muted">
+          <Link href="/wounds" className="hover:text-ink">
+            Wounds
+          </Link>
+          <span className="mx-2 text-ink-muted/60">/</span>
+          <span className="text-ink-soft">{params.id.slice(0, 8)}</span>
+        </nav>
 
-        <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold">Trajectory</h2>
-          <TrajectoryChart series={sampleSeries} />
-        </section>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span className="eyebrow">Wound case</span>
+            <h1 className="mt-2 font-display text-3xl font-bold text-ink">
+              {params.id.slice(0, 8)}
+            </h1>
+            <p className="mt-1 text-sm text-ink-muted">
+              Patient token <span className="font-mono">opaque-token</span>
+              {latest && <> · last capture {fmtDateTime(latest.captured_at)}</>}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {progression?.trend && <TrendBadge trend={progression.trend} />}
+            <Link
+              href={`/wounds/${params.id}/mesh`}
+              className="btn btn-secondary"
+              title="View 3D mesh reconstruction"
+            >
+              3D mesh
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </div>
 
-        <section className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold">Measurements</h2>
-          <table className="w-full divide-y rounded border bg-white">
-            <thead className="bg-gray-100 text-sm text-gray-600">
-              <tr>
-                <th className="p-2 text-left">Date</th>
-                <th className="p-2 text-left">V (cm³)</th>
-                <th className="p-2 text-left">SA (cm²)</th>
-                <th className="p-2 text-left">Max depth (cm)</th>
-                <th className="p-2 text-left">Quality</th>
-                <th className="p-2 text-left"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sampleSeries.map((m) => (
-                <tr key={m.date} className="border-t text-sm">
-                  <td className="p-2">{m.date}</td>
-                  <td className="p-2">{m.volume.toFixed(2)}</td>
-                  <td className="p-2">{m.surfaceArea.toFixed(2)}</td>
-                  <td className="p-2">{m.maxDepth.toFixed(2)}</td>
-                  <td className="p-2">A</td>
-                  <td className="p-2">
-                    <a className="text-brand-600 underline" href="#">
-                      View report
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        {points.length > 0 ? (
+          <>
+            <section className="mt-8">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h2 className="font-display text-lg font-semibold text-ink">Trajectory</h2>
+                <span className="text-xs text-ink-muted">{points.length} captures</span>
+              </div>
+              <TrajectoryChart series={series} />
+            </section>
+
+            <section className="card mt-8">
+              <header className="card-header">
+                <div>
+                  <h2 className="card-title">Measurement history</h2>
+                  <p className="card-subtitle">Each row links to the signed PDF report.</p>
+                </div>
+              </header>
+              <div className="overflow-x-auto">
+                <table className="table-base">
+                  <thead>
+                    <tr>
+                      <th>Captured</th>
+                      <th className="text-right">Volume (cm³)</th>
+                      <th className="text-right">Surface (cm²)</th>
+                      <th className="text-right">Max depth (cm)</th>
+                      <th className="text-right">Perimeter (cm)</th>
+                      <th>Quality</th>
+                      <th>Report</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {points.map((p) => (
+                      <tr key={p.measurement_id}>
+                        <td className="whitespace-nowrap">{fmtDateTime(p.captured_at)}</td>
+                        <td className="text-right tabular-nums">{p.volume_cm3.toFixed(2)}</td>
+                        <td className="text-right tabular-nums">{p.surface_area_cm2.toFixed(2)}</td>
+                        <td className="text-right tabular-nums">{p.max_depth_cm.toFixed(2)}</td>
+                        <td className="text-right tabular-nums">{p.perimeter_cm.toFixed(2)}</td>
+                        <td>
+                          <QualityPill grade={p.quality_grade} />
+                        </td>
+                        <td>
+                          <a
+                            className="text-accent hover:text-accent-bright"
+                            href={`/api/proxy/measurements/${p.measurement_id}/pdf`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            PDF ↗
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="card mt-8 p-10 text-center">
+            <p className="text-sm text-ink-muted">
+              No measurements captured for this wound yet. Captures from the iOS app will appear
+              here once uploaded.
+            </p>
+          </section>
+        )}
+
+        <GraftPanel woundId={params.id} initial={grafts} />
+
+        <NotesPanel
+          woundId={params.id}
+          patientToken="opaque-token"
+          measurements={points}
+          initial={notes}
+        />
+
+        <ReimbursementPanel
+          defaultAppliedAreaCm2={latest?.surface_area_cm2}
+          defaultPackageSizeCm2={latestGraft?.package_size_cm2}
+        />
       </main>
     </>
   );
+}
+
+function QualityPill({ grade }: { grade: string }) {
+  const map: Record<string, string> = {
+    A: "pill pill-success",
+    B: "pill pill-success",
+    C: "pill pill-warn",
+    D: "pill pill-warn",
+    F: "pill pill-danger",
+  };
+  return <span className={map[grade] ?? "pill pill-neutral"}>{grade}</span>;
 }
