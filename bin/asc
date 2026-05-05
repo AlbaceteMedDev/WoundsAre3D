@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+"""App Store Connect API helper.
+
+Authenticates with the API key + issuer ID + .p8 in env vars
+(ASC_API_KEY_ID, ASC_API_ISSUER_ID, ASC_API_KEY_PATH) and exposes a
+small set of subcommands for filling in the bits of App Store
+metadata Apple needs before a version can be submitted.
+
+Usage:
+  bin/asc whoami
+  bin/asc list-apps
+  bin/asc show-version <version-string>            (e.g. 1.0)
+  bin/asc set-metadata <version-string>            (drives metadata.json)
+  bin/asc attach-build <version-string> <build#>
+  bin/asc submit <version-string>
+
+Reads metadata defaults from `bin/asc-metadata.json` when present,
+overridden by --field=value CLI args. Uses no third-party libraries
+beyond PyJWT (installed via `uv pip install PyJWT cryptography`).
+
+Reads credentials from environment, source bin/.asc-env first:
+    source bin/.asc-env && bin/asc list-apps
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any
+
+try:
+    import jwt
+except ImportError:
+    sys.exit(
+        "PyJWT missing. Install once with:\n"
+        "  uv pip install --python "
+        "/Users/gabea/WoundsAre3D/woundscan-engine/.venv/bin/python PyJWT cryptography"
+    )
+
+API_HOST = "https://api.appstoreconnect.apple.com/v1"
+APP_BUNDLE_ID = "com.albacetemeddev.woundscan"
+
+
+def env(name: str) -> str:
+    v = os.environ.get(name)
+    if not v:
+        sys.exit(f"missing env var {name} (run `source bin/.asc-env`)")
+    return v
+
+
+def make_jwt() -> str:
+    key_id = env("ASC_API_KEY_ID")
+    issuer = env("ASC_API_ISSUER_ID")
+    key_path = Path(env("ASC_API_KEY_PATH")).expanduser()
+    if not key_path.exists():
+        sys.exit(f"key file not found: {key_path}")
+    private = key_path.read_text()
+    now = int(time.time())
+    return jwt.encode(
+        payload={
+            "iss": issuer,
+            "iat": now,
+            "exp": now + 60 * 19,  # < 20 min per Apple
+            "aud": "appstoreconnect-v1",
+        },
+        key=private,
+        algorithm="ES256",
+        headers={"kid": key_id, "typ": "JWT"},
+    )
+
+
+def call(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
+    token = make_jwt()
+    req = urllib.request.Request(
+        url=f"{API_HOST}{path}" if path.startswith("/") else path,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        data=json.dumps(body).encode() if body else None,
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            raw = resp.read()
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as exc:
+        msg = exc.read().decode("utf-8", errors="replace")
+        sys.exit(f"HTTP {exc.code}: {msg}")
+
+
+def find_app() -> dict:
+    res = call("GET", f"/apps?filter[bundleId]={APP_BUNDLE_ID}")
+    apps = res.get("data", [])
+    if not apps:
+        sys.exit(f"no app with bundle id {APP_BUNDLE_ID}")
+    return apps[0]
+
+
+def find_version(app_id: str, version: str) -> dict | None:
+    res = call(
+        "GET",
+        f"/apps/{app_id}/appStoreVersions?filter[versionString]={version}",
+    )
+    rows = res.get("data", [])
+    return rows[0] if rows else None
+
+
+def cmd_whoami(_argv: list[str]) -> None:
+    res = call("GET", "/apps?limit=1")
+    print("✓ App Store Connect API authenticated.")
+    print(f"  Issuer: {env('ASC_API_ISSUER_ID')}")
+    print(f"  Key:    {env('ASC_API_KEY_ID')}")
+    print(f"  Apps reachable: {len(res.get('data', []))}+")
+
+
+def cmd_list_apps(_argv: list[str]) -> None:
+    res = call("GET", "/apps?limit=200")
+    for a in res.get("data", []):
+        attrs = a["attributes"]
+        print(
+            f'{a["id"]:>10}  {attrs.get("bundleId", "—"):42}  '
+            f'{attrs.get("name", "")}'
+        )
+
+
+def cmd_show_version(argv: list[str]) -> None:
+    if not argv:
+        sys.exit("usage: bin/asc show-version <version-string>")
+    version = argv[0]
+    app = find_app()
+    print(f'app: {app["id"]}  ({app["attributes"]["name"]})')
+    v = find_version(app["id"], version)
+    if not v:
+        print(f"no version record for {version} (you'd need to create one)")
+        return
+    print(f'version {version}: {v["id"]}  state={v["attributes"]["appStoreState"]}')
+    # Fetch localizations to see what's filled
+    locs = call(
+        "GET", f'/appStoreVersions/{v["id"]}/appStoreVersionLocalizations'
+    )
+    for loc in locs.get("data", []):
+        a = loc["attributes"]
+        print(f'  locale={a.get("locale")}')
+        for key in ("description", "keywords", "supportUrl", "marketingUrl",
+                    "promotionalText", "whatsNew"):
+            val = a.get(key)
+            shown = (val[:60] + "…") if isinstance(val, str) and len(val) > 60 else val
+            print(f"    {key}: {shown!r}")
+    # Build attached?
+    build = call("GET", f'/appStoreVersions/{v["id"]}/relationships/build')
+    print(f'  build: {build.get("data")}')
+
+
+def cmd_set_metadata(argv: list[str]) -> None:
+    if not argv:
+        sys.exit("usage: bin/asc set-metadata <version-string>")
+    version = argv[0]
+    metadata_path = Path(__file__).resolve().parent / "asc-metadata.json"
+    if not metadata_path.exists():
+        sys.exit(f"metadata file missing: {metadata_path}")
+    cfg = json.loads(metadata_path.read_text())
+
+    app = find_app()
+    v = find_version(app["id"], version)
+    if not v:
+        # Create the version first
+        print(f"creating version {version}…")
+        v_resp = call(
+            "POST",
+            "/appStoreVersions",
+            {
+                "data": {
+                    "type": "appStoreVersions",
+                    "attributes": {
+                        "platform": "IOS",
+                        "versionString": version,
+                    },
+                    "relationships": {
+                        "app": {"data": {"type": "apps", "id": app["id"]}}
+                    },
+                }
+            },
+        )
+        v = v_resp["data"]
+        print(f'  → created {v["id"]}')
+
+    # Find or create the en-US localization
+    locs = call(
+        "GET", f'/appStoreVersions/{v["id"]}/appStoreVersionLocalizations'
+    )
+    en = next(
+        (
+            x for x in locs.get("data", [])
+            if x["attributes"].get("locale") == "en-US"
+        ),
+        None,
+    )
+    if en is None:
+        print("creating en-US localization…")
+        en_resp = call(
+            "POST",
+            "/appStoreVersionLocalizations",
+            {
+                "data": {
+                    "type": "appStoreVersionLocalizations",
+                    "attributes": {"locale": "en-US"},
+                    "relationships": {
+                        "appStoreVersion": {
+                            "data": {"type": "appStoreVersions", "id": v["id"]}
+                        }
+                    },
+                }
+            },
+        )
+        en = en_resp["data"]
+
+    # Patch the localization with our copy.
+    fields = {
+        k: cfg[k]
+        for k in (
+            "description",
+            "keywords",
+            "supportUrl",
+            "marketingUrl",
+            "promotionalText",
+            "whatsNew",
+        )
+        if k in cfg
+    }
+    print(f'updating en-US localization {en["id"]} ({", ".join(fields)})')
+    call(
+        "PATCH",
+        f'/appStoreVersionLocalizations/{en["id"]}',
+        {
+            "data": {
+                "id": en["id"],
+                "type": "appStoreVersionLocalizations",
+                "attributes": fields,
+            }
+        },
+    )
+
+    # Patch version-level fields (copyright, primary locale, release type)
+    version_attrs = {
+        k: cfg[k]
+        for k in ("copyright", "releaseType", "earliestReleaseDate")
+        if k in cfg
+    }
+    if version_attrs:
+        print(f'updating version attrs: {", ".join(version_attrs)}')
+        call(
+            "PATCH",
+            f'/appStoreVersions/{v["id"]}',
+            {
+                "data": {
+                    "id": v["id"],
+                    "type": "appStoreVersions",
+                    "attributes": version_attrs,
+                }
+            },
+        )
+
+    print("✓ metadata pushed")
+
+
+def cmd_attach_build(argv: list[str]) -> None:
+    if len(argv) < 2:
+        sys.exit("usage: bin/asc attach-build <version-string> <build-number>")
+    version, build_no = argv[0], argv[1]
+    app = find_app()
+    v = find_version(app["id"], version)
+    if not v:
+        sys.exit(f"no version {version} — run set-metadata first")
+    builds = call(
+        "GET",
+        f'/builds?filter[app]={app["id"]}'
+        f"&filter[preReleaseVersion.version]={version}"
+        f"&filter[version]={build_no}",
+    )
+    rows = builds.get("data", [])
+    if not rows:
+        sys.exit(
+            f"no build #{build_no} in pre-release version {version} yet "
+            "(Apple is probably still processing the upload — try again "
+            "in a few minutes)"
+        )
+    build = rows[0]
+    print(f'attaching build {build["id"]} ({build_no}) to version {v["id"]}')
+    call(
+        "PATCH",
+        f'/appStoreVersions/{v["id"]}/relationships/build',
+        {"data": {"type": "builds", "id": build["id"]}},
+    )
+    print("✓ build attached")
+
+
+def cmd_submit(argv: list[str]) -> None:
+    if not argv:
+        sys.exit("usage: bin/asc submit <version-string>")
+    version = argv[0]
+    app = find_app()
+    v = find_version(app["id"], version)
+    if not v:
+        sys.exit(f"no version {version}")
+    print(f'submitting version {v["id"]} for review…')
+    call(
+        "POST",
+        "/appStoreVersionSubmissions",
+        {
+            "data": {
+                "type": "appStoreVersionSubmissions",
+                "relationships": {
+                    "appStoreVersion": {
+                        "data": {"type": "appStoreVersions", "id": v["id"]}
+                    }
+                },
+            }
+        },
+    )
+    print("✓ submitted")
+
+
+COMMANDS = {
+    "whoami": cmd_whoami,
+    "list-apps": cmd_list_apps,
+    "show-version": cmd_show_version,
+    "set-metadata": cmd_set_metadata,
+    "attach-build": cmd_attach_build,
+    "submit": cmd_submit,
+}
+
+
+def main() -> None:
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        sys.exit(f"usage: bin/asc {{ {' | '.join(COMMANDS)} }}")
+    COMMANDS[sys.argv[1]](sys.argv[2:])
+
+
+if __name__ == "__main__":
+    main()
