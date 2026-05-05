@@ -44,8 +44,12 @@ export function MeshWorkspace({ woundId, measurementId, latest, depthSeries }: P
   );
 
   const meshUrl = measurementId
-    ? `/api/proxy/measurements/${measurementId}/mesh.glb`
+    ? `/api/proxy/measurements/${measurementId}/mesh`
     : null;
+  const [autoRotate, setAutoRotate] = useState(false);
+  const [crossSection, setCrossSection] = useState(false);
+  const [fitVersion, setFitVersion] = useState(0);
+  const [layersOpen, setLayersOpen] = useState(false);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_300px]">
@@ -132,16 +136,61 @@ export function MeshWorkspace({ woundId, measurementId, latest, depthSeries }: P
           mode={renderMode}
           layers={layers}
           analytics={tab === "analytics"}
+          autoRotate={autoRotate}
+          fitVersion={fitVersion}
+          crossSection={crossSection}
         />
 
         {/* Action bar */}
         <div className="absolute inset-x-0 bottom-0 z-10 border-t border-hairline bg-surface/85 px-4 py-3 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <ToolButton label="Rotate" icon={<RotateIcon />} />
-              <ToolButton label="Zoom" icon={<ZoomIcon />} />
-              <ToolButton label="Layers" icon={<LayersIcon />} />
-              <ToolButton label="Cross Section" icon={<CrossSectionIcon />} />
+            <div className="relative flex items-center gap-2">
+              <ToolButton
+                label={autoRotate ? "Stop rotation" : "Auto-rotate"}
+                icon={<RotateIcon />}
+                active={autoRotate}
+                onClick={() => setAutoRotate((v) => !v)}
+              />
+              <ToolButton
+                label="Fit to view"
+                icon={<ZoomIcon />}
+                onClick={() => setFitVersion((v) => v + 1)}
+              />
+              <ToolButton
+                label="Display layers"
+                icon={<LayersIcon />}
+                active={layersOpen}
+                onClick={() => setLayersOpen((v) => !v)}
+              />
+              <ToolButton
+                label={crossSection ? "Hide cross-section" : "Show cross-section"}
+                icon={<CrossSectionIcon />}
+                active={crossSection}
+                onClick={() => setCrossSection((v) => !v)}
+              />
+              {layersOpen && (
+                <div
+                  className="absolute bottom-12 left-0 z-30 w-56 rounded-md border border-hairline bg-surface p-2 shadow-elevated"
+                  role="menu"
+                >
+                  {DISPLAY_LAYERS.map((l) => (
+                    <label
+                      key={l.key}
+                      className="flex cursor-pointer items-center justify-between rounded px-2 py-1.5 text-xs text-ink-soft hover:bg-surface-2"
+                    >
+                      <span>{l.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={layers[l.key]}
+                        onChange={(e) =>
+                          setLayers((s) => ({ ...s, [l.key]: e.target.checked }))
+                        }
+                        className="rounded border-hairline text-accent focus:ring-accent"
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
             {measurementId ? (
               <a
@@ -207,14 +256,16 @@ export function MeshWorkspace({ woundId, measurementId, latest, depthSeries }: P
           </div>
         </div>
 
-        <button
-          type="button"
-          className="btn btn-secondary w-full justify-center"
-          disabled={!meshUrl}
-          onClick={() => meshUrl && window.open(meshUrl, "_blank")}
+        <a
+          href={meshUrl ?? "#"}
+          target="_blank"
+          rel="noreferrer"
+          download={measurementId ? `wound_${measurementId}.obj` : undefined}
+          aria-disabled={!meshUrl}
+          className={`btn btn-secondary w-full justify-center ${meshUrl ? "" : "pointer-events-none opacity-50"}`}
         >
-          Export Model
-        </button>
+          Export OBJ
+        </a>
 
         {latest && (
           <div className="mt-auto rounded-md border border-hairline bg-surface-2 p-3 text-[11px] text-ink-muted">
@@ -276,13 +327,29 @@ function Legend({ color, label, pct }: { color: string; label: string; pct: numb
   );
 }
 
-function ToolButton({ label, icon }: { label: string; icon: React.ReactNode }) {
+function ToolButton({
+  label,
+  icon,
+  active = false,
+  onClick,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
-      className="grid h-9 w-9 place-items-center rounded-md border border-hairline bg-surface text-ink-soft transition hover:border-accent hover:text-accent"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`grid h-9 w-9 place-items-center rounded-md border transition ${
+        active
+          ? "border-accent bg-accent/15 text-accent"
+          : "border-hairline bg-surface text-ink-soft hover:border-accent hover:text-accent"
+      }`}
     >
       {icon}
     </button>
