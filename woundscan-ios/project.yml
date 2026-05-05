@@ -39,6 +39,11 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.albacetemeddev.woundscan
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_FILE: WoundScan/Info.plist
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Apple Distribution"
+          PROVISIONING_PROFILE_SPECIFIER: "WoundScan App Store"
 
   WoundScanTests:
     type: bundle.unit-test
