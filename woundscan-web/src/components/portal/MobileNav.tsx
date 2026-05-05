@@ -11,6 +11,7 @@ const NAV: Item[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Patient Roster", href: "/patients" },
   { label: "3D Wound Intelligence", href: "/wounds" },
+  { label: "Capture from phone", href: "/capture/handoff" },
   { label: "Audit-Safe Notes", href: "/notes" },
   { label: "Inventory & Grafts", href: "/inventory" },
   { label: "Route Planner", href: "/routes" },

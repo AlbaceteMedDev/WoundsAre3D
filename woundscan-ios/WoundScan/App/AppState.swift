@@ -19,6 +19,18 @@ final class AppState: ObservableObject {
         session?.isValid ?? false
     }
 
+    /// Portal origin derived from the API base URL. Local dev → :3000,
+    /// production → strip the api. prefix so https://api.host → https://host.
+    var portalURL: URL {
+        var host = apiBaseURL.host ?? "localhost"
+        let scheme = apiBaseURL.scheme ?? "https"
+        if host == "localhost" || host == "127.0.0.1" {
+            return URL(string: "http://\(host):3000")!
+        }
+        if host.hasPrefix("api.") { host = String(host.dropFirst(4)) }
+        return URL(string: "\(scheme)://\(host)")!
+    }
+
     func signIn(_ session: AuthSession) {
         self.session = session
     }
