@@ -46,7 +46,6 @@ export default async function MeshPage({ params }: { params: { id: string } }) {
       </nav>
 
       <MeshWorkspace
-        woundId={params.id}
         measurementId={latest?.measurement_id ?? null}
         latest={
           latest

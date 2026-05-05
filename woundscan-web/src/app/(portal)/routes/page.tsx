@@ -129,7 +129,7 @@ export default async function RoutesPage() {
           </div>
 
           <div className="card p-4">
-            <span className="eyebrow">Today's supplies overview</span>
+            <span className="eyebrow">Today&apos;s supplies overview</span>
             <ul className="mt-2 space-y-1 text-xs text-ink-soft">
               <li className="flex justify-between"><span>Total items packed</span><span className="font-mono text-ink">26</span></li>
               <li className="flex justify-between"><span>Cold-chain items</span><span className="font-mono text-ink">3</span></li>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { fmtDateTime } from "@/lib/format";
 import { MeshCanvas } from "@/components/mesh/MeshCanvas";
 import { DepthSparkline } from "@/components/mesh/DepthSparkline";
@@ -17,7 +16,6 @@ type LatestSummary = {
 };
 
 type Props = {
-  woundId: string;
   measurementId: string | null;
   latest: LatestSummary | null;
   depthSeries: number[];
@@ -36,7 +34,7 @@ const DISPLAY_LAYERS = [
 
 type LayerKey = (typeof DISPLAY_LAYERS)[number]["key"];
 
-export function MeshWorkspace({ woundId, measurementId, latest, depthSeries }: Props) {
+export function MeshWorkspace({ measurementId, latest, depthSeries }: Props) {
   const [tab, setTab] = useState<Tab>("view3d");
   const [renderMode, setRenderMode] = useState<RenderMode>("realistic");
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() =>

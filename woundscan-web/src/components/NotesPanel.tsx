@@ -41,7 +41,7 @@ const PERIWOUND = ["intact", "macerated", "erythematous", "indurated", "denuded"
  * objective measurement, server generates the templated body, clinician
  * signs. Once signed, edits become amendments — never overwrite.
  */
-export function NotesPanel({ woundId, patientToken, measurements, initial }: Props) {
+export function NotesPanel({ patientToken, measurements, initial }: Props) {
   const [items, setItems] = useState<NoteOut[]>(initial);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<NoteOut | null>(null);
@@ -69,7 +69,6 @@ export function NotesPanel({ woundId, patientToken, measurements, initial }: Pro
 
       {open && (
         <NoteForm
-          woundId={woundId}
           patientToken={patientToken}
           measurements={measurements}
           onCreated={(n) => {
@@ -227,12 +226,10 @@ function SignBanner({
 }
 
 function NoteForm({
-  woundId,
   patientToken,
   measurements,
   onCreated,
 }: {
-  woundId: string;
   patientToken: string;
   measurements: ProgressionPoint[];
   onCreated: (n: NoteOut) => void;

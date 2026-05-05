@@ -18,7 +18,6 @@ from datetime import date, datetime
 
 from woundscan.billing.medicare import MedicareEstimate
 
-
 TEMPLATE_VERSION = "v1.2025.05"
 
 

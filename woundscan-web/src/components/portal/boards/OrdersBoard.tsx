@@ -139,7 +139,7 @@ export function OrdersBoard() {
 
           <div className="border-t border-hairline p-4">
             <h3 className="font-display text-sm font-semibold text-ink">Product catalog</h3>
-            <p className="text-xs text-ink-muted">Tap to add to the active patient's order.</p>
+            <p className="text-xs text-ink-muted">Tap to add to the active patient&apos;s order.</p>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
               {CATALOG.map((c) => (
                 <button

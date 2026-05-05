@@ -183,7 +183,7 @@ export default async function DashboardPage() {
             </div>
 
             <div className="card p-4">
-              <span className="eyebrow">Today's snapshot</span>
+              <span className="eyebrow">Today&apos;s snapshot</span>
               <h3 className="mt-1 font-display text-sm font-semibold text-ink">Operational</h3>
               <ul className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <SnapshotTile label="On time visits" value="6 / 8" tone="accent" />

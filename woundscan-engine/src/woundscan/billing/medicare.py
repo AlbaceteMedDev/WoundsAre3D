@@ -23,10 +23,10 @@ MA plans and HOPPS bundling can override.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class PlaceOfService(str, Enum):
+class PlaceOfService(StrEnum):
     """CMS Place-of-Service codes relevant for wound care."""
 
     OFFICE = "11"           # Physician office — non-facility rate (higher PE)
