@@ -1,0 +1,9 @@
+{
+  "description": "WoundScan brings clinical-grade wound measurement to the bedside with the iPhone's LiDAR sensor.\n\nCapture a 60-frame ARKit burst, get back surface area, volume, max depth, perimeter, tissue composition, and a healing trajectory in seconds — all auditable, all linked to a HIPAA-aware provider portal.\n\nKEY FEATURES\n• 3D wound capture with LiDAR + ARKit\n• Volume, surface area, depth with 95% confidence intervals\n• Quality scoring and live motion / lighting / distance guidance\n• Provider portal: patient roster, claims, compliance, reports\n• UDI-traceable graft tracking and Medicare reimbursement estimator\n• Audit-safe note templates with SHA-256 hashing on sign\n\nWoundScan is clinical decision support — not a diagnostic device. The clinician retains decision authority. Methodology is disclosed in every report.\n\nFor credentialed clinicians only. Requires an iPhone with a LiDAR sensor (iPhone 12 Pro or newer).",
+  "keywords": "wound,ulcer,DFU,pressure injury,clinical,podiatry,healing,LiDAR",
+  "supportUrl": "https://albacetemeddev.com/support",
+  "marketingUrl": "https://albacetemeddev.com",
+  "promotionalText": "3D wound measurement at the bedside. LiDAR capture, audit-ready reports, integrated provider portal.",
+  "copyright": "2026 Albacete MedDev LLC",
+  "releaseType": "MANUAL"
+}

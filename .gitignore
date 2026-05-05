@@ -60,3 +60,4 @@ Thumbs.db
 
 # Local config
 .env
+bin/.asc-env
