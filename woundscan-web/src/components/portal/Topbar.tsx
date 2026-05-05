@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { MobileNav } from "@/components/portal/MobileNav";
 
 type Props = {
   title: string;
@@ -8,14 +9,15 @@ type Props = {
 
 export function Topbar({ title, subtitle, user }: Props) {
   return (
-    <div className="border-b border-hairline bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/65">
-      <div className="flex flex-wrap items-center gap-3 px-6 py-3">
+    <div className="sticky top-0 z-20 border-b border-hairline bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/65">
+      <div className="flex items-center gap-3 px-4 py-3 md:px-6">
+        <MobileNav />
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-lg font-semibold text-ink">{title}</h1>
-          {subtitle && <p className="truncate text-xs text-ink-muted">{subtitle}</p>}
+          <h1 className="truncate font-display text-base font-semibold text-ink md:text-lg">{title}</h1>
+          {subtitle && <p className="hidden truncate text-xs text-ink-muted md:block">{subtitle}</p>}
         </div>
 
-        <label className="relative hidden md:block">
+        <label className="relative hidden xl:block">
           <input
             type="search"
             placeholder="Search patients, IDs, orders, notes…"
@@ -26,24 +28,32 @@ export function Topbar({ title, subtitle, user }: Props) {
           </span>
         </label>
 
-        <select className="input w-40 hidden md:block" defaultValue="all-locations" aria-label="Location">
+        <select className="input hidden w-40 xl:block" defaultValue="all-locations" aria-label="Location">
           <option value="all-locations">All locations</option>
           <option value="midtown">Midtown clinic</option>
           <option value="westside">Westside clinic</option>
           <option value="bayonne">Bayonne clinic</option>
         </select>
 
-        <select className="input w-40 hidden md:block" defaultValue="all-clinicians" aria-label="Clinician">
+        <select className="input hidden w-40 xl:block" defaultValue="all-clinicians" aria-label="Clinician">
           <option value="all-clinicians">All clinicians</option>
-          <option value="rm">Dr. Romero</option>
+          <option value="dr">Dr. Romero</option>
           <option value="rm">Dr. Morgan</option>
           <option value="ka">NP Adler</option>
         </select>
 
+        <button
+          type="button"
+          aria-label="Search"
+          className="grid h-9 w-9 place-items-center rounded-md border border-hairline bg-surface text-ink-soft xl:hidden"
+        >
+          <SearchIcon />
+        </button>
+
         <ThemeToggle />
 
         {user && (
-          <div className="flex items-center gap-2 rounded-md border border-hairline bg-surface px-2.5 py-1.5">
+          <div className="flex items-center gap-2 rounded-md border border-hairline bg-surface px-2 py-1.5">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-accent/15 text-[11px] font-bold text-accent">
               {initials(user.name)}
             </span>

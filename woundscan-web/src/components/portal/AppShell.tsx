@@ -15,7 +15,7 @@ export function AppShell({ title, subtitle, user, children }: Props) {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar title={title} subtitle={subtitle} user={user} />
-        <main className="flex-1 px-6 py-6">{children}</main>
+        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
         <StatusBar auditCount={142} />
       </div>
     </div>
