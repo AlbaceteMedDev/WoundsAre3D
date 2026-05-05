@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -7,13 +8,15 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-hairline bg-bg/80 backdrop-blur supports-[backdrop-filter]:bg-bg/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
-        <Link href={session ? "/dashboard" : "/"} className="flex items-baseline gap-2">
-          <span className="font-display text-xl font-bold tracking-tight text-ink">
-            Wound<span className="text-accent">Scan</span>
-          </span>
-          <span className="hidden text-[11px] uppercase tracking-[0.18em] text-ink-muted sm:inline">
-            powered by Albacete MedDev
-          </span>
+        <Link href={session ? "/dashboard" : "/"} aria-label="WoundScan home">
+          <Image
+            src="/logo.png"
+            width={468}
+            height={263}
+            alt="WoundScan — powered by Albacete MedDev"
+            priority
+            className="h-auto w-44 dark:invert"
+          />
         </Link>
 
         <div className="flex items-center gap-4">

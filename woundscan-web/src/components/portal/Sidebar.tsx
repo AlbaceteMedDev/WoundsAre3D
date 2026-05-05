@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -28,13 +29,19 @@ export function Sidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface lg:flex">
-      <Link href="/dashboard" className="flex flex-col gap-0.5 border-b border-hairline px-5 py-5">
-        <span className="font-display text-xl font-bold tracking-tight text-ink">
-          Wound<span className="text-accent">Scan</span>
-        </span>
-        <span className="text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-          Albacete MedDev
-        </span>
+      <Link
+        href="/dashboard"
+        aria-label="WoundScan home"
+        className="flex items-center justify-center border-b border-hairline px-3 py-3"
+      >
+        <Image
+          src="/logo.png"
+          width={468}
+          height={263}
+          alt="WoundScan — powered by Albacete MedDev"
+          priority
+          className="h-auto w-44 dark:invert"
+        />
       </Link>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">

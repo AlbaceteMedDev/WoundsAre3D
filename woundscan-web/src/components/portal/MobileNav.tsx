@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -67,9 +68,15 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
           />
           <aside className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface shadow-elevated">
-            <div className="flex items-center justify-between border-b border-hairline px-4 py-4">
-              <Link href="/dashboard" className="font-display text-lg font-bold text-ink">
-                Wound<span className="text-accent">Scan</span>
+            <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
+              <Link href="/dashboard" aria-label="WoundScan home">
+                <Image
+                  src="/logo.png"
+                  width={468}
+                  height={263}
+                  alt="WoundScan"
+                  className="h-auto w-32 dark:invert"
+                />
               </Link>
               <button
                 type="button"

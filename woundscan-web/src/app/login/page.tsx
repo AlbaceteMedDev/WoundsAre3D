@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -36,13 +37,15 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <Link href="/" className="mb-8 inline-flex items-baseline gap-2">
-        <span className="font-display text-2xl font-bold tracking-tight text-ink">
-          Wound<span className="text-accent">Scan</span>
-        </span>
-        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-muted">
-          powered by Albacete MedDev
-        </span>
+      <Link href="/" aria-label="WoundScan home" className="mb-8 inline-block">
+        <Image
+          src="/logo.png"
+          width={468}
+          height={263}
+          alt="WoundScan — powered by Albacete MedDev"
+          priority
+          className="h-auto w-56 dark:invert"
+        />
       </Link>
 
       <div className="card p-6">
