@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 final class AuthService {
     private let api: APIClient
-    private let keychainKey = "com.albacetemed.woundscan.session"
+    private let keychainKey = "com.albacetemeddev.woundscan.session"
 
     init(api: APIClient) {
         self.api = api
