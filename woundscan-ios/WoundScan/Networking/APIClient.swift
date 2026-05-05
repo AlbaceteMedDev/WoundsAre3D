@@ -8,6 +8,7 @@ enum APIError: Error {
 }
 
 /// Async HTTP client for the WoundScan engine API.
+@MainActor
 final class APIClient {
     private let baseURL: URL
     private let session: URLSession

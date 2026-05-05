@@ -22,7 +22,7 @@ final class ARKitCapture: NSObject, ObservableObject, ARSessionDelegate {
     private var startTimestamp: TimeInterval = 0
     private var continuation: CheckedContinuation<[CapturedFrame], Error>?
 
-    struct CapturedFrame {
+    struct CapturedFrame: @unchecked Sendable {
         let timestamp: TimeInterval
         let depth: ARDepthData
         let pixelBuffer: CVPixelBuffer
