@@ -95,10 +95,28 @@ xcodebuild \
 RAW_IPA="$(ls "$EXPORT_PATH"/*.ipa 2>/dev/null | head -n 1)"
 [[ -f "$RAW_IPA" ]] || fail "no .ipa produced in $EXPORT_PATH"
 
-# Rename to include the build number so each export is uniquely named
-# on disk — WoundScan-build-5.ipa, WoundScan-build-6.ipa, etc.
-IPA="$EXPORT_PATH/WoundScan-build-$next.ipa"
+# Read the build number that actually ended up in the .ipa — Xcode can
+# pull a value from its DerivedData cache that disagrees with the
+# on-disk Info.plist, so the .ipa is the source of truth for naming.
+TMP_DIR="$(mktemp -d)"
+unzip -q "$RAW_IPA" "Payload/WoundScan.app/Info.plist" -d "$TMP_DIR"
+SHIPPED_BUILD="$(plutil -extract CFBundleVersion raw "$TMP_DIR/Payload/WoundScan.app/Info.plist")"
+rm -rf "$TMP_DIR"
+
+if [[ "$SHIPPED_BUILD" != "$next" ]]; then
+    say "warning: archive shipped build $SHIPPED_BUILD, Info.plist had $next (Xcode cache drift)"
+fi
+
+# If the .ipa's build number is not strictly greater than what's already
+# on disk, bump on-disk Info.plist so future runs don't re-collide.
+if (( SHIPPED_BUILD >= next )); then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $((SHIPPED_BUILD + 1))" "$INFO_PLIST"
+    say "advanced on-disk CFBundleVersion to $((SHIPPED_BUILD + 1)) for next run"
+fi
+
+IPA="$EXPORT_PATH/WoundScan-build-$SHIPPED_BUILD.ipa"
 mv "$RAW_IPA" "$IPA"
+next="$SHIPPED_BUILD"
 ok "ipa: $IPA"
 
 # ─── Upload ──────────────────────────────────────────────────────────

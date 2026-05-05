@@ -8,6 +8,13 @@
     <string>RWG4WRX8A8</string>
     <key>signingStyle</key>
     <string>manual</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.albacetemeddev.woundscan</key>
+        <string>WoundScan App Store</string>
+    </dict>
+    <key>signingCertificate</key>
+    <string>Apple Distribution</string>
     <key>uploadSymbols</key>
     <true/>
     <key>uploadBitcode</key>
