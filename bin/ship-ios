@@ -92,8 +92,13 @@ xcodebuild \
     -exportPath "$EXPORT_PATH" \
     -exportOptionsPlist "$EXPORT_OPTIONS"
 
-IPA="$(ls "$EXPORT_PATH"/*.ipa 2>/dev/null | head -n 1)"
-[[ -f "$IPA" ]] || fail "no .ipa produced in $EXPORT_PATH"
+RAW_IPA="$(ls "$EXPORT_PATH"/*.ipa 2>/dev/null | head -n 1)"
+[[ -f "$RAW_IPA" ]] || fail "no .ipa produced in $EXPORT_PATH"
+
+# Rename to include the build number so each export is uniquely named
+# on disk — WoundScan-build-5.ipa, WoundScan-build-6.ipa, etc.
+IPA="$EXPORT_PATH/WoundScan-build-$next.ipa"
+mv "$RAW_IPA" "$IPA"
 ok "ipa: $IPA"
 
 # ─── Upload ──────────────────────────────────────────────────────────
