@@ -71,6 +71,32 @@ module "alb" {
   name              = "woundscan-dev"
   vpc_id            = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
+  certificate_arn   = aws_acm_certificate_validation.api.certificate_arn
+}
+
+resource "aws_acm_certificate" "api" {
+  domain_name       = "woundscan.albacetemeddev.com"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate_validation" "api" {
+  certificate_arn = aws_acm_certificate.api.arn
+}
+
+output "acm_validation_record" {
+  description = "Add this CNAME at your DNS provider to validate the cert. Terraform will hang on aws_acm_certificate_validation until you do."
+  value = {
+    for d in aws_acm_certificate.api.domain_validation_options :
+    d.domain_name => {
+      name  = d.resource_record_name
+      type  = d.resource_record_type
+      value = d.resource_record_value
+    }
+  }
 }
 
 module "ecs" {
