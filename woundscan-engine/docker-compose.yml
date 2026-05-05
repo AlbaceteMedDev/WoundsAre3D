@@ -35,6 +35,7 @@ services:
       WS_CELERY_BROKER: redis://redis:6379/0
       WS_CELERY_BACKEND: redis://redis:6379/1
       WS_JWT_SIGNING_KEY: dev-only-do-not-use-in-prod
+      WS_ALLOW_DEV_LOGIN: "1"
     ports:
       - "8000:8000"
     depends_on:
@@ -54,6 +55,7 @@ services:
       WS_CELERY_BROKER: redis://redis:6379/0
       WS_CELERY_BACKEND: redis://redis:6379/1
       WS_JWT_SIGNING_KEY: dev-only-do-not-use-in-prod
+      WS_ALLOW_DEV_LOGIN: "1"
     depends_on:
       postgres:
         condition: service_healthy
