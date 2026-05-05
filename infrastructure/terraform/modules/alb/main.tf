@@ -14,6 +14,11 @@ variable "certificate_arn" {
   default     = null
   description = "ACM cert ARN. If null, the listener serves HTTP on 80; otherwise HTTPS on 443 with HTTP->HTTPS redirect."
 }
+variable "enable_https" {
+  type        = bool
+  default     = false
+  description = "Whether HTTPS is enabled. Controls listener/SG rule selection at plan time."
+}
 variable "ingress_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
@@ -34,7 +39,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group_rule" "alb_ingress_http" {
-  count             = var.certificate_arn == null ? 1 : 0
+  count             = var.enable_https ? 0 : 1
   type              = "ingress"
   from_port         = 80
   to_port           = 80
@@ -44,7 +49,7 @@ resource "aws_security_group_rule" "alb_ingress_http" {
 }
 
 resource "aws_security_group_rule" "alb_ingress_http_redirect" {
-  count             = var.certificate_arn == null ? 0 : 1
+  count             = var.enable_https ? 1 : 0
   type              = "ingress"
   from_port         = 80
   to_port           = 80
@@ -54,7 +59,7 @@ resource "aws_security_group_rule" "alb_ingress_http_redirect" {
 }
 
 resource "aws_security_group_rule" "alb_ingress_https" {
-  count             = var.certificate_arn == null ? 0 : 1
+  count             = var.enable_https ? 1 : 0
   type              = "ingress"
   from_port         = 443
   to_port           = 443
@@ -101,7 +106,7 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   dynamic "default_action" {
-    for_each = var.certificate_arn == null ? [1] : []
+    for_each = var.enable_https ? [] : [1]
     content {
       type             = "forward"
       target_group_arn = aws_lb_target_group.this.arn
@@ -109,7 +114,7 @@ resource "aws_lb_listener" "http" {
   }
 
   dynamic "default_action" {
-    for_each = var.certificate_arn == null ? [] : [1]
+    for_each = var.enable_https ? [1] : []
     content {
       type = "redirect"
       redirect {
@@ -122,7 +127,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_listener" "https" {
-  count             = var.certificate_arn == null ? 0 : 1
+  count             = var.enable_https ? 1 : 0
   load_balancer_arn = aws_lb.this.arn
   port              = 443
   protocol          = "HTTPS"
