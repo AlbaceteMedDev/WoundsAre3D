@@ -8,6 +8,7 @@ enum APIError: Error {
 }
 
 /// Async HTTP client for the WoundScan engine API.
+@MainActor
 final class APIClient {
     private let baseURL: URL
     private let session: URLSession
@@ -63,6 +64,25 @@ final class APIClient {
 
     func getMeasurement(id: UUID) async throws -> MeasurementResult {
         try await request("/measurements/\(id.uuidString)", method: "GET")
+    }
+
+    func downloadMesh(measurementId: UUID) async throws -> Data {
+        var req = URLRequest(url: baseURL.appendingPathComponent("/measurements/\(measurementId.uuidString)/mesh"))
+        req.httpMethod = "GET"
+        guard let token else { throw APIError.noToken }
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: req)
+        } catch {
+            throw APIError.transport(error)
+        }
+        guard let http = response as? HTTPURLResponse else { throw APIError.http(-1, "no response") }
+        guard (200..<300).contains(http.statusCode) else {
+            throw APIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+        }
+        return data
     }
 
     private func request<T: Decodable>(

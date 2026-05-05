@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,47 +36,69 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md p-8">
-      <h1 className="mb-6 text-2xl font-bold">Sign in</h1>
-      <form onSubmit={submit} className="space-y-4">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border p-2"
-          autoComplete="email"
-          required
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
+      <Link href="/" aria-label="WoundScan home" className="mb-8 inline-block">
+        <Image
+          src="/logo.png"
+          width={468}
+          height={263}
+          alt="WoundScan — powered by Albacete MedDev"
+          priority
+          className="h-auto w-56 dark:invert"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded border p-2"
-          autoComplete="current-password"
-          required
-        />
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]{6}"
-          placeholder="6-digit TOTP code"
-          value={totpCode}
-          onChange={(e) => setTotpCode(e.target.value)}
-          className="w-full rounded border p-2"
-          autoComplete="one-time-code"
-          required
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 disabled:opacity-50"
-        >
-          {loading ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
+      </Link>
+
+      <div className="card p-6">
+        <span className="eyebrow">Provider portal</span>
+        <h1 className="mt-2 font-display text-2xl font-bold text-ink">Sign in</h1>
+        <p className="mt-1 text-sm text-ink-muted">Email, password, and your six-digit TOTP code.</p>
+        <form onSubmit={submit} className="mt-6 space-y-3">
+          <label className="block text-sm">
+            <span className="label">Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+              autoComplete="email"
+              required
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="label">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="label">TOTP code</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              placeholder="123456"
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value)}
+              className="input font-mono tracking-[0.4em]"
+              autoComplete="one-time-code"
+              required
+            />
+          </label>
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <button type="submit" disabled={loading} className="btn btn-primary w-full">
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </div>
+
+      <p className="mt-6 text-xs text-ink-muted">
+        Need access? Email <a className="text-accent hover:text-accent-bright" href="mailto:gabe@albacetemeddev.com">gabe@albacetemeddev.com</a>.
+      </p>
     </main>
   );
 }

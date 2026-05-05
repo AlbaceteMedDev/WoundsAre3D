@@ -12,6 +12,7 @@ weights. Each step records timing into the provenance record.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
@@ -125,6 +126,7 @@ def run_measurement_pipeline(
     deps: PipelineDependencies,
     *,
     measurement_id: UUID | None = None,
+    mesh_sink: Callable[[bytes], None] | None = None,
 ) -> MeasurementResponse:
     """Run the full measurement pipeline. Deterministic.
 
@@ -192,6 +194,14 @@ def run_measurement_pipeline(
     )
     fused_depth_mm = np.where(mask, np.maximum(gp.depth_mean_mm, 0.0), 0.0)
     fused_std_mm = np.where(mask, gp.depth_std_mm, 0.0)
+
+    # Export reconstructed surface as a 3D mesh for the iOS viewer.
+    # The pipeline doesn't own S3 — the caller decides where to store the bytes.
+    if mesh_sink is not None:
+        from woundscan.output.mesh_export import grid_to_obj
+
+        mesh_bytes = grid_to_obj(X_mm, Y_mm, fused_depth_mm, mask)
+        mesh_sink(mesh_bytes)
 
     # 5. Geometry on cm grid (convert mm -> cm)
     dx_cm = dx_mm / 10.0

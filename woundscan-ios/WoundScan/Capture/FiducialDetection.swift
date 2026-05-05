@@ -9,7 +9,7 @@ import Vision
 /// by reading the inner pattern. The full ArUco decode runs server-side on the
 /// post-capture image — this on-device check is just for live feedback.
 final class FiducialLiveCheck {
-    func detect(in pixelBuffer: CVPixelBuffer, completion: @escaping (Int) -> Void) {
+    func detect(in pixelBuffer: CVPixelBuffer, completion: @escaping @Sendable (Int) -> Void) {
         let req = VNDetectRectanglesRequest { request, _ in
             let count = request.results?.count ?? 0
             DispatchQueue.main.async { completion(count) }

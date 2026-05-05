@@ -37,10 +37,10 @@ final class UploadService: ObservableObject {
                     if retried.attempt < 4 {
                         let delayNs = UInt64(pow(2.0, Double(retried.attempt))) * 1_000_000_000
                         try? await Task.sleep(nanoseconds: delayNs)
-                        await self.requeue(retried)
+                        self.requeue(retried)
                     }
                 }
-                await self.completed()
+                self.completed()
             }
         }
     }

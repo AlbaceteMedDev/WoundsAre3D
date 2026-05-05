@@ -235,9 +235,30 @@ struct UploadingView: View {
 
 struct ResultView: View {
     let result: MeasurementResult
+    @EnvironmentObject var appState: AppState
+    @State private var show3D = false
 
     var body: some View {
         Form {
+            Section {
+                Button {
+                    show3D = true
+                } label: {
+                    HStack {
+                        Image(systemName: "cube.transparent.fill")
+                            .font(.title3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("View 3D reconstruction").font(.headline)
+                            Text("Rotate, zoom, and inspect the wound surface")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
             Section("Measurements") {
                 Text("Volume: \(String(format: "%.2f", result.volume.mean)) cm³ (95% CI \(String(format: "%.2f", result.volume.ci95Low))–\(String(format: "%.2f", result.volume.ci95High)))")
                 Text("3D SA: \(String(format: "%.2f", result.surfaceArea.mean)) cm²")
@@ -262,5 +283,10 @@ struct ResultView: View {
             }
         }
         .navigationTitle("Result")
+        .fullScreenCover(isPresented: $show3D) {
+            let api = APIClient(baseURL: appState.apiBaseURL)
+            let _ = api.setToken(appState.session?.token)
+            MeasurementDetailView(measurement: result, api: api)
+        }
     }
 }
