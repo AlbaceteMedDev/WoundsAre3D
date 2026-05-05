@@ -256,10 +256,15 @@ your pilot is satisfied.
 
 ### Step 2: Build and push the engine image (30 min)
 
+ECS Fargate runs on `linux/amd64`. If you're building on Apple Silicon
+you **must** pass `--platform linux/amd64`, otherwise ECS will fail to
+launch with `CannotPullContainerError: image Manifest does not contain
+descriptor matching platform 'linux/amd64'`.
+
 ```bash
-# Build
+# Build (linux/amd64 is required even on Apple Silicon)
 cd <repo-root>/woundscan-engine
-docker build -t woundscan-engine:0.1.0 .
+docker buildx build --platform linux/amd64 -t woundscan-engine:0.1.0 --load .
 
 # Tag for ECR
 aws ecr create-repository --repository-name woundscan-engine
@@ -273,10 +278,25 @@ aws ecr get-login-password --region $REGION | \
   docker login --username AWS --password-stdin $ECR
 docker push $ECR/woundscan-engine:0.1.0
 
+# Seed the DB password secret (Terraform creates the container, you set the value)
+aws secretsmanager put-secret-value \
+  --secret-id woundscan/dev/db-password \
+  --secret-string "$(openssl rand -base64 32)"
+
 # Re-apply Terraform with the real image
 cd <repo-root>/infrastructure/terraform/environments/dev
 terraform apply -var image=$ECR/woundscan-engine:0.1.0
 ```
+
+> **Dev has no RDS.** `environments/dev/main.tf` provisions VPC, S3, ECS,
+> KMS, and a Secrets Manager *container* for the DB password — but no
+> RDS instance. The engine starts cleanly (the DB connection is lazy on
+> first request), and `GET /healthz` returns 200, but any endpoint that
+> hits the database (auth, wounds, measurements, uploads) will fail
+> until you add an RDS module to `dev/main.tf` and wire `WS_DB_HOST`
+> into the ECS task definition. For pilot, copy the `module "rds"`
+> block from `environments/prod/main.tf`.
+
 
 ECS will pull the image and start the API. Find the load balancer
 hostname in the Terraform output, point your subdomain at it via Route53.

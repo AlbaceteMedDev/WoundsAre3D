@@ -5,7 +5,15 @@ import Combine
 @MainActor
 final class AppState: ObservableObject {
     @Published var session: AuthSession?
-    @Published var apiBaseURL: URL = URL(string: "https://api.dev.woundscan.local")!
+    @Published var apiBaseURL: URL = AppState.defaultAPIBaseURL()
+
+    static func defaultAPIBaseURL() -> URL {
+        if let override = Bundle.main.object(forInfoDictionaryKey: "WS_API_BASE_URL") as? String,
+           let url = URL(string: override) {
+            return url
+        }
+        return URL(string: "https://woundscan.albacetemeddev.com")!
+    }
 
     var isAuthenticated: Bool {
         session?.isValid ?? false
