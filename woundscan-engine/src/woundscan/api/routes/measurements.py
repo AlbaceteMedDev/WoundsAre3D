@@ -24,6 +24,7 @@ _DEFAULT_PRODUCT_DB = default_product_db()
 _DEFAULT_DEPS = PipelineDependencies(product_db=_DEFAULT_PRODUCT_DB)
 
 _RESPONSE_CACHE: dict[UUID, MeasurementResponse] = {}
+_MESH_CACHE: dict[UUID, bytes] = {}
 
 
 @router.post("", response_model=MeasurementResponse, status_code=status.HTTP_201_CREATED)
@@ -33,8 +34,15 @@ def create_measurement(
     audit: AuditLogger = Depends(get_audit_logger),
 ) -> MeasurementResponse:
     """Run the engine pipeline on the supplied capture data."""
-    response = run_measurement_pipeline(request, _DEFAULT_DEPS)
+    mesh_holder: dict[str, bytes] = {}
+    response = run_measurement_pipeline(
+        request,
+        _DEFAULT_DEPS,
+        mesh_sink=lambda obj_bytes: mesh_holder.__setitem__("obj", obj_bytes),
+    )
     _RESPONSE_CACHE[response.measurement_id] = response
+    if "obj" in mesh_holder:
+        _MESH_CACHE[response.measurement_id] = mesh_holder["obj"]
     audit.log(
         action=AuditAction.CREATE_MEASUREMENT,
         user_id=identity.user_id,
@@ -85,6 +93,36 @@ def sign_off_measurement(
         metadata={"signed_off_at": datetime.now(UTC).isoformat()},
     )
     return {"status": "signed_off"}
+
+
+@router.get(
+    "/{measurement_id}/mesh",
+    responses={200: {"content": {"model/obj": {}}}},
+)
+def get_measurement_mesh(
+    measurement_id: UUID,
+    identity: Identity = Depends(get_identity),
+    audit: AuditLogger = Depends(get_audit_logger),
+) -> Response:
+    """Reconstructed wound surface as a Wavefront OBJ.
+
+    The iOS viewer fetches this and renders it in SceneKit. Coordinates are
+    millimeters in the wound-local frame; +Z = depth below skin surface.
+    """
+    if measurement_id not in _MESH_CACHE:
+        raise HTTPException(status_code=404, detail="Mesh not available")
+    audit.log(
+        action=AuditAction.READ_MEASUREMENT,
+        user_id=identity.user_id,
+        organization_id=identity.organization_id,
+        resource_type="measurement_mesh",
+        resource_id=str(measurement_id),
+    )
+    return Response(
+        content=_MESH_CACHE[measurement_id],
+        media_type="model/obj",
+        headers={"Content-Disposition": f'inline; filename="wound_{measurement_id}.obj"'},
+    )
 
 
 @router.get("/{measurement_id}/pdf", responses={200: {"content": {"application/pdf": {}}}})
