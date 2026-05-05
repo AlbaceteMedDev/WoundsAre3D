@@ -15,6 +15,12 @@ final class ARKitCapture: NSObject, ObservableObject, ARSessionDelegate {
     @Published var frameCount: Int = 0
     @Published var motionScore: Float = 1.0  // 1 = stable, 0 = moving fast
     @Published var fiducialDetected: Bool = false
+    /// Distance to the centre of the depth map, in millimetres. `nil` if no depth yet.
+    @Published var distanceMm: Float? = nil
+    /// Pitch in degrees from horizontal. 0 = phone parallel to ground.
+    @Published var pitchDeg: Float = 0
+    /// Tracking quality from ARKit. .normal = green, others = warn.
+    @Published var trackingState: ARCamera.TrackingState = .notAvailable
 
     let session = ARSession()
     private var burstActive = false
@@ -70,29 +76,65 @@ final class ARKitCapture: NSObject, ObservableObject, ARSessionDelegate {
     private var frameLimit: Int = 60
 
     nonisolated func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        let depthOpt = frame.sceneDepth ?? frame.smoothedSceneDepth
+        let camera = frame.capturedImage
+        let timestamp = frame.timestamp
+        let arCamera = frame.camera
+        let track = frame.camera.trackingState
+        let centerDepth = depthOpt.flatMap { centerDepthMm(of: $0.depthMap) }
+        let pitch = pitchDegrees(from: arCamera.transform)
+
         Task { @MainActor in
-            guard burstActive, let depth = frame.sceneDepth ?? frame.smoothedSceneDepth else {
-                self.motionScore = self.computeMotionScore(camera: frame.camera)
-                return
-            }
-            burstFrames.append(
+            self.trackingState = track
+            self.motionScore = self.computeMotionScore(camera: arCamera)
+            self.pitchDeg = pitch
+            if let d = centerDepth { self.distanceMm = d }
+
+            guard self.burstActive, let depth = depthOpt else { return }
+            self.burstFrames.append(
                 CapturedFrame(
-                    timestamp: frame.timestamp,
+                    timestamp: timestamp,
                     depth: depth,
-                    pixelBuffer: frame.capturedImage,
-                    camera: frame.camera
+                    pixelBuffer: camera,
+                    camera: arCamera
                 )
             )
-            frameCount = burstFrames.count
-            motionScore = computeMotionScore(camera: frame.camera)
-            if burstFrames.count >= frameLimit {
-                let collected = burstFrames
-                burstFrames.removeAll()
-                burstActive = false
-                continuation?.resume(returning: collected)
-                continuation = nil
+            self.frameCount = self.burstFrames.count
+            if self.burstFrames.count >= self.frameLimit {
+                let collected = self.burstFrames
+                self.burstFrames.removeAll()
+                self.burstActive = false
+                self.continuation?.resume(returning: collected)
+                self.continuation = nil
             }
         }
+    }
+
+    private nonisolated func centerDepthMm(of buffer: CVPixelBuffer) -> Float? {
+        CVPixelBufferLockBaseAddress(buffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(buffer) else { return nil }
+        let w = CVPixelBufferGetWidth(buffer)
+        let h = CVPixelBufferGetHeight(buffer)
+        let bpr = CVPixelBufferGetBytesPerRow(buffer)
+        let cx = w / 2
+        let cy = h / 2
+        // ARKit sceneDepth is Float32 metres.
+        let row = base.advanced(by: cy * bpr)
+        let pixel = row.assumingMemoryBound(to: Float.self).advanced(by: cx)
+        let metres = pixel.pointee
+        guard metres.isFinite, metres > 0 else { return nil }
+        return metres * 1000.0
+    }
+
+    private nonisolated func pitchDegrees(from transform: simd_float4x4) -> Float {
+        // Phone forward axis in world space; angle below horizontal.
+        let forward = simd_normalize(simd_float3(-transform.columns.2.x,
+                                                 -transform.columns.2.y,
+                                                 -transform.columns.2.z))
+        // pitch positive = pointing down at the wound on a table.
+        let pitch = asinf(-forward.y)
+        return pitch * 180.0 / .pi
     }
 
     private var lastTransform: simd_float4x4?
