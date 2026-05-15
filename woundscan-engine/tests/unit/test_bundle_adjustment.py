@@ -1,6 +1,6 @@
 """Tests for fusion/bundle_adjustment.
 
-The optimizer tests run in a subprocess: scipy.optimize.least_squares
+The LM optimizer tests run in a subprocess: `scipy.optimize.least_squares`
 silently fails under coverage's CTracer + numpy 1.26 reload race on
 Py3.12 (same root cause as the matplotlib race in trajectory_plot tests).
 The non-LM paths (shape validation, all-views-skipped, raw projection)
