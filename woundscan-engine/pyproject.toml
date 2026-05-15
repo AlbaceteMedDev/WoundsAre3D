@@ -129,7 +129,7 @@ source = ["src/woundscan"]
 omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 75
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
