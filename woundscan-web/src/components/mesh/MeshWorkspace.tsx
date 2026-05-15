@@ -19,6 +19,12 @@ type Props = {
   measurementId: string | null;
   latest: LatestSummary | null;
   depthSeries: number[];
+  /**
+   * Optional direct mesh URL. When set, overrides the
+   * `/api/proxy/measurements/{id}/mesh` path — used by the public demo
+   * route to point at a bundled static OBJ.
+   */
+  meshUrlOverride?: string;
 };
 
 type RenderMode = "realistic" | "wireframe" | "tissue";
@@ -34,16 +40,23 @@ const DISPLAY_LAYERS = [
 
 type LayerKey = (typeof DISPLAY_LAYERS)[number]["key"];
 
-export function MeshWorkspace({ measurementId, latest, depthSeries }: Props) {
+export function MeshWorkspace({
+  measurementId,
+  latest,
+  depthSeries,
+  meshUrlOverride,
+}: Props) {
   const [tab, setTab] = useState<Tab>("view3d");
   const [renderMode, setRenderMode] = useState<RenderMode>("realistic");
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() =>
     Object.fromEntries(DISPLAY_LAYERS.map((l) => [l.key, l.default])) as Record<LayerKey, boolean>,
   );
 
-  const meshUrl = measurementId
-    ? `/api/proxy/measurements/${measurementId}/mesh`
-    : null;
+  const meshUrl = meshUrlOverride
+    ? meshUrlOverride
+    : measurementId
+      ? `/api/proxy/measurements/${measurementId}/mesh`
+      : null;
   const [autoRotate, setAutoRotate] = useState(false);
   const [crossSection, setCrossSection] = useState(false);
   const [fitVersion, setFitVersion] = useState(0);
