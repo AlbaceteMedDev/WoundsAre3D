@@ -29,9 +29,12 @@ out/
 tsconfig.tsbuildinfo
 
 # Swift / Xcode
-WoundScan.xcodeproj/
+# Track the .xcodeproj (pbxproj + workspace + shared schemes) so Xcode Cloud
+# has a project to build. Per-user state lives in xcuserdata/*.xcuserstate
+# and stays ignored.
 WoundScan.xcworkspace/
 DerivedData/
+xcuserdata/
 *.xcuserstate
 build/
 *.ipa

@@ -32,6 +32,18 @@ struct LoginView: View {
                     }
                 }
                 .disabled(email.isEmpty || password.isEmpty || totpCode.count < 6 || isLoading)
+
+                #if DEBUG
+                Section {
+                    NavigationLink {
+                        MeshDemoView()
+                    } label: {
+                        Label("View 3D mesh demo (no login)", systemImage: "cube.transparent")
+                    }
+                } footer: {
+                    Text("Debug-only shortcut to the public mesh viewer demo.")
+                }
+                #endif
             }
             .navigationTitle("WoundScan")
         }
