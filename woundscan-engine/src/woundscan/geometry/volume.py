@@ -98,8 +98,8 @@ def compute_volume_trapezoid(
     if mask is not None:
         d = np.where(mask, depth_map, 0.0)
 
-    inner = np.trapezoid(d, dx=dx, axis=1)
-    volume = np.trapezoid(inner, dx=dy)
+    inner = np.trapz(d, dx=dx, axis=1)
+    volume = np.trapz(inner, dx=dy)
     return float(volume)
 
 
