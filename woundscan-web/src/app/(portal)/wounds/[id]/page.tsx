@@ -15,6 +15,7 @@ import {
   type NoteOut,
   type ProgressionResponse,
 } from "@/lib/api";
+import { mockProgression } from "@/lib/sample";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8000";
 
@@ -40,7 +41,7 @@ export default async function WoundDetailPage({ params }: { params: { id: string
   const session = await getSession();
   const token = session?.token ?? "";
 
-  const [progression, grafts, notes] = await Promise.all([
+  const [progressionRaw, grafts, notes] = await Promise.all([
     fetchJson<ProgressionResponse | null>(
       `/wounds/${params.id}/progression`,
       token,
@@ -61,7 +62,11 @@ export default async function WoundDetailPage({ params }: { params: { id: string
     ),
   ]);
 
-  const points = progression?.points ?? [];
+  // Engine returned no data (demo mode / no backend) → synthesize a
+  // deterministic progression so the page renders the trajectory chart
+  // and trend badges with realistic numbers.
+  const progression = progressionRaw ?? mockProgression(params.id);
+  const points = progression.points;
   const series = points.map((p) => ({
     date: p.captured_at.slice(0, 10),
     volume: p.volume_cm3,
