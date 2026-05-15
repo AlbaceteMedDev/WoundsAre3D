@@ -44,6 +44,11 @@ private struct MoreMenu: View {
                         Label("Recent captures", systemImage: "clock.fill")
                     }
                     NavigationLink {
+                        MeshDemoView()
+                    } label: {
+                        Label("3D mesh demo", systemImage: "cube.transparent")
+                    }
+                    NavigationLink {
                         DeviceSettingsView()
                     } label: {
                         Label("Device settings", systemImage: "gearshape.fill")
