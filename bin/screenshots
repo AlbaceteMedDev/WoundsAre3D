@@ -1,0 +1,321 @@
+#!/usr/bin/env python3
+"""Compose App Store iPhone 6.9" screenshots from WoundScan portal renders.
+
+Reads the production "WoundScan Updated *.png" desktop captures (1672×941),
+drops each into a 1320×2868 portrait canvas with branded chrome (title,
+subtitle, framed screenshot, caption), and writes the results to
+bin/screenshots-out/.
+
+Run:    bin/screenshots
+Force:  bin/screenshots --force          # overwrite existing output
+List:   bin/screenshots --list           # show what would be generated
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = ROOT / "bin" / "screenshots-out"
+
+# Apple iPhone 6.9" (16 Pro Max) screenshot size.
+W, H = 1320, 2868
+
+# Brand palette (Albacete dark + WoundScan accents).
+BG = (5, 7, 12)              # #05070c
+INK = (245, 246, 250)        # near-white
+INK_DIM = (148, 163, 184)    # slate-400
+GOLD = (212, 169, 74)        # #d4a94a
+CYAN = (34, 211, 238)        # cyan-400 — secondary accent
+HAIRLINE = (212, 169, 74, 60)  # gold @ ~25%
+
+# Apple's San Francisco — present on every Mac.
+FONT_PATH = "/System/Library/Fonts/SFNS.ttf"
+
+
+@dataclass(frozen=True)
+class Shot:
+    src: str         # filename under repo root
+    title: str       # 2-line hero (use \n)
+    subtitle: str    # one-line accent under title
+    caption: str     # bottom body copy, may wrap
+    out: str         # output filename, ordered (01_, 02_, ...)
+
+
+SHOTS: list[Shot] = [
+    Shot(
+        src="WoundScan Updated 3D Wound Analysis.png",
+        title="Bedside-grade 3D\nwound intelligence",
+        subtitle="LiDAR capture. Audit-safe reports.",
+        caption=(
+            "Every scan returns surface area, volume, depth, perimeter "
+            "and tissue composition — with 95% confidence intervals."
+        ),
+        out="01_3d_wound_intelligence.png",
+    ),
+    Shot(
+        src="WoundScan Updated Patient Roster.png",
+        title="Your roster.\nOne clinical view.",
+        subtitle="Status, trajectory, and risk at a glance.",
+        caption=(
+            "Patient list, healing trajectory, and care priorities live "
+            "next to each other — no tab-switching during rounds."
+        ),
+        out="02_patient_roster.png",
+    ),
+    Shot(
+        src="WoundScan Updated Clinical Operating Dashboard.png",
+        title="Clinical leadership,\nrun on data.",
+        subtitle="KPIs, throughput, and outcomes.",
+        caption=(
+            "An operating dashboard for medical directors and DONs — "
+            "built around the metrics CMS will ask about."
+        ),
+        out="03_clinical_dashboard.png",
+    ),
+    Shot(
+        src="WoundScan Updated Reports & Analytics.png",
+        title="Audit-ready reports\nin seconds.",
+        subtitle="Methodology disclosed in every report.",
+        caption=(
+            "Every report carries methodology, confidence intervals, and "
+            "a SHA-256 hash on sign — payable, defendable, reproducible."
+        ),
+        out="04_reports_analytics.png",
+    ),
+    Shot(
+        src="WoundScan Updated Claims.png",
+        title="Reimbursement,\nend-to-end.",
+        subtitle="Medicare-aware claim assembly.",
+        caption=(
+            "Cross-checks documentation, codes, and graft UDIs against "
+            "payer rules before submission."
+        ),
+        out="05_claims.png",
+    ),
+    Shot(
+        src="WoundScan Updated Compliance.png",
+        title="HIPAA-aware.\nAudit-safe.",
+        subtitle="Continuous compliance posture.",
+        caption=(
+            "Live status across BAA coverage, training, encryption, and "
+            "access — with an export trail ready for any audit."
+        ),
+        out="06_compliance.png",
+    ),
+]
+
+
+def font(size: int, weight: str = "regular") -> ImageFont.FreeTypeFont:
+    # SFNS.ttf is a variable font; PIL doesn't expose axes directly, but we can
+    # pick weights via font_variant on macOS Pillow builds. Fall back to size-only.
+    f = ImageFont.truetype(FONT_PATH, size)
+    if weight != "regular":
+        try:
+            f = f.font_variant(size=size)
+            f.set_variation_by_name(  # type: ignore[attr-defined]
+                {"bold": "Bold", "semibold": "Semibold", "heavy": "Heavy"}[weight]
+            )
+        except (AttributeError, KeyError, OSError):
+            pass
+    return f
+
+
+def text_wrap(draw: ImageDraw.ImageDraw, text: str, fnt: ImageFont.FreeTypeFont, max_w: int) -> list[str]:
+    """Greedy word-wrap to fit max_w pixels."""
+    words = text.split()
+    lines: list[str] = []
+    cur: list[str] = []
+    for w in words:
+        trial = " ".join(cur + [w])
+        if draw.textlength(trial, font=fnt) <= max_w:
+            cur.append(w)
+        else:
+            if cur:
+                lines.append(" ".join(cur))
+            cur = [w]
+    if cur:
+        lines.append(" ".join(cur))
+    return lines
+
+
+def draw_text_block(
+    canvas: Image.Image,
+    text: str,
+    *,
+    xy: tuple[int, int],
+    fnt: ImageFont.FreeTypeFont,
+    fill: tuple[int, int, int],
+    leading: float = 1.15,
+    max_w: int | None = None,
+    align: str = "left",
+) -> int:
+    """Draw a (possibly wrapped, possibly multi-line) block; returns final y."""
+    draw = ImageDraw.Draw(canvas)
+    x, y = xy
+    paragraphs = text.split("\n")
+    line_h = int(fnt.size * leading)
+    for para in paragraphs:
+        lines = text_wrap(draw, para, fnt, max_w) if max_w else [para]
+        for line in lines:
+            if align == "center":
+                w = draw.textlength(line, font=fnt)
+                draw.text((x - w / 2, y), line, font=fnt, fill=fill)
+            else:
+                draw.text((x, y), line, font=fnt, fill=fill)
+            y += line_h
+    return y
+
+
+def rounded_card(size: tuple[int, int], radius: int = 28) -> Image.Image:
+    """Empty RGBA card with rounded corners — used as a clip mask."""
+    mask = Image.new("L", size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
+    card = Image.new("RGBA", size, (0, 0, 0, 0))
+    card.putalpha(mask)
+    return card
+
+
+def soft_shadow(size: tuple[int, int], radius: int = 28, blur: int = 32, opacity: int = 130) -> Image.Image:
+    w, h = size
+    pad = blur * 2
+    shadow = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle(
+        (pad, pad, pad + w - 1, pad + h - 1), radius=radius, fill=(0, 0, 0, opacity)
+    )
+    return shadow.filter(ImageFilter.GaussianBlur(blur))
+
+
+def compose(shot: Shot) -> Image.Image:
+    src_path = ROOT / shot.src
+    if not src_path.exists():
+        raise FileNotFoundError(f"missing source PNG: {src_path}")
+
+    canvas = Image.new("RGB", (W, H), BG)
+    draw = ImageDraw.Draw(canvas)
+
+    # Subtle gold hairline grid behind the hero — adds depth without noise.
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    for y in range(0, 1100, 80):
+        od.line((0, y, W, y), fill=(212, 169, 74, 8))
+    canvas.alpha_composite(overlay) if canvas.mode == "RGBA" else canvas.paste(
+        Image.alpha_composite(canvas.convert("RGBA"), overlay).convert("RGB")
+    )
+
+    # ── Hero zone (top) ────────────────────────────────────────────────────
+    margin_x = 96
+    y = 200
+
+    # Brand mark — small wordmark "WoundScan" in gold, lowered eyebrow.
+    eyebrow_fnt = font(32, "semibold")
+    draw.text((margin_x, y), "WOUNDSCAN  ·  ALBACETE MEDDEV", font=eyebrow_fnt, fill=GOLD)
+    y += 70
+
+    # Title — large, bold, two lines.
+    title_fnt = font(108, "bold")
+    y = draw_text_block(
+        canvas, shot.title, xy=(margin_x, y), fnt=title_fnt, fill=INK, leading=1.06,
+    )
+    y += 24
+
+    # Subtitle — gold accent.
+    sub_fnt = font(46, "semibold")
+    y = draw_text_block(
+        canvas, shot.subtitle, xy=(margin_x, y), fnt=sub_fnt,
+        fill=GOLD, leading=1.2, max_w=W - margin_x * 2,
+    )
+
+    # ── Screenshot zone (middle) ───────────────────────────────────────────
+    src = Image.open(src_path).convert("RGB")
+    max_card_w = W - margin_x * 2          # 1128
+    max_card_h = 1300
+    src_w, src_h = src.size
+    scale = min(max_card_w / src_w, max_card_h / src_h)
+    card_w, card_h = int(src_w * scale), int(src_h * scale)
+    card_img = src.resize((card_w, card_h), Image.LANCZOS).convert("RGBA")
+
+    # Rounded corners.
+    mask = Image.new("L", (card_w, card_h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, card_w - 1, card_h - 1), radius=32, fill=255)
+    card_img.putalpha(mask)
+
+    # Position: anchored at the top of the visual zone (under hero copy).
+    cx = (W - card_w) // 2
+    cy = 1180
+
+    # Drop shadow first.
+    sh = soft_shadow((card_w, card_h), radius=32, blur=40, opacity=160)
+    canvas_rgba = canvas.convert("RGBA")
+    canvas_rgba.alpha_composite(sh, dest=(cx - 80, cy - 60))
+    canvas_rgba.alpha_composite(card_img, dest=(cx, cy))
+
+    # Hairline border.
+    bd = ImageDraw.Draw(canvas_rgba)
+    bd.rounded_rectangle(
+        (cx, cy, cx + card_w - 1, cy + card_h - 1), radius=32, outline=HAIRLINE, width=2,
+    )
+    canvas = canvas_rgba.convert("RGB")
+    draw = ImageDraw.Draw(canvas)
+
+    # ── Caption zone (bottom) ──────────────────────────────────────────────
+    cap_y = cy + card_h + 90
+    cap_fnt = font(40, "regular")
+    draw_text_block(
+        canvas, shot.caption, xy=(margin_x, cap_y), fnt=cap_fnt,
+        fill=INK_DIM, leading=1.32, max_w=W - margin_x * 2,
+    )
+
+    # Footer mark, anchored to bottom-center.
+    foot_fnt = font(26, "semibold")
+    foot = "albacetemeddev.com  ·  Clinical decision support"
+    fw = draw.textlength(foot, font=foot_fnt)
+    draw.text(((W - fw) / 2, H - 80), foot, font=foot_fnt, fill=(120, 130, 145))
+
+    return canvas
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("--force", action="store_true", help="overwrite existing output")
+    p.add_argument("--list", action="store_true", help="list shots and exit")
+    p.add_argument("--only", help="comma-separated output filenames to (re)generate")
+    args = p.parse_args()
+
+    if args.list:
+        for s in SHOTS:
+            ok = "✓" if (ROOT / s.src).exists() else "✗"
+            print(f"  {ok}  {s.out:<32}  {s.src}")
+        return 0
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    only = set(args.only.split(",")) if args.only else None
+    selected = [s for s in SHOTS if only is None or s.out in only]
+    if only and not selected:
+        print(f"no shots match --only={args.only}", file=sys.stderr)
+        return 2
+
+    for shot in selected:
+        out_path = OUT_DIR / shot.out
+        if out_path.exists() and not args.force:
+            print(f"skip  {shot.out}  (exists; --force to overwrite)")
+            continue
+        try:
+            img = compose(shot)
+        except FileNotFoundError as e:
+            print(f"FAIL  {shot.out}  ({e})", file=sys.stderr)
+            return 1
+        img.save(out_path, "PNG", optimize=True)
+        print(f"wrote {shot.out}  ({out_path.stat().st_size // 1024} KB)")
+
+    print(f"\n{len(selected)} screenshot(s) → {OUT_DIR.relative_to(ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

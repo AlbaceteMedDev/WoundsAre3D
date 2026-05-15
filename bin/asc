@@ -12,6 +12,7 @@ Usage:
   bin/asc show-version <version-string>            (e.g. 1.0)
   bin/asc set-metadata <version-string>            (drives metadata.json)
   bin/asc attach-build <version-string> <build#>
+  bin/asc upload-screenshots <version-string>      (PNGs from screenshots-out)
   bin/asc submit <version-string>
 
 Reads metadata defaults from `bin/asc-metadata.json` when present,
@@ -24,6 +25,7 @@ Reads credentials from environment, source bin/.asc-env first:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -93,6 +95,22 @@ def call(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
     except urllib.error.HTTPError as exc:
         msg = exc.read().decode("utf-8", errors="replace")
         sys.exit(f"HTTP {exc.code}: {msg}")
+
+
+def upload_chunk(op: dict, payload: bytes) -> None:
+    """Execute one of the uploadOperations Apple returns when registering a
+    new screenshot/build asset. Each op is a presigned PUT (or POST) with
+    pre-baked headers — we send the bytes verbatim, no JWT involved."""
+    headers = {h["name"]: h["value"] for h in op.get("requestHeaders", [])}
+    req = urllib.request.Request(
+        url=op["url"], method=op["method"], headers=headers, data=payload,
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            resp.read()
+    except urllib.error.HTTPError as exc:
+        msg = exc.read().decode("utf-8", errors="replace")
+        sys.exit(f"upload chunk failed: HTTP {exc.code}: {msg[:400]}")
 
 
 def find_app() -> dict:
@@ -301,6 +319,140 @@ def cmd_attach_build(argv: list[str]) -> None:
     print("✓ build attached")
 
 
+SCREENSHOT_DIR = Path(__file__).resolve().parent / "screenshots-out"
+# Apple's screenshot taxonomy collapses 6.7" + 6.9" into a single slot —
+# the API rejects "APP_IPHONE_69". 1320×2868 (16 Pro Max) is uploaded as
+# APP_IPHONE_67 and Apple auto-classifies by pixel size at review.
+IPHONE_DISPLAY_TYPE = "APP_IPHONE_67"
+
+
+def cmd_upload_screenshots(argv: list[str]) -> None:
+    if not argv:
+        sys.exit("usage: bin/asc upload-screenshots <version-string>")
+    version = argv[0]
+
+    pngs = sorted(SCREENSHOT_DIR.glob("*.png"))
+    if not pngs:
+        sys.exit(f"no PNGs in {SCREENSHOT_DIR} — run bin/screenshots first")
+    print(f"found {len(pngs)} screenshot(s) in {SCREENSHOT_DIR.name}/")
+
+    app = find_app()
+    v = find_version(app["id"], version)
+    if not v:
+        sys.exit(f"no version {version} — run set-metadata first")
+
+    locs = call(
+        "GET", f'/appStoreVersions/{v["id"]}/appStoreVersionLocalizations'
+    )
+    en = next(
+        (x for x in locs.get("data", []) if x["attributes"].get("locale") == "en-US"),
+        None,
+    )
+    if en is None:
+        sys.exit("no en-US localization — run set-metadata first")
+
+    # Find or create the 6.9" iPhone screenshot set.
+    sets = call(
+        "GET", f'/appStoreVersionLocalizations/{en["id"]}/appScreenshotSets'
+    )
+    shot_set = next(
+        (
+            s for s in sets.get("data", [])
+            if s["attributes"].get("screenshotDisplayType") == IPHONE_DISPLAY_TYPE
+        ),
+        None,
+    )
+    if shot_set is None:
+        print(f"creating {IPHONE_DISPLAY_TYPE} screenshot set…")
+        resp = call(
+            "POST",
+            "/appScreenshotSets",
+            {
+                "data": {
+                    "type": "appScreenshotSets",
+                    "attributes": {
+                        "screenshotDisplayType": IPHONE_DISPLAY_TYPE,
+                    },
+                    "relationships": {
+                        "appStoreVersionLocalization": {
+                            "data": {
+                                "type": "appStoreVersionLocalizations",
+                                "id": en["id"],
+                            }
+                        }
+                    },
+                }
+            },
+        )
+        shot_set = resp["data"]
+    set_id = shot_set["id"]
+
+    # Wipe existing screenshots in the set so re-runs are deterministic.
+    existing = call("GET", f"/appScreenshotSets/{set_id}/appScreenshots")
+    for ex in existing.get("data", []):
+        print(f'  deleting old screenshot {ex["id"]}')
+        call("DELETE", f'/appScreenshots/{ex["id"]}')
+
+    uploaded_ids: list[str] = []
+    for png in pngs:
+        data = png.read_bytes()
+        size = len(data)
+        checksum = hashlib.md5(data).hexdigest()
+        print(f"  upload {png.name}  ({size // 1024} KB)…")
+
+        # Register the upload — Apple replies with one or more presigned PUTs.
+        reg = call(
+            "POST",
+            "/appScreenshots",
+            {
+                "data": {
+                    "type": "appScreenshots",
+                    "attributes": {"fileSize": size, "fileName": png.name},
+                    "relationships": {
+                        "appScreenshotSet": {
+                            "data": {"type": "appScreenshotSets", "id": set_id}
+                        }
+                    },
+                }
+            },
+        )
+        screenshot = reg["data"]
+        screenshot_id = screenshot["id"]
+        ops = screenshot["attributes"].get("uploadOperations", []) or []
+
+        for op in ops:
+            offset = op.get("offset", 0)
+            length = op.get("length", size)
+            upload_chunk(op, data[offset : offset + length])
+
+        # Mark uploaded + send checksum so Apple validates the bytes.
+        call(
+            "PATCH",
+            f"/appScreenshots/{screenshot_id}",
+            {
+                "data": {
+                    "id": screenshot_id,
+                    "type": "appScreenshots",
+                    "attributes": {
+                        "uploaded": True,
+                        "sourceFileChecksum": checksum,
+                    },
+                }
+            },
+        )
+        uploaded_ids.append(screenshot_id)
+
+    # Persist the order — filenames are zero-padded so disk-sort = display-sort.
+    print(f"setting display order for {len(uploaded_ids)} screenshots…")
+    call(
+        "PATCH",
+        f"/appScreenshotSets/{set_id}/relationships/appScreenshots",
+        {"data": [{"type": "appScreenshots", "id": i} for i in uploaded_ids]},
+    )
+
+    print(f"✓ uploaded {len(uploaded_ids)} screenshots to {IPHONE_DISPLAY_TYPE}")
+
+
 def cmd_submit(argv: list[str]) -> None:
     if not argv:
         sys.exit("usage: bin/asc submit <version-string>")
@@ -309,22 +461,89 @@ def cmd_submit(argv: list[str]) -> None:
     v = find_version(app["id"], version)
     if not v:
         sys.exit(f"no version {version}")
-    print(f'submitting version {v["id"]} for review…')
+
+    # Apple deprecated /appStoreVersionSubmissions. The new model is:
+    #   1. POST /reviewSubmissions  → draft (state=READY_FOR_REVIEW)
+    #   2. POST /reviewSubmissionItems → attach the appStoreVersion
+    #   3. PATCH /reviewSubmissions/{id} with submitted:true
+    # Re-using an existing READY_FOR_REVIEW submission keeps the operation
+    # idempotent — running this twice in a row won't strand orphan drafts.
+    existing = call(
+        "GET",
+        f'/reviewSubmissions?filter[app]={app["id"]}&filter[platform]=IOS',
+    )
+    draft = next(
+        (
+            s for s in existing.get("data", [])
+            if s["attributes"]["state"] == "READY_FOR_REVIEW"
+        ),
+        None,
+    )
+    if draft:
+        sub_id = draft["id"]
+        print(f"using existing draft review submission {sub_id}")
+    else:
+        print("creating review submission…")
+        resp = call(
+            "POST",
+            "/reviewSubmissions",
+            {
+                "data": {
+                    "type": "reviewSubmissions",
+                    "attributes": {"platform": "IOS"},
+                    "relationships": {
+                        "app": {"data": {"type": "apps", "id": app["id"]}}
+                    },
+                }
+            },
+        )
+        sub_id = resp["data"]["id"]
+        print(f"  → {sub_id}")
+
+    # Skip the item POST if the version is already attached.
+    items = call(
+        "GET",
+        f"/reviewSubmissions/{sub_id}/items?include=appStoreVersion",
+    )
+    already = any(
+        inc["type"] == "appStoreVersions" and inc["id"] == v["id"]
+        for inc in items.get("included", [])
+    )
+    if already:
+        print(f'version {version} already attached to submission')
+    else:
+        print(f'attaching version {version} ({v["id"]}) to submission…')
+        call(
+            "POST",
+            "/reviewSubmissionItems",
+            {
+                "data": {
+                    "type": "reviewSubmissionItems",
+                    "relationships": {
+                        "reviewSubmission": {
+                            "data": {"type": "reviewSubmissions", "id": sub_id}
+                        },
+                        "appStoreVersion": {
+                            "data": {"type": "appStoreVersions", "id": v["id"]}
+                        },
+                    },
+                }
+            },
+        )
+
+    print("submitting for App Review…")
     call(
-        "POST",
-        "/appStoreVersionSubmissions",
+        "PATCH",
+        f"/reviewSubmissions/{sub_id}",
         {
             "data": {
-                "type": "appStoreVersionSubmissions",
-                "relationships": {
-                    "appStoreVersion": {
-                        "data": {"type": "appStoreVersions", "id": v["id"]}
-                    }
-                },
+                "id": sub_id,
+                "type": "reviewSubmissions",
+                "attributes": {"submitted": True},
             }
         },
     )
-    print("✓ submitted")
+    print("✓ submitted for App Review")
 
 
 COMMANDS = {
@@ -333,6 +552,7 @@ COMMANDS = {
     "show-version": cmd_show_version,
     "set-metadata": cmd_set_metadata,
     "attach-build": cmd_attach_build,
+    "upload-screenshots": cmd_upload_screenshots,
     "submit": cmd_submit,
 }
 

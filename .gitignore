@@ -61,3 +61,15 @@ Thumbs.db
 # Local config
 .env
 bin/.asc-env
+
+# Scratch artifacts at repo root
+/*.png
+/*.zip
+/package.json
+/package-lock.json
+
+# Xcode IPA export staging dirs
+WoundScan 20*-*-* *-*-*/
+
+# asc upload-screenshots output
+bin/screenshots-out/
