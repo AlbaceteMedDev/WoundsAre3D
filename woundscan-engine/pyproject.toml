@@ -66,6 +66,7 @@ dev = [
     "types-redis",
     "bandit>=1.7",
     "pip-audit>=2.7",
+    "moto[s3]>=5.0",
 ]
 
 [project.scripts]
