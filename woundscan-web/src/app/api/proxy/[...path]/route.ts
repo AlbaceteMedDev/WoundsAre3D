@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { getSession } from "@/lib/auth";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8000";
@@ -14,14 +16,27 @@ const PASSTHROUGH_RESPONSE_HEADERS = [
   "last-modified",
 ] as const;
 
+const MESH_PATH_RE = /^measurements\/[^/]+\/mesh$/;
+
+/** Serve the bundled `public/demo-wound.obj` for any mesh request. */
+async function serveDemoMesh(): Promise<NextResponse> {
+  const filePath = path.join(process.cwd(), "public", "demo-wound.obj");
+  const data = await readFile(filePath);
+  return new NextResponse(data, {
+    status: 200,
+    headers: { "content-type": "model/obj", "x-ws-demo": "1" },
+  });
+}
+
 async function forward(req: NextRequest, params: { path: string[] }) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const path = "/" + params.path.join("/");
-  const url = `${API_BASE}${path}${req.nextUrl.search}`;
+  const joined = params.path.join("/");
+  const apiPath = "/" + joined;
+  const url = `${API_BASE}${apiPath}${req.nextUrl.search}`;
 
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${session.token}`);
@@ -35,12 +50,32 @@ async function forward(req: NextRequest, params: { path: string[] }) {
     headers,
     cache: "no-store",
     redirect: "manual",
+    // Cap upstream stall so demo flows don't hang on a dead engine.
+    signal: AbortSignal.timeout(3000),
   };
   if (req.method !== "GET" && req.method !== "HEAD") {
     init.body = await req.arrayBuffer();
   }
 
-  const upstream = await fetch(url, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, init);
+  } catch {
+    // Engine unreachable. For mesh GETs we have a built-in fallback so
+    // the 3D viewer still has something to render in demo mode.
+    if (req.method === "GET" && MESH_PATH_RE.test(joined)) {
+      return serveDemoMesh();
+    }
+    // Everything else: empty JSON envelope so the caller's defensive
+    // fallback path activates instead of surfacing a network error.
+    return NextResponse.json({ error: "engine unavailable", demo: true }, { status: 503 });
+  }
+
+  // Real engine answered but with an error AND this is a mesh request —
+  // fall back to the demo OBJ rather than break the viewer.
+  if (!upstream.ok && req.method === "GET" && MESH_PATH_RE.test(joined)) {
+    return serveDemoMesh();
+  }
 
   const out = new Headers();
   for (const name of PASSTHROUGH_RESPONSE_HEADERS) {

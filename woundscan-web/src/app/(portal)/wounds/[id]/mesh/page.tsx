@@ -6,6 +6,7 @@ import {
   ProgressionResponseSchema,
   type ProgressionResponse,
 } from "@/lib/api";
+import { mockProgression } from "@/lib/sample";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8000";
 
@@ -27,8 +28,11 @@ async function fetchProgression(
 
 export default async function MeshPage({ params }: { params: { id: string } }) {
   const session = await getSession();
-  const progression = await fetchProgression(params.id, session?.token ?? "");
-  const points = progression?.points ?? [];
+  const real = await fetchProgression(params.id, session?.token ?? "");
+  // Demo fallback so the workspace always has stats + a depth series even
+  // when the engine API isn't reachable.
+  const progression = real ?? mockProgression(params.id);
+  const points = progression.points;
   const latest = points[0];
 
   return (

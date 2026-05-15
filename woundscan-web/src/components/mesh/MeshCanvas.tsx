@@ -193,7 +193,11 @@ function WoundMesh({
   const obj = useLoader(OBJLoader, url);
   const { invalidate } = useThree();
 
-  // Normalize once: center, scale, recompute normals, color by depth.
+  // Normalize once: center, scale, rotate so the bed lies horizontally
+  // (engine convention: bed lies in the XY plane with +Z below skin →
+  // after a -π/2 rotation around X, the bed sits in the XZ plane and
+  // wound depth runs along -Y, which matches the camera's default look-
+  // down angle).
   const { geometry, depthRange, bbox } = useMemo(() => {
     let merged: THREE.BufferGeometry | null = null;
     obj.traverse((c) => {
@@ -212,19 +216,24 @@ function WoundMesh({
     const scale = 1.6 / longest;
     merged.translate(-center.x, -center.y, -center.z);
     merged.scale(scale, scale, scale);
+    merged.rotateX(-Math.PI / 2);
     merged.computeVertexNormals();
     merged.computeBoundingBox();
     const newBb = merged.boundingBox ?? new THREE.Box3();
     return {
       geometry: merged,
-      depthRange: { min: newBb.min.z, max: newBb.max.z },
+      // After the X rotation the depth axis is Y (more-negative = deeper).
+      depthRange: { min: newBb.min.y, max: newBb.max.y },
       bbox: { size: size.clone().multiplyScalar(scale), realSize: size },
     };
   }, [obj]);
 
   const clipPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.05), []);
 
-  // Colour palette per mode.
+  // Material picks vertex colors whenever any of the color-generating
+  // layers are active (depth map, heat map, tissue layers, or tissue
+  // render mode); otherwise falls back to a flat realistic skin tone.
+  const wantsVertexColor = mode === "tissue" || depthMap || heatMap || tissue;
   const material = useMemo(() => {
     const base = (() => {
       if (mode === "wireframe") {
@@ -233,7 +242,7 @@ function WoundMesh({
           wireframe: true,
         });
       }
-      if (mode === "tissue") {
+      if (wantsVertexColor) {
         return new THREE.MeshStandardMaterial({
           vertexColors: true,
           roughness: 0.55,
@@ -252,13 +261,11 @@ function WoundMesh({
       base.clipShadows = true;
     }
     return base;
-  }, [mode, crossSection, clipPlane]);
+  }, [mode, crossSection, clipPlane, wantsVertexColor]);
 
   // Vertex colours for tissue / depth-map / heat-map modes.
   useEffect(() => {
     if (!geometry) return;
-    const wantsVertexColor =
-      mode === "tissue" || depthMap || heatMap || tissue;
     if (!wantsVertexColor) {
       geometry.deleteAttribute("color");
       invalidate();
@@ -269,8 +276,10 @@ function WoundMesh({
     const colors = new Float32Array(n * 3);
     const range = depthRange.max - depthRange.min || 1;
     for (let i = 0; i < n; i++) {
-      const z = pos.getZ(i);
-      const t = (z - depthRange.min) / range; // 0 = deepest, 1 = shallowest
+      // After the -π/2 X rotation, depth lives on the Y axis
+      // (more-negative = deeper).
+      const y = pos.getY(i);
+      const t = (y - depthRange.min) / range; // 0 = deepest, 1 = shallowest
       let r = 0;
       let g = 0;
       let b = 0;
@@ -308,7 +317,7 @@ function WoundMesh({
     }
     geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     invalidate();
-  }, [geometry, mode, depthMap, heatMap, tissue, depthRange, invalidate]);
+  }, [geometry, mode, depthMap, heatMap, tissue, depthRange, invalidate, wantsVertexColor]);
 
   if (!visible || !geometry) return null;
 

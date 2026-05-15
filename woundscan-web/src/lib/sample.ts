@@ -116,3 +116,82 @@ export const ACTIVITY = [
   { at: "07:40", who: "Audit log",     what: "Compliance pass",         subject: "Q-code A2005 verified" },
   { at: "07:14", who: "Dr. Morgan",    what: "Updated care plan",       subject: "Sandra Cole · L plantar" },
 ];
+
+// ---------------------------------------------------------------------------
+// Demo progression generator — used as the wound-detail fallback when the
+// engine API isn't reachable. Deterministic per wound ID so each wound shows
+// consistent but distinct healing trajectories.
+// ---------------------------------------------------------------------------
+
+import type { ProgressionResponse } from "@/lib/api";
+
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h;
+}
+
+export function mockProgression(woundId: string): ProgressionResponse {
+  const h = hashStr(woundId || "demo");
+  const seedVol = 4.8 + ((h % 100) / 100) * 4; // 4.8–8.8 cm³ initial
+  const seedArea = 12 + ((h >> 8) % 100) / 10; // 12–22 cm² initial
+  const seedDepth = 1.2 + (((h >> 16) % 60) / 100); // 1.2–1.8 cm initial
+  const trend = ((h >> 24) % 100) / 100; // 0..1 — fraction healed by latest
+  const visits = 8;
+
+  // Build 8 visits, most-recent first (engine convention).
+  const now = Date.now();
+  const points = Array.from({ length: visits }, (_, i) => {
+    // i=0 is latest; older visits have larger wound.
+    const t = i / (visits - 1); // 0 = latest, 1 = oldest
+    const scale = 1 - trend + trend * t; // latest = (1 - trend); oldest = 1
+    const wobble = (((h >> (i * 3)) % 21) - 10) / 100; // ±10%
+    const surfaceArea = +(seedArea * (scale + wobble)).toFixed(2);
+    const volume = +(seedVol * (scale + wobble * 0.8)).toFixed(2);
+    const maxDepth = +(seedDepth * (scale + wobble * 0.5)).toFixed(2);
+    const meanDepth = +(maxDepth * 0.55).toFixed(2);
+    const perimeter = +(2 * Math.sqrt(Math.PI * surfaceArea)).toFixed(2);
+    const grade = (["A", "A", "B", "B", "C"] as const)[(h >> (i * 2)) % 5] ?? "B";
+    const date = new Date(now - i * 7 * 24 * 60 * 60 * 1000).toISOString();
+    return {
+      measurement_id: `m-${woundId.slice(0, 8)}-${i}`,
+      captured_at: date,
+      volume_cm3: volume,
+      surface_area_cm2: surfaceArea,
+      max_depth_cm: maxDepth,
+      mean_depth_cm: meanDepth,
+      perimeter_cm: perimeter,
+      quality_grade: grade,
+    };
+  });
+
+  const first = points[points.length - 1]!;
+  const latest = points[0]!;
+  const daysObserved = (visits - 1) * 7;
+  const pctArea = ((latest.surface_area_cm2 - first.surface_area_cm2) / first.surface_area_cm2) * 100;
+  const pctVol = ((latest.volume_cm3 - first.volume_cm3) / first.volume_cm3) * 100;
+  const healing = pctArea < -5;
+
+  return {
+    wound_id: woundId,
+    points,
+    trend: {
+      first_capture_at: first.captured_at,
+      last_capture_at: latest.captured_at,
+      days_observed: daysObserved,
+      initial_area_cm2: first.surface_area_cm2,
+      latest_area_cm2: latest.surface_area_cm2,
+      pct_area_change: +pctArea.toFixed(2),
+      initial_volume_cm3: first.volume_cm3,
+      latest_volume_cm3: latest.volume_cm3,
+      pct_volume_change: +pctVol.toFixed(2),
+      healing_rate_cm2_per_week:
+        +((latest.surface_area_cm2 - first.surface_area_cm2) / (daysObserved / 7)).toFixed(2),
+      is_healing: healing,
+      is_stalled: Math.abs(pctArea) < 3,
+    },
+  };
+}
