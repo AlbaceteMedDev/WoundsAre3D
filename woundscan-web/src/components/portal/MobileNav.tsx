@@ -72,11 +72,18 @@ export function MobileNav() {
             <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
               <Link href="/dashboard" aria-label="WoundScan home">
                 <Image
-                  src="/logo.png"
-                  width={468}
-                  height={263}
+                  src="/logo-mark-light.png"
+                  width={1960}
+                  height={319}
                   alt="WoundScan"
-                  className="h-auto w-32 dark:invert"
+                  className="block h-auto w-32 dark:hidden"
+                />
+                <Image
+                  src="/logo-mark.png"
+                  width={1960}
+                  height={319}
+                  alt="WoundScan"
+                  className="hidden h-auto w-32 dark:block"
                 />
               </Link>
               <button

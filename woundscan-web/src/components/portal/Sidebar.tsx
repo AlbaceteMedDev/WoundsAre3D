@@ -36,12 +36,20 @@ export function Sidebar() {
         className="flex items-center justify-center border-b border-hairline px-3 py-3"
       >
         <Image
-          src="/logo.png"
-          width={468}
-          height={263}
-          alt="WoundScan — powered by Albacete MedDev"
+          src="/logo-mark-light.png"
+          width={1960}
+          height={319}
+          alt="WoundScan"
           priority
-          className="h-auto w-44 dark:invert"
+          className="block h-auto w-40 dark:hidden"
+        />
+        <Image
+          src="/logo-mark.png"
+          width={1960}
+          height={319}
+          alt="WoundScan"
+          priority
+          className="hidden h-auto w-40 dark:block"
         />
       </Link>
 
