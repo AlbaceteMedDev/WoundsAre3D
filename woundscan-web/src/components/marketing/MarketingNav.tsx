@@ -10,6 +10,7 @@ const LINKS = [
   { href: "#pipeline", label: "How it works" },
   { href: "#report", label: "The report" },
   { href: "#demo", label: "Live demo" },
+  { href: "#portal", label: "Portal" },
   { href: "#platform", label: "Platform" },
   { href: "#compliance", label: "Compliance" },
 ];
