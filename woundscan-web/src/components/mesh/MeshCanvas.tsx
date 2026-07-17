@@ -4,7 +4,6 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import {
   Bounds,
-  Environment,
   Grid,
   Html,
   OrbitControls,
@@ -65,9 +64,12 @@ export function MeshCanvas({
         <color attach="background" args={["#03060d"]} />
         <fog attach="fog" args={["#03060d", 6, 14]} />
 
-        <ambientLight intensity={0.45} />
-        <directionalLight position={[3, 4, 2]} intensity={1.2} castShadow />
-        <directionalLight position={[-3, 2, -2]} intensity={0.4} color="#7dd3fc" />
+        {/* Direct lighting only — no HDR environment fetch, so the viewer
+            works fully offline and can never crash on a blocked CDN. */}
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[3, 4, 2]} intensity={1.25} castShadow />
+        <directionalLight position={[-3, 2, -2]} intensity={0.45} color="#7dd3fc" />
+        <directionalLight position={[0, -3, 1]} intensity={0.25} color="#e0f2fe" />
 
         <Suspense fallback={<LoaderBadge label="Loading mesh…" />}>
           {meshUrl ? (
@@ -110,7 +112,6 @@ export function MeshCanvas({
           infiniteGrid
         />
 
-        <Environment preset="studio" environmentIntensity={0.3} />
         <OrbitControls
           enablePan
           enableZoom

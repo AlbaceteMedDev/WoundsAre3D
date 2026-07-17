@@ -135,7 +135,7 @@ export function MobileCapture({ sessionId }: { sessionId: string }) {
     <main className="mx-auto flex min-h-[100svh] max-w-md flex-col px-4 py-5 text-sm">
       <header className="mb-4">
         <p className="text-[11px] uppercase tracking-[0.18em] text-ink-muted">
-          WoundScan capture
+          StrataMetric AI capture
         </p>
         <h1 className="mt-1 font-display text-2xl font-bold text-ink">
           Take the photo here
