@@ -1,6 +1,7 @@
-# WoundScan
+# StrataMetric AI
 
-Medical-grade 3D wound measurement platform: iPhone capture, sensor
+**StrataMetric AI by Albacete MedDev** (formerly WoundScan) —
+medical-grade 3D wound measurement platform: iPhone capture, sensor
 fusion, machine learning, full provenance, designed to support FDA
 510(k) submission without rewrite.
 
@@ -10,7 +11,7 @@ fusion, machine learning, full provenance, designed to support FDA
 WoundsAre3D/
 ├── woundscan-engine/     Python FastAPI engine + math + ML
 ├── woundscan-ios/        SwiftUI + ARKit iPhone capture app
-├── woundscan-web/        Next.js dashboard for review and admin
+├── woundscan-web/        Next.js marketing site + provider portal (Vercel)
 ├── infrastructure/       Terraform, Docker, deployment scripts
 └── .github/workflows/    CI/CD pipelines
 ```

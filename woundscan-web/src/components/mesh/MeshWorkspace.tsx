@@ -118,12 +118,21 @@ export function MeshWorkspace({
 
       {/* ─── Center: mesh canvas ─── */}
       <section className="card relative overflow-hidden p-0">
+        {/* Canvas is always dark — fixed light colors, not theme tokens. */}
         <div className="absolute left-1/2 top-6 z-10 -translate-x-1/2 text-center">
-          <div className="font-display text-2xl font-bold tracking-tight text-ink">
-            Wound<span className="text-accent">Scan</span>
+          <div className="font-display text-2xl font-bold tracking-tight text-white">
+            Strata<span className="text-cyan-400">Metric</span>{" "}
+            <span className="relative inline-block">
+              AI
+              <span
+                aria-hidden
+                className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full"
+                style={{ background: "linear-gradient(90deg, #b8860b66, #e6c06b, #b8860b66)" }}
+              />
+            </span>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">
-            powered by Albacete MedDev
+          <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+            by Albacete MedDev
           </div>
         </div>
 
@@ -293,7 +302,7 @@ export function MeshWorkspace({
       </aside>
 
       <p className="lg:col-span-3 text-center text-[11px] text-ink-muted">
-        WoundScan v1.0.0 · Albacete MedDev · all rights reserved.
+        StrataMetric AI v1.0.0 · Albacete MedDev · all rights reserved.
       </p>
     </div>
   );

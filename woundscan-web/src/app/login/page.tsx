@@ -37,12 +37,12 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <Link href="/" aria-label="WoundScan home" className="mb-8 inline-block">
+      <Link href="/" aria-label="StrataMetric AI home" className="mb-8 inline-block">
         <Image
           src="/logo.png"
           width={468}
           height={263}
-          alt="WoundScan — powered by Albacete MedDev"
+          alt="StrataMetric AI — by Albacete MedDev"
           priority
           className="h-auto w-56 dark:invert"
         />

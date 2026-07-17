@@ -26,6 +26,10 @@
   --danger: 220 38 38;        /* red-600 */
 
   --shadow: 15 23 42;         /* slate-900 */
+
+  /* Wordmark: Strata(ink) · Metric(blue) · AI(gold) — matches the logo. */
+  --wm-metric: 37 99 235;     /* vivid azure, logo "Metric" */
+  --gold: 176 130 30;         /* metallic gold, darkened for light-bg legibility */
 }
 
 .dark {
@@ -50,6 +54,10 @@
   --danger: 248 113 113;
 
   --shadow: 0 0 0;
+
+  /* Wordmark: Strata(white) · Metric(cyan) · AI(gold) — matches the logo. */
+  --wm-metric: 34 211 238;    /* cyan, logo "Metric" in dark */
+  --gold: 230 192 107;        /* luminous gold */
 }
 
 /* ─── Base ─── */
@@ -163,4 +171,147 @@ h1, h2, h3, h4, h5, h6 {
   .surface-grad {
     background-image: linear-gradient(180deg, rgb(var(--surface)) 0%, rgb(var(--surface-2)) 100%);
   }
+}
+
+/* ─── Marketing site ─── */
+
+@layer components {
+  .mk-section {
+    @apply mx-auto w-full max-w-7xl px-6 md:px-8;
+  }
+  .mk-h2 {
+    @apply font-display text-3xl font-bold tracking-tight text-ink md:text-[2.6rem] md:leading-[1.1];
+  }
+  .mk-lead {
+    @apply mt-4 max-w-2xl text-base leading-relaxed text-ink-soft md:text-lg;
+  }
+  .mk-card {
+    @apply rounded-xl border border-hairline bg-surface/70 p-6 backdrop-blur transition duration-300;
+  }
+  .mk-card:hover {
+    @apply -translate-y-1 border-accent/40 shadow-elevated;
+  }
+  .mk-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface/80 px-3 py-1 font-mono text-[11px] text-ink-soft backdrop-blur;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(100deg, rgb(var(--accent)) 0%, rgb(var(--accent-bright)) 55%, rgb(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .mk-grid-bg {
+    background-image:
+      linear-gradient(rgb(var(--ink) / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--ink) / 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
+  }
+  .mk-noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: radial-gradient(rgb(var(--ink) / 0.06) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: linear-gradient(180deg, transparent, black 30%, black 70%, transparent);
+  }
+}
+
+/* Scroll-reveal primitives (activated by .is-visible from the Reveal component). */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+    transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hero entrance (plays on load, no observer needed). */
+@keyframes mk-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+.mk-rise {
+  animation: mk-rise 0.9s cubic-bezier(0.19, 1, 0.22, 1) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-rise { animation: none; }
+}
+
+/* Slow conic ring used behind the hero canvas. */
+@keyframes mk-spin {
+  to { transform: rotate(360deg); }
+}
+.mk-orbit {
+  animation: mk-spin 40s linear infinite;
+}
+
+/* Pulsing "live" dot. */
+@keyframes mk-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--success) / 0.5); }
+  50% { box-shadow: 0 0 0 6px rgb(var(--success) / 0); }
+}
+.mk-live-dot {
+  animation: mk-pulse 2.4s ease-out infinite;
+}
+
+/* Animated dashes for SVG flow lines (architecture diagram). */
+@keyframes mk-dash {
+  to { stroke-dashoffset: -24; }
+}
+.mk-flow {
+  stroke-dasharray: 6 6;
+  animation: mk-dash 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-flow { animation: none; }
+}
+
+/* Boundary trace draw-on for the report diagram. */
+.mk-trace {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  transition: stroke-dashoffset 2.2s cubic-bezier(0.65, 0, 0.35, 1) 0.2s;
+}
+.is-visible .mk-trace,
+.mk-trace.is-on {
+  stroke-dashoffset: 0;
+}
+
+/* Scanline sweep across a container. */
+@keyframes mk-scan {
+  0% { top: -12%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 112%; opacity: 0; }
+}
+.mk-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgb(var(--accent-bright) / 0.9), transparent);
+  animation: mk-scan 4.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-scanline { display: none; }
 }

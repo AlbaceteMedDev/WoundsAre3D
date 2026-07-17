@@ -8,12 +8,12 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-hairline bg-bg/80 backdrop-blur supports-[backdrop-filter]:bg-bg/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
-        <Link href={session ? "/dashboard" : "/"} aria-label="WoundScan home">
+        <Link href={session ? "/dashboard" : "/"} aria-label="StrataMetric AI home">
           <Image
             src="/logo.png"
             width={468}
             height={263}
-            alt="WoundScan — powered by Albacete MedDev"
+            alt="StrataMetric AI — by Albacete MedDev"
             priority
             className="h-auto w-44 dark:invert"
           />

@@ -1,7 +1,26 @@
-# WoundScan Web Dashboard
+# StrataMetric AI — Web
 
-Next.js 14 app for clinicians and admins to review measurements, view
-trajectories, manage products, audit logs, and track ML/phantom drift.
+Next.js 14 app serving two surfaces:
+
+1. **Public marketing site** (`/`) — interactive introduction to
+   StrataMetric AI by Albacete MedDev: animated 3D LiDAR hero, the
+   capture→report pipeline walkthrough, an interactive sample
+   measurement report, the live portal mesh viewer, AWS architecture,
+   and compliance posture. Signed-in users skip straight to the portal.
+2. **Provider portal** (auth-gated) — clinicians and admins review
+   measurements, view trajectories, manage products, audit logs, and
+   track ML/phantom drift.
+
+## Deploy (Vercel)
+
+- **Root Directory**: `woundscan-web` (monorepo — set this in the Vercel
+  project settings)
+- Framework preset: Next.js (auto-detected); no extra env needed for the
+  marketing site. Portal API calls expect `API_URL` /
+  `NEXT_PUBLIC_API_URL` to point at the measurement engine.
+- Custom domain: add `stratametricai.com` (+ `www`) under Project →
+  Settings → Domains and point the registrar's DNS at Vercel
+  (A `76.76.21.21` / CNAME `cname.vercel-dns.com`).
 
 ## Features
 
