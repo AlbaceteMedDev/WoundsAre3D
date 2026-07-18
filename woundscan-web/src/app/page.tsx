@@ -7,6 +7,7 @@ import { ProblemSection } from "@/components/marketing/ProblemSection";
 import { PipelineSection } from "@/components/marketing/PipelineSection";
 import { ReportSection } from "@/components/marketing/ReportSection";
 import { DemoSection } from "@/components/marketing/DemoSection";
+import { PortalTourSection } from "@/components/marketing/PortalTourSection";
 import { TechnologySection } from "@/components/marketing/TechnologySection";
 import { ArchitectureSection } from "@/components/marketing/ArchitectureSection";
 import { ComplianceSection } from "@/components/marketing/ComplianceSection";
@@ -32,6 +33,7 @@ export default async function HomePage() {
         <PipelineSection />
         <ReportSection />
         <DemoSection />
+        <PortalTourSection />
         <TechnologySection />
         <ArchitectureSection />
         <ComplianceSection />
