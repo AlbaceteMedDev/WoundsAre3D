@@ -21,11 +21,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://stratametricai.com"),
   alternates: { canonical: "/" },
   title: {
-    default: "StrataMetric AI — 3D Wound Measurement | Albacete MedDev",
-    template: "%s | StrataMetric AI",
+    default: "StrataMetric — AI Wound Scan | Albacete MedDev",
+    template: "%s | StrataMetric",
   },
   description:
-    "StrataMetric AI by Albacete MedDev: objective, reproducible 3D wound measurement from an iPhone LiDAR scan. Length, width, depth, wound bed and peri-wound area — audit-defensible documentation in minutes.",
+    "AI Wound Scan by StrataMetric, part of the Albacete MedDev ecosystem: objective, reproducible 3D wound measurement from an iPhone LiDAR scan. Length, width, depth, wound bed and peri-wound area — audit-defensible documentation in minutes.",
   keywords: [
     "wound measurement",
     "3D wound scan",
@@ -33,21 +33,22 @@ export const metadata: Metadata = {
     "wound care documentation",
     "CMS audit defensibility",
     "wound depth measurement",
-    "StrataMetric AI",
+    "StrataMetric",
+    "AI Wound Scan",
     "Albacete MedDev",
   ],
   openGraph: {
-    title: "StrataMetric AI — 3D Wound Measurement",
+    title: "StrataMetric — AI Wound Scan",
     description:
       "Objective, reproducible 3D wound measurement from an iPhone LiDAR scan. The full three-dimensional wound profile — captured at the point of care.",
-    siteName: "StrataMetric AI",
+    siteName: "StrataMetric",
     url: "https://stratametricai.com",
     type: "website",
     images: [{ url: "/logo-square.png", width: 1024, height: 1024 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "StrataMetric AI — 3D Wound Measurement",
+    title: "StrataMetric — AI Wound Scan",
     description:
       "Objective, reproducible 3D wound measurement from an iPhone LiDAR scan, by Albacete MedDev.",
   },

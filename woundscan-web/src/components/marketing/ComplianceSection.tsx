@@ -29,7 +29,7 @@ export function ComplianceSection() {
               <span className="eyebrow">Compliance & trust</span>
               <h2 className="mk-h2 mt-3">Regulatory strategy is an architecture decision.</h2>
               <p className="mk-lead">
-                StrataMetric AI was engineered from the first commit for the pathway ahead —
+                StrataMetric&rsquo;s AI Wound Scan was engineered from the first commit for the pathway ahead —
                 internal clinical-decision-support use now, commercial clearance later, with no
                 rewrite in between.
               </p>

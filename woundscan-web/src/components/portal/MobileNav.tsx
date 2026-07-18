@@ -70,13 +70,13 @@ export function MobileNav() {
           />
           <aside className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface shadow-elevated">
             <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-              <Link href="/dashboard" aria-label="StrataMetric AI home">
+              <Link href="/dashboard" aria-label="StrataMetric — AI Wound Scan home">
                 <Image
                   src="/logo.png"
                   width={468}
                   height={263}
-                  alt="StrataMetric AI"
-                  className="h-auto w-32 dark:invert"
+                  alt="StrataMetric — AI Wound Scan"
+                  className="h-auto w-32"
                 />
               </Link>
               <button

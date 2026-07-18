@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -52,7 +53,19 @@ export function MarketingNav() {
       />
 
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 md:px-8">
-        <Link href="/" aria-label="StrataMetric AI home" className="shrink-0">
+        <Link
+          href="/"
+          aria-label="StrataMetric — AI Wound Scan home"
+          className="flex shrink-0 items-center gap-2.5"
+        >
+          <Image
+            src="/logo-square.png"
+            width={36}
+            height={36}
+            alt=""
+            priority
+            className="h-8 w-8 rounded-md ring-1 ring-hairline md:h-9 md:w-9"
+          />
           <Wordmark className="text-lg md:text-xl" />
         </Link>
 

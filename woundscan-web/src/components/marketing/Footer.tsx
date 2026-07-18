@@ -53,8 +53,8 @@ export function Footer() {
       <div className="border-t border-hairline">
         <div className="mk-section flex flex-col items-start justify-between gap-3 py-6 md:flex-row md:items-center">
           <p className="text-xs text-ink-muted">
-            © {new Date().getFullYear()} Albacete MedDev LLC. StrataMetric AI is a product of
-            Albacete MedDev.
+            © {new Date().getFullYear()} Albacete MedDev LLC. AI Wound Scan is a StrataMetric product,
+            part of the Albacete MedDev ecosystem.
           </p>
           <p className="max-w-xl text-[11px] leading-relaxed text-ink-muted">
             For clinical decision support only. Not for diagnostic use. Clinician retains decision

@@ -15,7 +15,7 @@ export default function MeshDemoPage() {
     <main className="min-h-screen bg-bg px-4 py-6 md:px-6 md:py-8">
       <header className="mx-auto mb-6 max-w-7xl">
         <nav className="mb-3 text-sm text-ink-muted">
-          <Link href="/" className="hover:text-ink">StrataMetric AI</Link>
+          <Link href="/" className="hover:text-ink">StrataMetric</Link>
           <span className="mx-2 text-ink-muted/60">/</span>
           <span className="text-ink-soft">3D Mesh Viewer Demo</span>
         </nav>
