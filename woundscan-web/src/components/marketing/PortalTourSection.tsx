@@ -86,8 +86,10 @@ export function PortalTourSection() {
             <div className="grid md:grid-cols-[200px_1fr]">
               {/* Sidebar */}
               <aside className="border-b border-hairline bg-surface-2/40 md:border-b-0 md:border-r">
+                {/* Mobile: 2-col grid so all ten views are visible and tappable.
+                    md+: vertical sidebar. */}
                 <nav
-                  className="flex gap-1 overflow-x-auto p-2 md:flex-col md:overflow-visible md:p-3"
+                  className="grid grid-cols-2 gap-1 p-2 md:flex md:flex-col md:p-3"
                   aria-label="Portal views"
                 >
                   {NAV.map((n) => (
@@ -96,21 +98,22 @@ export function PortalTourSection() {
                       type="button"
                       onClick={() => go(n.key)}
                       aria-pressed={view === n.key}
-                      className={`flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition ${
+                      className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] font-medium leading-tight transition md:px-3 md:text-sm ${
                         view === n.key
                           ? "bg-accent/10 text-accent"
                           : "text-ink-soft hover:bg-surface hover:text-ink"
                       }`}
                     >
-                      <span aria-hidden className="w-4 text-center">{n.icon}</span>
+                      <span aria-hidden className="w-4 shrink-0 text-center">{n.icon}</span>
                       {n.label}
                     </button>
                   ))}
                 </nav>
               </aside>
 
-              {/* Active view */}
-              <div className="max-h-[640px] overflow-y-auto bg-bg/40 p-4 md:p-5">
+              {/* Active view — natural flow on mobile (no trapped scroll),
+                  capped scroll box on desktop. */}
+              <div className="min-w-0 bg-bg/40 p-4 md:max-h-[640px] md:overflow-y-auto md:p-5">
                 {view === "dashboard" && <DashboardView go={go} />}
                 {view === "patients" && <PatientsView go={go} />}
                 {view === "wound" && <WoundRecordView patientId={patientId} go={go} />}
