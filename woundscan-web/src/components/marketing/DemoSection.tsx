@@ -35,10 +35,7 @@ export function DemoSection() {
                 toggle depth and tissue layers, cut a cross-section, open the analytics tab.
               </p>
             </div>
-            <span className="mk-chip">
-              <span className="mk-live-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
-              interactive · WebGL
-            </span>
+            <span className="mk-chip">interactive · WebGL</span>
           </div>
         </Reveal>
 
