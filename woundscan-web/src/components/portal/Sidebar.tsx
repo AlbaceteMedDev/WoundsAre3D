@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { BrandImage } from "@/components/BrandImage";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -35,10 +35,8 @@ export function Sidebar() {
         aria-label="StrataMetric — AI Wound Scan home"
         className="flex items-center justify-center border-b border-hairline px-3 py-3"
       >
-        <Image
-          src="/logo.png"
-          width={468}
-          height={263}
+        <BrandImage
+          variant="lockup"
           alt="StrataMetric — AI Wound Scan by Albacete MedDev"
           priority
           className="h-auto w-44"

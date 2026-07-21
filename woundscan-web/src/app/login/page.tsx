@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { BrandImage } from "@/components/BrandImage";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,10 +38,8 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
       <Link href="/" aria-label="StrataMetric — AI Wound Scan home" className="mb-8 inline-block">
-        <Image
-          src="/logo.png"
-          width={468}
-          height={263}
+        <BrandImage
+          variant="lockup"
           alt="StrataMetric — AI Wound Scan by Albacete MedDev"
           priority
           className="h-auto w-56"

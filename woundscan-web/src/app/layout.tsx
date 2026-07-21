@@ -44,13 +44,22 @@ export const metadata: Metadata = {
     siteName: "StrataMetric",
     url: "https://stratametricai.com",
     type: "website",
-    images: [{ url: "/logo-square.png", width: 1024, height: 1024 }],
+    images: [{ url: "/icon-dark.png", width: 1254, height: 1254 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "StrataMetric — AI Wound Scan",
     description:
       "Objective, reproducible 3D wound measurement from an iPhone LiDAR scan, by Albacete MedDev.",
+  },
+  icons: {
+    // A favicon can't read the in-page theme toggle, only the browser/OS color
+    // scheme — so light UA gets the light mark, dark UA gets the navy mark.
+    icon: [
+      { url: "/icon-light.png", media: "(prefers-color-scheme: light)", type: "image/png" },
+      { url: "/icon-dark.png", media: "(prefers-color-scheme: dark)", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-dark.png" }],
   },
 };
 

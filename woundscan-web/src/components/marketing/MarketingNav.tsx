@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { Wordmark } from "./Wordmark";
+import { BrandImage } from "@/components/BrandImage";
 
 const LINKS = [
   { href: "#technology", label: "Technology" },
@@ -56,17 +55,16 @@ export function MarketingNav() {
         <Link
           href="/"
           aria-label="StrataMetric — AI Wound Scan home"
-          className="flex shrink-0 items-center gap-2.5"
+          className="flex shrink-0 items-center"
         >
-          <Image
-            src="/logo-square.png"
-            width={36}
-            height={36}
-            alt=""
+          {/* The full StrataMetric lockup (transparent, theme-aware) is the
+              proper logo — not the square favicon mark. Swaps light/dark. */}
+          <BrandImage
+            variant="lockup"
+            alt="StrataMetric — AI Wound Scan by Albacete MedDev"
             priority
-            className="h-8 w-8 rounded-md ring-1 ring-hairline md:h-9 md:w-9"
+            className="h-11 w-auto md:h-12"
           />
-          <Wordmark className="text-lg md:text-xl" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Sections">
