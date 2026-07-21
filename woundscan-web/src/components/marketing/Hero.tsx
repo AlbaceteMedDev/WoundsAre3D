@@ -31,14 +31,9 @@ export function Hero() {
 
       <div className="mk-section relative grid items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
         <div>
-          <span className="mk-rise mk-chip" style={{ "--rise-delay": "0ms" } as React.CSSProperties}>
-            <span className="mk-live-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
-            AWS-validated proof of concept · 510(k)-ready architecture
-          </span>
-
           <h1
-            className="mk-rise mt-5 font-display text-4xl font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl xl:text-6xl"
-            style={{ "--rise-delay": "80ms" } as React.CSSProperties}
+            className="mk-rise font-display text-4xl font-bold leading-[1.06] tracking-tight text-ink sm:text-5xl xl:text-6xl"
+            style={{ "--rise-delay": "0ms" } as React.CSSProperties}
           >
             The wound has depth.
             <br />
@@ -76,6 +71,30 @@ export function Hero() {
             <HeroStat value="±mm" label="instrument precision" />
             <HeroStat value="< 5 min" label="scan to report" />
           </dl>
+
+          {/* Validation credentials — an understated technical stamp rather than a
+              badge-with-a-blinking-dot. The gold "+" echoes the medical cross in the mark. */}
+          <ul
+            className="mk-rise mt-9 flex flex-wrap items-center gap-x-7 gap-y-2.5 border-t border-hairline pt-5"
+            style={{ "--rise-delay": "400ms" } as React.CSSProperties}
+            aria-label="Validation status"
+          >
+            {["AWS-validated proof of concept", "FDA 510(k)-ready architecture"].map((c) => (
+              <li
+                key={c}
+                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-muted"
+              >
+                <span
+                  aria-hidden
+                  className="font-sans text-sm font-bold leading-none"
+                  style={{ color: "rgb(var(--gold))" }}
+                >
+                  +
+                </span>
+                {c}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div
