@@ -1,13 +1,17 @@
 import Link from "next/link";
-import { WordmarkLockup } from "./Wordmark";
+import { BrandImage } from "@/components/BrandImage";
 
 export function Footer() {
   return (
     <footer className="border-t border-hairline bg-surface/60">
       <div className="mk-section grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <WordmarkLockup />
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-muted">
+          <BrandImage
+            variant="lockup"
+            alt="StrataMetric — AI Wound Scan by Albacete MedDev"
+            className="h-auto w-60"
+          />
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink-muted">
             Objective, reproducible 3D wound measurement from an iPhone LiDAR scan — engineered for
             audit-defensible documentation at the point of care.
           </p>

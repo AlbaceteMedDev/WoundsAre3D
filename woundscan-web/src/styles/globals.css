@@ -191,8 +191,16 @@ h1, h2, h3, h4, h5, h6 {
   .mk-card:hover {
     @apply -translate-y-1 border-accent/40 shadow-elevated;
   }
+  /* "Instrument tag": a technical, brand-specific badge — mono micro-caps under
+     a sharp-cornered hairline, marked with the gold "+" from the SM cross —
+     rather than a generic rounded pill with a pulsing dot. */
   .mk-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface/80 px-3 py-1 font-mono text-[11px] text-ink-soft backdrop-blur;
+    @apply inline-flex items-center gap-1.5 rounded-[3px] border border-hairline bg-surface/70 px-2.5 py-1 font-mono text-[10.5px] uppercase leading-none tracking-[0.14em] text-ink-soft backdrop-blur;
+  }
+  .mk-chip::before {
+    content: "+";
+    color: rgb(var(--gold));
+    @apply font-sans text-[13px] font-bold leading-none;
   }
 }
 

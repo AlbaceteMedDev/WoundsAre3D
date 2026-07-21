@@ -61,10 +61,7 @@ export function PortalTourSection() {
                 with a live tamper-evidence check. Click anything.
               </p>
             </div>
-            <span className="mk-chip">
-              <span className="mk-live-dot inline-block h-1.5 w-1.5 rounded-full bg-success" />
-              fully interactive · synthetic data · no PHI
-            </span>
+            <span className="mk-chip">fully interactive · synthetic data · no PHI</span>
           </div>
         </Reveal>
 

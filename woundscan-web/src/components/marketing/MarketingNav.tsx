@@ -55,16 +55,13 @@ export function MarketingNav() {
         <Link
           href="/"
           aria-label="StrataMetric — AI Wound Scan home"
-          className="flex shrink-0 items-center"
+          className="flex shrink-0 items-center gap-2 md:gap-2.5"
         >
-          {/* The "StrataMetric" wordmark is the proper nav logo; the SM symbol is
-              the favicon, and the full lockup lives on the login/portal pages. */}
-          <BrandImage
-            variant="wordmark"
-            alt="StrataMetric"
-            priority
-            className="h-6 w-auto md:h-7"
-          />
+          {/* Icon + wordmark lockup: the SM symbol (also the favicon) beside the
+              StrataMetric wordmark. Both theme-aware; the full lockup with the
+              "AI Wound Scan" taglines lives on the login/portal pages and footer. */}
+          <BrandImage variant="symbol" alt="" priority className="h-7 w-auto md:h-8" />
+          <BrandImage variant="wordmark" alt="" priority className="h-5 w-auto md:h-6" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Sections">
