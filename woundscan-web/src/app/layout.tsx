@@ -40,17 +40,27 @@ export const metadata: Metadata = {
   openGraph: {
     title: "StrataMetric — AI Wound Scan",
     description:
-      "Objective, reproducible 3D wound measurement from an iPhone LiDAR scan. The full three-dimensional wound profile — captured at the point of care.",
+      "A 4-second iPhone LiDAR scan becomes an objective 3D wound measurement — length, width, and true depth — with audit-defensible documentation in minutes.",
     siteName: "StrataMetric",
     url: "https://stratametricai.com",
     type: "website",
-    images: [{ url: "/logo-square.png", width: 1024, height: 1024 }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "StrataMetric — AI Wound Scan by Albacete MedDev" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "StrataMetric — AI Wound Scan",
     description:
-      "Objective, reproducible 3D wound measurement from an iPhone LiDAR scan, by Albacete MedDev.",
+      "A 4-second iPhone LiDAR scan becomes an objective 3D wound measurement — length, width, and true depth — with audit-defensible documentation in minutes.",
+    images: ["/og.png"],
+  },
+  icons: {
+    // A favicon can't read the in-page theme toggle, only the browser/OS color
+    // scheme — so light UA gets the light mark, dark UA gets the navy mark.
+    icon: [
+      { url: "/icon-light.png", media: "(prefers-color-scheme: light)", type: "image/png" },
+      { url: "/icon-dark.png", media: "(prefers-color-scheme: dark)", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-dark.png" }],
   },
 };
 

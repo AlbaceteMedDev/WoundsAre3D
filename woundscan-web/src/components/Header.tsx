@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { BrandImage } from "@/components/BrandImage";
 import { getSession } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
@@ -9,10 +9,8 @@ export async function Header() {
     <header className="sticky top-0 z-30 border-b border-hairline bg-bg/80 backdrop-blur supports-[backdrop-filter]:bg-bg/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
         <Link href={session ? "/dashboard" : "/"} aria-label="StrataMetric — AI Wound Scan home">
-          <Image
-            src="/logo.png"
-            width={468}
-            height={263}
+          <BrandImage
+            variant="lockup"
             alt="StrataMetric — AI Wound Scan by Albacete MedDev"
             priority
             className="h-auto w-44"

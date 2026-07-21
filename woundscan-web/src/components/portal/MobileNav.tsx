@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { BrandImage } from "@/components/BrandImage";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -71,10 +71,8 @@ export function MobileNav() {
           <aside className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-surface shadow-elevated">
             <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
               <Link href="/dashboard" aria-label="StrataMetric — AI Wound Scan home">
-                <Image
-                  src="/logo.png"
-                  width={468}
-                  height={263}
+                <BrandImage
+                  variant="lockup"
                   alt="StrataMetric — AI Wound Scan"
                   className="h-auto w-32"
                 />
