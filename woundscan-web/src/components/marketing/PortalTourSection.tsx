@@ -160,7 +160,7 @@ export function PortalTourSection() {
               <span aria-hidden>→</span>
             </Link>
             <a
-              href="mailto:gabe@albacetemeddev.com?subject=StrataMetric%20AI%20portal%20walkthrough"
+              href="mailto:gabe@albacetemeddev.com?subject=StrataMetric%20portal%20walkthrough"
               className="btn btn-secondary px-5 py-2.5"
             >
               Book a guided walkthrough

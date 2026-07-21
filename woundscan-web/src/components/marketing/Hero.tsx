@@ -49,7 +49,7 @@ export function Hero() {
             className="mk-rise mt-6 max-w-xl text-base leading-relaxed text-ink-soft md:text-lg"
             style={{ "--rise-delay": "160ms" } as React.CSSProperties}
           >
-            StrataMetric AI turns a four-second iPhone LiDAR scan into an objective,
+            StrataMetric&rsquo;s AI Wound Scan turns a four-second iPhone LiDAR scan into an objective,
             reproducible 3D wound measurement — length, width, <strong className="text-ink">true depth</strong>,
             wound bed and peri-wound area — with audit-defensible documentation generated in minutes,
             at the point of care.

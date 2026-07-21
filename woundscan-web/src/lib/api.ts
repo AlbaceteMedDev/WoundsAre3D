@@ -1,5 +1,5 @@
 /**
- * API client for the StrataMetric AI measurement engine.
+ * API client for the AI Wound Scan measurement engine.
  *
  * Uses fetch + cookies; the JWT lives in an HTTP-only cookie set by the
  * Next.js auth route, never exposed to client JS. Requests are made via

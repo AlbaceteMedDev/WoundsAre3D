@@ -16,7 +16,7 @@ import { CtaSection } from "@/components/marketing/CtaSection";
 import { Footer } from "@/components/marketing/Footer";
 
 /**
- * Public marketing site for StrataMetric AI by Albacete MedDev.
+ * Public marketing site for StrataMetric AI Wound Scan (Albacete MedDev).
  * Authenticated users skip straight to the portal dashboard.
  */
 export default async function HomePage() {

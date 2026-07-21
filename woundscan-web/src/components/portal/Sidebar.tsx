@@ -32,16 +32,16 @@ export function Sidebar() {
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface lg:flex">
       <Link
         href="/dashboard"
-        aria-label="StrataMetric AI home"
+        aria-label="StrataMetric — AI Wound Scan home"
         className="flex items-center justify-center border-b border-hairline px-3 py-3"
       >
         <Image
           src="/logo.png"
           width={468}
           height={263}
-          alt="StrataMetric AI — by Albacete MedDev"
+          alt="StrataMetric — AI Wound Scan by Albacete MedDev"
           priority
-          className="h-auto w-44 dark:invert"
+          className="h-auto w-44"
         />
       </Link>
 
