@@ -1,18 +1,20 @@
 import Image from "next/image";
 
-type Variant = "lockup" | "mark";
+type Variant = "lockup" | "wordmark" | "mark";
 
 /**
  * Intrinsic sizes match the source artwork so next/image never distorts the
- * aspect ratio. The wide lockup is ~1869×842; the square mark is 1254×1254.
+ * aspect ratio. Lockup ~1869×842; wordmark ("StrataMetric" only) ~1200×145;
+ * square mark 1254×1254.
  */
 const ASSETS: Record<Variant, { light: string; dark: string; w: number; h: number }> = {
   lockup: { light: "/logo-light.png", dark: "/logo-dark.png", w: 1869, h: 842 },
+  wordmark: { light: "/wordmark-light.png", dark: "/wordmark-dark.png", w: 1200, h: 145 },
   mark: { light: "/icon-light.png", dark: "/icon-dark.png", w: 1254, h: 1254 },
 };
 
 type Props = {
-  /** "lockup" = full StrataMetric / AI Wound Scan wordmark; "mark" = square SM badge. */
+  /** "lockup" = full lockup w/ taglines; "wordmark" = "StrataMetric" only; "mark" = square SM badge. */
   variant: Variant;
   /** Sizing/appearance classes (e.g. "h-auto w-56"). Applied to both variants. */
   className?: string;

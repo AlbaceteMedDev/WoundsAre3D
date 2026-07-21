@@ -57,13 +57,13 @@ export function MarketingNav() {
           aria-label="StrataMetric — AI Wound Scan home"
           className="flex shrink-0 items-center"
         >
-          {/* The full StrataMetric lockup (transparent, theme-aware) is the
-              proper logo — not the square favicon mark. Swaps light/dark. */}
+          {/* The "StrataMetric" wordmark is the proper nav logo; the SM symbol is
+              the favicon, and the full lockup lives on the login/portal pages. */}
           <BrandImage
-            variant="lockup"
-            alt="StrataMetric — AI Wound Scan by Albacete MedDev"
+            variant="wordmark"
+            alt="StrataMetric"
             priority
-            className="h-11 w-auto md:h-12"
+            className="h-6 w-auto md:h-7"
           />
         </Link>
 
