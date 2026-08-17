@@ -44,12 +44,12 @@ export function Hero() {
             className="mk-rise mt-6 max-w-xl text-base leading-relaxed text-ink-soft md:text-lg"
             style={{ "--rise-delay": "160ms" } as React.CSSProperties}
           >
-            Wound charts record length × width × depth, which is an estimate of a box. AI Wound
-            Scan measures the{" "}
-            <strong className="text-ink">volume the wound actually has</strong>, integrating depth
-            across every point of its own topography from a four-second iPhone scan. Area, depth
-            and perimeter arrive with it, each carrying a confidence interval, and the note is
-            written before you leave the room.
+            Wound beds are never uniform. Undermining, tunneling and uneven granulation all
+            change how much volume is really there, so length × width × depth only ever
+            estimates a box. AI Wound Scan reads depth across every point of the bed&rsquo;s
+            topography from a four-second iPhone scan and gives you the{" "}
+            <strong className="text-ink">true volume</strong>, with area, depth and perimeter,
+            each carrying a confidence interval. The note is written before you leave the room.
           </p>
 
           <div
