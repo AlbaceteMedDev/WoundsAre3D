@@ -116,16 +116,16 @@ d = ImageDraw.Draw(card)
 
 # ── Headline ──────────────────────────────────────────────────────────────
 y = 186
-for line in ["Length × width × depth", "isn’t volume."]:
+for line in ["Defensible wound volume,", "from its own topography."]:
     d.text((PAD, y), line, font=f_head, fill=INK)
     y += 70
 
 # ── Supporting line: names the WHOLE product, not just the scan ───────────
 y += 26
 for line in [
-    "That describes a box. Wounds aren’t boxes. A four-second iPhone",
-    "scan reconstructs the bed and integrates depth across the whole",
-    "surface, so you chart the volume the wound actually has.",
+    "A four-second iPhone scan reconstructs the wound bed, then",
+    "integrates depth across every point of it. Volume, area and depth",
+    "arrive with 95% confidence intervals, in a report built to be audited.",
 ]:
     d.text((PAD, y), line, font=f_sub, fill=INK_SOFT)
     y += 34
