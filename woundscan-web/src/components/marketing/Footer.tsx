@@ -38,7 +38,7 @@ export function Footer() {
               <li><Link className="transition hover:text-accent" href="/login">Portal sign in</Link></li>
               <li><Link className="transition hover:text-accent" href="/demo">3D viewer demo</Link></li>
               <li>
-                <a className="transition hover:text-accent" href="mailto:gabe@albacetemeddev.com">
+                <a className="transition hover:text-accent" href="mailto:gabe@stratametricai.com">
                   Request access
                 </a>
               </li>

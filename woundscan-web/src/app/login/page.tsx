@@ -95,7 +95,7 @@ export default function LoginPage() {
       </div>
 
       <p className="mt-6 text-xs text-ink-muted">
-        Need access? Email <a className="text-accent hover:text-accent-bright" href="mailto:gabe@albacetemeddev.com">gabe@albacetemeddev.com</a>.
+        Need access? Email <a className="text-accent hover:text-accent-bright" href="mailto:gabe@stratametricai.com">gabe@stratametricai.com</a>.
       </p>
     </main>
   );
