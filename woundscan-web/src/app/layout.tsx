@@ -13,10 +13,10 @@ const SITE = "https://stratametricai.com";
  * context, and "3D wound measurement" alone undersells what they'd be buying.
  */
 const SHARE_DESCRIPTION =
-  "Length × width × depth describes a box, and wounds aren't boxes. A four-second iPhone scan reconstructs the wound bed and integrates depth across the whole surface. Notes, claims checks and graft inventory come with it.";
+  "Defensible wound volume, measured from the wound's own topography. A four-second iPhone scan reconstructs the bed and integrates depth across every point of it, returning volume, area and depth with 95% confidence intervals. Notes, claims checks and graft inventory come with it.";
 
 const SEARCH_DESCRIPTION =
-  "Wound charts record length × width × depth, which describes a box. AI Wound Scan reconstructs the wound from a four-second iPhone LiDAR scan and integrates depth across the whole bed, returning volume, surface area, depth, perimeter and footprint with 95% confidence intervals. The same portal handles notes, claims and documentation checks, UDI-traceable graft inventory, healing analytics and visit routing for wound care teams.";
+  "AI Wound Scan measures defensible wound volume from the wound's own topography. A four-second iPhone LiDAR scan reconstructs the bed, then integrates depth across every point of it, returning volume, surface area, depth, perimeter and footprint with 95% confidence intervals rather than a length × width × depth estimate. The same portal handles notes, claims and documentation checks, UDI-traceable graft inventory, healing analytics and visit routing for wound care teams.";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -42,7 +42,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "StrataMetric — 3D Wound Volume Measurement & Wound-Care Platform",
+    default: "StrataMetric — Defensible Wound Volume & 3D Measurement Platform",
     template: "%s | StrataMetric",
   },
   description: SEARCH_DESCRIPTION,
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   openGraph: {
-    title: "AI Wound Scan — wound volume from a four-second iPhone scan",
+    title: "AI Wound Scan — defensible wound volume from its own topography",
     description: SHARE_DESCRIPTION,
     siteName: "StrataMetric",
     url: SITE,
@@ -82,13 +82,13 @@ export const metadata: Metadata = {
         url: "/og-v2.png",
         width: 1200,
         height: 630,
-        alt: "StrataMetric AI Wound Scan: length times width times depth isn't volume. A four-second iPhone scan reconstructs the wound bed and integrates depth across the whole surface.",
+        alt: "StrataMetric AI Wound Scan: defensible wound volume, measured from the wound's own topography by a four-second iPhone scan.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Wound Scan — wound volume from a four-second iPhone scan",
+    title: "AI Wound Scan — defensible wound volume from its own topography",
     description: SHARE_DESCRIPTION,
     images: ["/og-v2.png"],
   },

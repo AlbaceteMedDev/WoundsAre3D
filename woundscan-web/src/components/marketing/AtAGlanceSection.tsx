@@ -15,7 +15,7 @@ const CAPABILITIES = [
   {
     n: "02",
     title: "Volume the wound actually has",
-    body: "Most tools multiply length × width × depth and call it volume. The engine integrates the depth field across the whole bed instead, so an undermined or irregular wound reports what it really holds. Surface area, depth and perimeter come with it, each with a 95% confidence interval.",
+    body: "Most tools multiply length × width × depth and call it volume. The engine integrates the depth field across the wound's own topography instead, so an undermined or irregular wound reports what it really holds. Surface area, depth and perimeter come with it, each with a 95% confidence interval.",
   },
   {
     n: "03",
