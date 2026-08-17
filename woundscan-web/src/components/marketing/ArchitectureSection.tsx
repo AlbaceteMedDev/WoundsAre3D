@@ -16,9 +16,10 @@ export function ArchitectureSection() {
             An end-to-end pipeline, <span className="text-gradient">born on AWS.</span>
           </h2>
           <p className="mk-lead">
-            Designed and validated with AWS partner engineering: serverless ingestion, an automated
-            processing pipeline, managed AI services for segmentation and narration, and encrypted,
-            lifecycle-managed storage — the same architecture that carries forward into production.
+            Designed and built with nClouds, an AWS Premier Consulting Partner: serverless
+            ingestion, an automated processing pipeline, managed AI services for segmentation and
+            narration, and encrypted, lifecycle-managed storage — the same architecture that carries
+            forward into production.
           </p>
         </Reveal>
 

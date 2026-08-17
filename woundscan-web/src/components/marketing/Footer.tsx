@@ -28,6 +28,7 @@ export function Footer() {
               <li><a className="transition hover:text-accent" href="#demo">Live demo</a></li>
               <li><a className="transition hover:text-accent" href="#portal">Portal tour</a></li>
               <li><a className="transition hover:text-accent" href="#platform">Platform</a></li>
+              <li><a className="transition hover:text-accent" href="#partnership">Partnership</a></li>
             </ul>
           </nav>
 
