@@ -27,7 +27,7 @@ export function CtaSection() {
               <span aria-hidden>→</span>
             </Link>
             <a
-              href="mailto:gabe@albacetemeddev.com?subject=StrataMetric%20access%20request"
+              href="mailto:gabe@stratametricai.com?subject=StrataMetric%20access%20request"
               className="btn btn-secondary px-6 py-3 text-base"
             >
               Request access
