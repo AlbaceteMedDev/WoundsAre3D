@@ -13,10 +13,10 @@ const SITE = "https://stratametricai.com";
  * context, and "3D wound measurement" alone undersells what they'd be buying.
  */
 const SHARE_DESCRIPTION =
-  "A 4-second iPhone LiDAR scan becomes objective 3D wound measurement — length, width, true depth and area. Documentation, claims compliance, graft inventory and scheduling run in one audit-ready portal.";
+  "A 4-second iPhone LiDAR scan rebuilds the wound bed in 3D, then integrates true volume across its real topography — never the length × width × depth box. Documentation, claims compliance, graft inventory and scheduling follow in one audit-ready portal.";
 
 const SEARCH_DESCRIPTION =
-  "AI Wound Scan turns a 4-second iPhone LiDAR scan into objective, reproducible 3D wound measurement — length, width, true depth, wound bed and peri-wound area. Audit-defensible documentation, claims compliance, UDI-traceable graft inventory, healing analytics and route planning in one portal for wound care teams.";
+  "AI Wound Scan turns a 4-second iPhone LiDAR scan into objective, reproducible 3D wound measurement. Volume is integrated over the reconstructed wound bed — not approximated as length × width × depth — alongside surface area, true depth, perimeter and footprint, each reported with a 95% confidence interval. Audit-defensible documentation, claims compliance, UDI-traceable graft inventory, healing analytics and route planning in one portal for wound care teams.";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -42,7 +42,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "StrataMetric — 3D Wound Measurement & Wound-Care Platform",
+    default: "StrataMetric — True Wound Volume & 3D Measurement Platform",
     template: "%s | StrataMetric",
   },
   description: SEARCH_DESCRIPTION,
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   openGraph: {
-    title: "AI Wound Scan — 3D wound measurement & wound-care platform",
+    title: "AI Wound Scan — true wound volume, integrated not estimated",
     description: SHARE_DESCRIPTION,
     siteName: "StrataMetric",
     url: SITE,
@@ -82,13 +82,13 @@ export const metadata: Metadata = {
         url: "/og-v2.png",
         width: 1200,
         height: 630,
-        alt: "StrataMetric AI Wound Scan — objective 3D wound measurement in 4 seconds, with documentation, claims compliance, graft inventory and scheduling in one portal.",
+        alt: "StrataMetric AI Wound Scan — true wound volume integrated from the wound bed's own topography, with documentation, claims compliance and graft inventory in one portal.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Wound Scan — 3D wound measurement & wound-care platform",
+    title: "AI Wound Scan — true wound volume, integrated not estimated",
     description: SHARE_DESCRIPTION,
     images: ["/og-v2.png"],
   },
@@ -151,8 +151,9 @@ const STRUCTURED_DATA = {
       publisher: { "@id": `${SITE}/#organization` },
       featureList: [
         "Four-second iPhone LiDAR wound capture",
-        "Objective 3D measurement: length, width, true depth, wound bed and peri-wound area",
-        "Reproducible measurements with stated uncertainty",
+        "True wound volume integrated over the reconstructed wound bed (Simpson's rule over the depth field), not a length × width × depth approximation",
+        "Surface area, max and mean depth, perimeter and footprint area",
+        "Every measurement reported with a 95% confidence interval",
         "Auto-generated, audit-defensible documentation",
         "Patient and wound tracking with healing trajectories",
         "Clinical notes with sign-and-lock",

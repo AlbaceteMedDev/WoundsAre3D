@@ -14,8 +14,8 @@ const CAPABILITIES = [
   },
   {
     n: "02",
-    title: "Objective measurement",
-    body: "Length, width, true depth, wound bed and peri-wound area — reconstructed in 3D and reported with the uncertainty of the estimate, so two clinicians get the same numbers.",
+    title: "Volume, integrated — not estimated",
+    body: "Most tools multiply length × width × depth and call it volume. The engine integrates the depth field across the whole wound bed, so an undermined or irregular wound reports the volume it actually has — with surface area, true depth and perimeter, each carrying a 95% confidence interval.",
   },
   {
     n: "03",
