@@ -65,12 +65,12 @@ export function MarketingNav() {
           <BrandImage variant="wordmark" alt="" priority className="h-5 w-auto md:h-6" />
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex" aria-label="Sections">
+        <nav className="hidden items-center gap-5 xl:flex" aria-label="Sections">
           {LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="font-display text-sm font-medium text-ink-soft transition hover:text-ink"
+              className="whitespace-nowrap font-display text-sm font-medium text-ink-soft transition hover:text-ink"
             >
               {l.label}
             </a>
@@ -79,13 +79,13 @@ export function MarketingNav() {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <Link href="/login" className="btn btn-primary hidden sm:inline-flex">
+          <Link href="/login" className="btn btn-primary hidden whitespace-nowrap sm:inline-flex">
             Portal sign in
             <span aria-hidden>→</span>
           </Link>
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-md border border-hairline bg-surface text-ink-soft lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-md border border-hairline bg-surface text-ink-soft xl:hidden"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -104,7 +104,7 @@ export function MarketingNav() {
       {/* Mobile sheet */}
       {open && (
         <nav
-          className="border-t border-hairline bg-bg/95 px-6 py-4 backdrop-blur-xl lg:hidden"
+          className="border-t border-hairline bg-bg/95 px-6 py-4 backdrop-blur-xl xl:hidden"
           aria-label="Sections"
         >
           <ul className="space-y-1">

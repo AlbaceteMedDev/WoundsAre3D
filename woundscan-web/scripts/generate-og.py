@@ -30,6 +30,7 @@ f_sub = ImageFont.truetype(f"{FONTS}/WorkSans-Regular.ttf", 23)
 f_tag = ImageFont.truetype(f"{FONTS}/JetBrainsMono-Regular.ttf", 15)
 f_plus = ImageFont.truetype(f"{FONTS}/Outfit-Bold.ttf", 19)
 f_dom = ImageFont.truetype(f"{FONTS}/JetBrainsMono-Regular.ttf", 16)
+f_small = ImageFont.truetype(f"{FONTS}/JetBrainsMono-Regular.ttf", 11)
 
 
 def gradient(w, h, top, bot):
@@ -94,7 +95,10 @@ for yy in range(top_y, bot_y, 8):
     dl.line([(cx, yy), (cx, yy + 3)], fill=GOLD + (215,), width=2)
 dl.line([(cx - 8, top_y), (cx + 8, top_y)], fill=GOLD + (235,), width=2)
 dl.line([(cx - 8, bot_y), (cx + 8, bot_y)], fill=GOLD + (235,), width=2)
-dl.text((cx - 46, bot_y + 22), "TRUE DEPTH", font=f_tag, fill=GOLD + (240,))
+formula = "V = ∫∫ d(x,y) dA"
+dl.text((cx - dl.textlength(formula, font=f_tag) / 2, bot_y + 20), formula, font=f_tag, fill=GOLD + (240,))
+sub = "OVER THE WOUND BED"
+dl.text((cx - dl.textlength(sub, font=f_small) / 2, bot_y + 42), sub, font=f_small, fill=INK_MUTED)
 
 # ── Brand lockup, top-left ────────────────────────────────────────────────
 PAD = 74
@@ -111,17 +115,17 @@ card.alpha_composite(wm, (PAD + sym.width + 16, 60 + (sh - wh) // 2))
 d = ImageDraw.Draw(card)
 
 # ── Headline ──────────────────────────────────────────────────────────────
-y = 196
-for line in ["Objective 3D wound", "measurement in 4 seconds."]:
+y = 186
+for line in ["True wound volume —", "integrated, not estimated."]:
     d.text((PAD, y), line, font=f_head, fill=INK)
     y += 70
 
 # ── Supporting line: names the WHOLE product, not just the scan ───────────
 y += 26
 for line in [
-    "iPhone LiDAR captures length, width, true depth and area —",
-    "then the portal handles documentation, claims compliance,",
-    "graft inventory and scheduling. One login.",
+    "A 4-second iPhone LiDAR scan rebuilds the wound bed in 3D, then",
+    "integrates true volume across its real topography — never the",
+    "length × width × depth box. Documentation and claims follow.",
 ]:
     d.text((PAD, y), line, font=f_sub, fill=INK_SOFT)
     y += 34
@@ -129,7 +133,7 @@ for line in [
 # ── Credential tags, matching the site's gold "+" instrument tags ─────────
 y += 34
 x = PAD
-for label in ["±0.3 MM @ 95% CI", "< 5 MIN SCAN-TO-REPORT", "510(K)-READY ARCHITECTURE"]:
+for label in ["VOLUME · AREA · TRUE DEPTH", "±0.3 MM @ 95% CI", "510(K)-READY ARCHITECTURE"]:
     d.text((x, y - 2), "+", font=f_plus, fill=GOLD)
     x += 17
     d.text((x, y), label, font=f_tag, fill=INK_MUTED)

@@ -45,9 +45,11 @@ export function Hero() {
             style={{ "--rise-delay": "160ms" } as React.CSSProperties}
           >
             StrataMetric&rsquo;s AI Wound Scan turns a four-second iPhone LiDAR scan into an objective,
-            reproducible 3D wound measurement — length, width, <strong className="text-ink">true depth</strong>,
-            wound bed and peri-wound area — with audit-defensible documentation generated in minutes,
-            at the point of care.
+            reproducible 3D reconstruction — then integrates{" "}
+            <strong className="text-ink">true wound volume</strong> across the bed&rsquo;s own topography
+            rather than approximating it as length × width × depth. Surface area, depth and perimeter
+            come with it, each carrying a confidence interval, with audit-defensible documentation
+            generated in minutes at the point of care.
           </p>
 
           <div
@@ -68,7 +70,7 @@ export function Hero() {
             style={{ "--rise-delay": "320ms" } as React.CSSProperties}
           >
             <HeroStat value="4 s" label="LiDAR burst capture" />
-            <HeroStat value="±mm" label="instrument precision" />
+            <HeroStat value="±0.3 mm" label="instrument precision @95%" />
             <HeroStat value="< 5 min" label="scan to report" />
           </dl>
 
