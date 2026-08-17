@@ -1,0 +1,33 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "albacetemeddev",
+  "description": "Claude Code plugins published by Albacete MedDev. Currently ships the aws-startup-advisor plugin.",
+  "owner": {
+    "name": "Albacete MedDev",
+    "email": "gabe@albacetemeddev.com"
+  },
+  "plugins": [
+    {
+      "name": "aws-startup-advisor",
+      "source": "./plugins/aws-startup-advisor",
+      "description": "Pragmatic AWS architecture, cost, security and scaling guidance for startups, grounded in the Well-Architected Framework and adapted for small teams and tight budgets.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Albacete MedDev",
+        "email": "gabe@albacetemeddev.com"
+      },
+      "homepage": "https://github.com/AlbaceteMedDev/WoundsAre3D/tree/main/plugins/aws-startup-advisor",
+      "license": "MIT",
+      "category": "devops",
+      "keywords": [
+        "aws",
+        "cost-optimization",
+        "architecture",
+        "startup",
+        "security",
+        "well-architected",
+        "scaling"
+      ]
+    }
+  ]
+}
