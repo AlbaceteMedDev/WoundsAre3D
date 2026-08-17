@@ -53,7 +53,7 @@ export function ArchitectureSection() {
                 <text x="262" y="323" fontSize="12" fontFamily="var(--font-display), sans-serif" fontWeight="600" fill="rgb(var(--ink))">
                   Encrypted storage
                 </text>
-                <text x="262" y="341" fontSize="10.5" fontFamily="monospace" fill="rgb(var(--ink-muted))">
+                <text x="262" y="341" fontSize="10.5" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-muted))">
                   S3 (object lock) · DynamoDB · KMS keys · CloudWatch
                 </text>
                 <path className="mk-flow" d="M570 270 V 300" stroke="rgb(var(--accent) / 0.6)" strokeWidth="1.6" fill="none" />
@@ -139,7 +139,7 @@ function ArchNode({
         {title}
       </text>
       {sub.split(" · ").map((line, i) => (
-        <text key={line} x={x + 16} y={y + 48 + i * 15} fontSize="10.5" fontFamily="monospace" fill="rgb(var(--ink-muted))">
+        <text key={line} x={x + 16} y={y + 48 + i * 15} fontSize="10.5" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-muted))">
           {line}
         </text>
       ))}

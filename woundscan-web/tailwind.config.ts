@@ -33,10 +33,15 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
         sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       boxShadow: {
-        soft: "0 8px 24px rgb(var(--shadow) / 0.20)",
-        elevated: "0 20px 60px rgb(var(--shadow) / 0.30)",
+        // Layered ramps: a tight contact shadow plus a soft ambient one. The
+        // per-theme --shadow-N strengths keep dark mode from rendering these as
+        // invisible pure black (it previously had --shadow: 0 0 0, i.e. none).
+        soft: "0 1px 2px rgb(var(--shadow) / var(--shadow-1)), 0 6px 16px -4px rgb(var(--shadow) / var(--shadow-2))",
+        elevated:
+          "0 1px 2px rgb(var(--shadow) / var(--shadow-1)), 0 8px 24px -6px rgb(var(--shadow) / var(--shadow-2)), 0 24px 56px -12px rgb(var(--shadow) / var(--shadow-3))",
         accent: "0 8px 30px rgb(var(--accent) / 0.18)",
       },
       borderRadius: {

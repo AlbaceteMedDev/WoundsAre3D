@@ -260,7 +260,7 @@ function StepGlyph({ step }: { step: string }) {
           <path d="M25 55 Q 55 95 70 96 Q 85 95 115 55" stroke={stroke} strokeWidth="2" />
           <path className="mk-flow" d="M25 55 H 115" stroke={soft} strokeWidth="1.2" />
           <path className="mk-flow" d="M70 55 V 96" stroke={stroke} strokeWidth="1.4" />
-          <text x="76" y="80" fill={stroke} fontSize="10" fontFamily="monospace">
+          <text x="76" y="80" fill={stroke} fontSize="10" fontFamily="var(--font-mono), monospace">
             11.8mm
           </text>
         </svg>

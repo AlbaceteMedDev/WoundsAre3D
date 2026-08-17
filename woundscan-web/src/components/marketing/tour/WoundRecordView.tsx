@@ -58,11 +58,11 @@ export function WoundRecordView({ patientId, go }: { patientId: string; go: Tour
                 );
               })()}
               <line x1="38" y1="150" x2="182" y2="150" stroke="#22d3ee" strokeWidth="1" />
-              <text x="86" y="146" fontSize="8" fontFamily="monospace" fill="#7dd3fc">
+              <text x="86" y="146" fontSize="8" fontFamily="var(--font-mono), monospace" fill="#7dd3fc">
                 bed {v.area.toFixed(1)} cm²
               </text>
               <circle cx="110" cy="84" r="4" fill="none" stroke="#fbbf24" strokeWidth="1" />
-              <text x="118" y="80" fontSize="8" fontFamily="monospace" fill="#fbbf24">
+              <text x="118" y="80" fontSize="8" fontFamily="var(--font-mono), monospace" fill="#fbbf24">
                 D {v.depth.toFixed(1)}
               </text>
             </svg>
