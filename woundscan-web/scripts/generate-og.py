@@ -116,16 +116,16 @@ d = ImageDraw.Draw(card)
 
 # ── Headline ──────────────────────────────────────────────────────────────
 y = 186
-for line in ["True wound volume —", "integrated, not estimated."]:
+for line in ["Length × width × depth", "isn’t volume."]:
     d.text((PAD, y), line, font=f_head, fill=INK)
     y += 70
 
 # ── Supporting line: names the WHOLE product, not just the scan ───────────
 y += 26
 for line in [
-    "A 4-second iPhone LiDAR scan rebuilds the wound bed in 3D, then",
-    "integrates true volume across its real topography — never the",
-    "length × width × depth box. Documentation and claims follow.",
+    "That describes a box. Wounds aren’t boxes. A four-second iPhone",
+    "scan reconstructs the bed and integrates depth across the whole",
+    "surface, so you chart the volume the wound actually has.",
 ]:
     d.text((PAD, y), line, font=f_sub, fill=INK_SOFT)
     y += 34
@@ -133,7 +133,7 @@ for line in [
 # ── Credential tags, matching the site's gold "+" instrument tags ─────────
 y += 34
 x = PAD
-for label in ["VOLUME · AREA · TRUE DEPTH", "±0.3 MM @ 95% CI", "510(K)-READY ARCHITECTURE"]:
+for label in ["VOLUME · AREA · DEPTH", "±0.3 MM @ 95% CI", "510(K)-READY ARCHITECTURE"]:
     d.text((x, y - 2), "+", font=f_plus, fill=GOLD)
     x += 17
     d.text((x, y), label, font=f_tag, fill=INK_MUTED)
