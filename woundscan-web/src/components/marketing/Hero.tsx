@@ -82,7 +82,7 @@ export function Hero() {
             style={{ "--rise-delay": "400ms" } as React.CSSProperties}
             aria-label="Validation status"
           >
-            {["AWS-validated proof of concept", "FDA 510(k)-ready architecture"].map((c) => (
+            {["Built with an AWS Premier Partner", "FDA 510(k)-ready architecture"].map((c) => (
               <li
                 key={c}
                 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-muted"

@@ -12,6 +12,7 @@ import { DemoSection } from "@/components/marketing/DemoSection";
 import { PortalTourSection } from "@/components/marketing/PortalTourSection";
 import { TechnologySection } from "@/components/marketing/TechnologySection";
 import { ArchitectureSection } from "@/components/marketing/ArchitectureSection";
+import { PartnershipSection } from "@/components/marketing/PartnershipSection";
 import { ComplianceSection } from "@/components/marketing/ComplianceSection";
 import { BenefitsSection } from "@/components/marketing/BenefitsSection";
 import { CtaSection } from "@/components/marketing/CtaSection";
@@ -41,6 +42,7 @@ export default async function HomePage() {
         <PortalTourSection />
         <TechnologySection />
         <ArchitectureSection />
+        <PartnershipSection />
         <ComplianceSection />
         <BenefitsSection />
         <CtaSection />
