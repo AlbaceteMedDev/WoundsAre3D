@@ -44,12 +44,12 @@ export function Hero() {
             className="mk-rise mt-6 max-w-xl text-base leading-relaxed text-ink-soft md:text-lg"
             style={{ "--rise-delay": "160ms" } as React.CSSProperties}
           >
-            StrataMetric&rsquo;s AI Wound Scan turns a four-second iPhone LiDAR scan into an objective,
-            reproducible 3D reconstruction — then integrates{" "}
-            <strong className="text-ink">true wound volume</strong> across the bed&rsquo;s own topography
-            rather than approximating it as length × width × depth. Surface area, depth and perimeter
-            come with it, each carrying a confidence interval, with audit-defensible documentation
-            generated in minutes at the point of care.
+            Wound charts record length × width × depth. That describes a box, and wounds
+            aren&rsquo;t boxes. AI Wound Scan reconstructs the wound from a four-second iPhone
+            scan and integrates depth across the whole bed, so you chart the{" "}
+            <strong className="text-ink">volume it actually has</strong> — with area, depth and
+            perimeter, each carrying a confidence interval. The note is written before you leave
+            the room.
           </p>
 
           <div
