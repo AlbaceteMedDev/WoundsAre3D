@@ -19,7 +19,7 @@ const BENEFITS = [
   {
     n: "04",
     title: "Investor & partner narrative",
-    body: "A working, AWS-validated demonstration of LiDAR wound measurement is concrete technical evidence — for fundraising, clinical partnerships, and the regulatory conversations that follow a successful proof of concept.",
+    body: "A working demonstration of LiDAR wound measurement on AWS, built with an AWS Premier Partner, is concrete technical evidence — for fundraising, clinical partnerships, and the regulatory conversations that follow a successful proof of concept.",
   },
 ];
 
