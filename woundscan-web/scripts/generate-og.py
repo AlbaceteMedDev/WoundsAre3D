@@ -71,34 +71,66 @@ card = Image.alpha_composite(card, grid)
 card = Image.alpha_composite(card, glow(CYAN, W * 0.30, H * 0.42, 300, 250, 0.30))
 card = Image.alpha_composite(card, glow(GOLD, W * 0.86, H * 0.80, 260, 200, 0.13))
 
-# ── Topographic depth rings: the wound profile the product measures ───────
-# Kept in its own right-hand column so it never crowds the headline.
+# ── LiDAR reconstruction mesh ─────────────────────────────────────────────
+# Drawn the way ARKit renders a scene-reconstruction mesh: a triangulated
+# wireframe deforming over the surface, brighter where the sensor is closest.
+import math
+
 topo = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 td = ImageDraw.Draw(topo)
-cx, cy = int(W * 0.855), int(H * 0.44)
-RINGS = 9
-for i in range(RINGS):
-    t = i / (RINGS - 1)
-    rx = int(148 * (1 - t * 0.80))
-    ry = int(54 * (1 - t * 0.80))
-    oy = int(t * 52)  # sink each ring to read as a crater in perspective
-    a = int(232 * (1 - t * 0.62))
-    col = CYAN if i < RINGS - 3 else GOLD
-    td.ellipse([cx - rx, cy - ry + oy, cx + rx, cy + ry + oy], outline=col + (a,), width=2)
-topo = topo.filter(ImageFilter.GaussianBlur(0.4))
+CX, CY = 1000, int(H * 0.40)
+N = 15                       # grid resolution
+ISO_X, ISO_Y = 62, 34        # isometric axes
+DEPTH = 76                   # crater depth on screen
+SIGMA = 0.55                 # crater width; larger reads shallower and broader
+
+
+def surface(i, j):
+    """Grid index -> screen point over a Gaussian depression, isometric view."""
+    u = (i / (N - 1) - 0.5) * 2
+    v = (j / (N - 1) - 0.5) * 2
+    z = math.exp(-(u * u + v * v) / SIGMA)   # 1 at the deepest point, ~0 at the rim
+    return (CX + (u - v) * ISO_X, CY + (u + v) * ISO_Y + z * DEPTH), z
+
+
+pts = [[surface(i, j) for j in range(N)] for i in range(N)]
+
+
+def shade(z):
+    """Intact rim stays cyan; the excavated centre warms toward gold."""
+    return tuple(round(CYAN[k] + (GOLD[k] - CYAN[k]) * z) for k in range(3))
+
+
+for i in range(N):
+    for j in range(N):
+        (x0, y0), z0 = pts[i][j]
+        for di, dj in ((1, 0), (0, 1), (1, 1)):   # rows, columns, one diagonal
+            if i + di < N and j + dj < N:
+                (x1, y1), z1 = pts[i + di][j + dj]
+                z = (z0 + z1) / 2
+                a = int(78 + 172 * z)
+                if di and dj:
+                    a = int(a * 0.34)             # diagonals sit behind the quads
+                td.line([(x0, y0), (x1, y1)], fill=shade(z) + (a,), width=1)
+
+# Vertex returns, the way a depth capture shows its samples.
+for i in range(N):
+    for j in range(N):
+        (x, y), z = pts[i][j]
+        if (i + j) % 2:
+            continue
+        r = 1.5 if z > 0.4 else 1.1
+        td.ellipse([x - r, y - r, x + r, y + r], fill=shade(z) + (int(130 + 125 * z),))
+
 card = Image.alpha_composite(card, topo)
 
-# depth callout: a gold measure line dropping into the crater
 dl = ImageDraw.Draw(card)
-top_y, bot_y = cy - 42, cy + 50
-for yy in range(top_y, bot_y, 8):
-    dl.line([(cx, yy), (cx, yy + 3)], fill=GOLD + (215,), width=2)
-dl.line([(cx - 8, top_y), (cx + 8, top_y)], fill=GOLD + (235,), width=2)
-dl.line([(cx - 8, bot_y), (cx + 8, bot_y)], fill=GOLD + (235,), width=2)
+bot_y = CY + DEPTH + 12
+
 formula = "V = ∫∫ d(x,y) dA"
-dl.text((cx - dl.textlength(formula, font=f_tag) / 2, bot_y + 20), formula, font=f_tag, fill=GOLD + (240,))
+dl.text((CX - dl.textlength(formula, font=f_tag) / 2, bot_y + 26), formula, font=f_tag, fill=GOLD + (240,))
 sub = "OVER THE WOUND BED"
-dl.text((cx - dl.textlength(sub, font=f_small) / 2, bot_y + 42), sub, font=f_small, fill=INK_MUTED)
+dl.text((CX - dl.textlength(sub, font=f_small) / 2, bot_y + 48), sub, font=f_small, fill=INK_MUTED)
 
 # ── Brand lockup, top-left ────────────────────────────────────────────────
 PAD = 74
@@ -124,8 +156,8 @@ for line in ["Measure true wound volume", "in 4 seconds, with an iPhone."]:
 y += 26
 for line in [
     "Wound beds are never uniform. Undermining, tunneling and uneven",
-    "granulation all change how much volume is really there. The scan",
-    "reads depth across every point of that topography, not a box.",
+    "granulation all change the real volume. So the scan measures depth",
+    "point by point across the whole bed and adds it up.",
 ]:
     d.text((PAD, y), line, font=f_sub, fill=INK_SOFT)
     y += 34

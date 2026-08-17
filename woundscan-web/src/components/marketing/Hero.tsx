@@ -45,11 +45,12 @@ export function Hero() {
             style={{ "--rise-delay": "160ms" } as React.CSSProperties}
           >
             Wound beds are never uniform. Undermining, tunneling and uneven granulation all
-            change how much volume is really there, so length × width × depth only ever
-            estimates a box. AI Wound Scan reads depth across every point of the bed&rsquo;s
-            topography from a four-second iPhone scan and gives you the{" "}
-            <strong className="text-ink">true volume</strong>, with area, depth and perimeter,
-            each carrying a confidence interval. The note is written before you leave the room.
+            change how much volume is really there, and length × width × depth cannot see
+            any of it. AI Wound Scan measures depth point by point across the whole bed from
+            a four-second iPhone scan and adds it up, so you get the{" "}
+            <strong className="text-ink">true volume</strong> along with area, depth and
+            perimeter, each with a confidence interval. The note is written before you leave
+            the room.
           </p>
 
           <div
