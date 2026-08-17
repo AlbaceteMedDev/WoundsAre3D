@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BrandImage } from "@/components/BrandImage";
 
 const LINKS = [
+  { href: "#overview", label: "Overview" },
   { href: "#technology", label: "Technology" },
   { href: "#pipeline", label: "How it works" },
   { href: "#report", label: "The report" },

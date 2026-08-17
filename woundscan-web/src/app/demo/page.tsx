@@ -1,3 +1,18 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "3D Wound Mesh Viewer — Live Demo",
+  description:
+    "Orbit a real reconstructed wound mesh in the browser: depth shading, tissue layers, cross-sections and the measurement overlay AI Wound Scan produces from a four-second iPhone LiDAR scan.",
+  alternates: { canonical: "/demo" },
+  openGraph: {
+    title: "3D Wound Mesh Viewer — Live Demo | StrataMetric",
+    description:
+      "Orbit a real reconstructed wound mesh in the browser — depth, tissue layers, cross-sections and measurement overlay. No sign-in required.",
+    url: "/demo",
+  },
+};
+
 import Link from "next/link";
 import { MeshWorkspace } from "@/components/mesh/MeshWorkspace";
 

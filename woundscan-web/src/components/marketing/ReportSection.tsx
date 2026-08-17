@@ -161,7 +161,7 @@ function TopView({ hovered }: { hovered: string | null }) {
             strokeWidth="1.4"
             strokeDasharray="5 5"
           />
-          <text x="380" y="70" fontSize="11" fontFamily="monospace" fill="rgb(var(--accent))">
+          <text x="380" y="70" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--accent))">
             peri-wound 18.4 cm²
           </text>
         </g>
@@ -175,7 +175,7 @@ function TopView({ hovered }: { hovered: string | null }) {
             stroke="rgb(var(--danger) / 0.8)"
             strokeWidth="2"
           />
-          <text x="196" y="222" fontSize="11" fontFamily="monospace" fill="rgb(var(--ink-soft))">
+          <text x="196" y="222" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-soft))">
             bed 11.2 cm²
           </text>
         </g>
@@ -185,7 +185,7 @@ function TopView({ hovered }: { hovered: string | null }) {
           <line x1="160" y1="292" x2="368" y2="292" stroke="rgb(var(--accent))" strokeWidth="1.4" />
           <line x1="160" y1="286" x2="160" y2="298" stroke="rgb(var(--accent))" strokeWidth="1.4" />
           <line x1="368" y1="286" x2="368" y2="298" stroke="rgb(var(--accent))" strokeWidth="1.4" />
-          <text x="240" y="312" fontSize="11" fontFamily="monospace" fill="rgb(var(--accent))">
+          <text x="240" y="312" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--accent))">
             L 42.0 mm
           </text>
         </g>
@@ -195,7 +195,7 @@ function TopView({ hovered }: { hovered: string | null }) {
           <line x1="120" y1="100" x2="120" y2="240" stroke="rgb(var(--accent))" strokeWidth="1.4" />
           <line x1="114" y1="100" x2="126" y2="100" stroke="rgb(var(--accent))" strokeWidth="1.4" />
           <line x1="114" y1="240" x2="126" y2="240" stroke="rgb(var(--accent))" strokeWidth="1.4" />
-          <text x="36" y="176" fontSize="11" fontFamily="monospace" fill="rgb(var(--accent))">
+          <text x="36" y="176" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--accent))">
             W 38.0 mm
           </text>
         </g>
@@ -205,7 +205,7 @@ function TopView({ hovered }: { hovered: string | null }) {
           <circle cx="262" cy="168" r="7" fill="none" stroke="rgb(var(--warn))" strokeWidth="1.4" />
           <line x1="262" y1="157" x2="262" y2="179" stroke="rgb(var(--warn))" strokeWidth="1.2" />
           <line x1="251" y1="168" x2="273" y2="168" stroke="rgb(var(--warn))" strokeWidth="1.2" />
-          <text x="274" y="156" fontSize="11" fontFamily="monospace" fill="rgb(var(--warn))">
+          <text x="274" y="156" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--warn))">
             max depth 11.8 mm
           </text>
         </g>
@@ -215,7 +215,7 @@ function TopView({ hovered }: { hovered: string | null }) {
           <line x1="424" y1="308" x2="504" y2="308" stroke="rgb(var(--ink-muted))" strokeWidth="1.6" />
           <line x1="424" y1="303" x2="424" y2="313" stroke="rgb(var(--ink-muted))" strokeWidth="1.4" />
           <line x1="504" y1="303" x2="504" y2="313" stroke="rgb(var(--ink-muted))" strokeWidth="1.4" />
-          <text x="446" y="300" fontSize="10" fontFamily="monospace" fill="rgb(var(--ink-muted))">
+          <text x="446" y="300" fontSize="10" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-muted))">
             10 mm
           </text>
         </g>
@@ -235,7 +235,7 @@ function CrossSection() {
       <svg viewBox="0 0 520 330" className="w-full" role="img" aria-label="Cross-section wound depth profile relative to the surrounding skin plane">
         {/* Skin plane */}
         <line x1="30" y1="110" x2="490" y2="110" stroke="rgb(var(--ink-muted))" strokeWidth="1.3" strokeDasharray="7 5" />
-        <text x="34" y="100" fontSize="11" fontFamily="monospace" fill="rgb(var(--ink-muted))">
+        <text x="34" y="100" fontSize="11" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-muted))">
           fitted reference plane
         </text>
 
@@ -256,13 +256,13 @@ function CrossSection() {
         {/* Depth arrow */}
         <line x1="262" y1="110" x2="262" y2="198" stroke="rgb(var(--warn))" strokeWidth="1.6" />
         <path d="M258 190 L 262 198 L 266 190" fill="none" stroke="rgb(var(--warn))" strokeWidth="1.6" />
-        <text x="272" y="160" fontSize="12" fontFamily="monospace" fill="rgb(var(--warn))">
+        <text x="272" y="160" fontSize="12" fontFamily="var(--font-mono), monospace" fill="rgb(var(--warn))">
           11.8 mm
         </text>
 
         {/* Mean depth line */}
         <line x1="150" y1="163" x2="372" y2="163" stroke="rgb(var(--accent))" strokeWidth="1" strokeDasharray="4 4" />
-        <text x="378" y="167" fontSize="10" fontFamily="monospace" fill="rgb(var(--accent))">
+        <text x="378" y="167" fontSize="10" fontFamily="var(--font-mono), monospace" fill="rgb(var(--accent))">
           mean 5.4 mm
         </text>
 
@@ -271,7 +271,7 @@ function CrossSection() {
           d="M150 106 C 190 108, 205 191, 262 194 C 320 191, 335 108, 372 106 L 372 114 C 335 116, 320 199, 262 202 C 205 199, 190 116, 150 114 Z"
           fill="rgb(var(--warn) / 0.12)"
         />
-        <text x="34" y="290" fontSize="10" fontFamily="monospace" fill="rgb(var(--ink-muted))">
+        <text x="34" y="290" fontSize="10" fontFamily="var(--font-mono), monospace" fill="rgb(var(--ink-muted))">
           shaded band: ±0.3 mm measurement uncertainty (95% CI, Monte Carlo)
         </text>
       </svg>

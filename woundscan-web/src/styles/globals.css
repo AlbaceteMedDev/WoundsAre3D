@@ -28,6 +28,11 @@
   --shadow: 15 23 42;         /* slate-900 */
 
   /* Wordmark: Strata(ink) · Metric(blue) · AI(gold) — matches the logo. */
+  --on-accent: 255 255 255;   /* readable foreground on --accent fills */
+  --shadow-1: 0.05;
+  --shadow-2: 0.07;
+  --shadow-3: 0.09;
+
   --wm-metric: 37 99 235;     /* vivid azure, logo "Metric" */
   --gold: 176 130 30;         /* metallic gold, darkened for light-bg legibility */
 }
@@ -56,6 +61,11 @@
   --shadow: 0 0 0;
 
   /* Wordmark: Strata(white) · Metric(cyan) · AI(gold) — matches the logo. */
+  --on-accent: 5 7 12;        /* dark ink on the gold accent */
+  --shadow-1: 0.50;
+  --shadow-2: 0.65;
+  --shadow-3: 0.75;
+
   --wm-metric: 34 211 238;    /* cyan, logo "Metric" in dark */
   --gold: 230 192 107;        /* luminous gold */
 }
@@ -82,8 +92,9 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display), system-ui, sans-serif;
   color: rgb(var(--ink));
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.011em;
   line-height: 1.15;
+  text-wrap: balance;
 }
 
 ::selection {
@@ -122,7 +133,8 @@ h1, h2, h3, h4, h5, h6 {
     @apply inline-flex items-center justify-center gap-2 rounded font-display text-sm font-semibold tracking-wide transition;
   }
   .btn-primary {
-    @apply bg-accent px-4 py-2 text-white hover:bg-accent-bright disabled:opacity-50 dark:text-ink;
+    @apply bg-accent px-4 py-2 hover:bg-accent-bright disabled:opacity-50;
+    color: rgb(var(--on-accent));
   }
   .btn-secondary {
     @apply border border-hairline bg-surface px-3 py-1.5 text-ink hover:border-accent hover:text-accent disabled:opacity-50;
@@ -180,10 +192,12 @@ h1, h2, h3, h4, h5, h6 {
     @apply mx-auto w-full max-w-7xl px-6 md:px-8;
   }
   .mk-h2 {
-    @apply font-display text-3xl font-bold tracking-tight text-ink md:text-[2.6rem] md:leading-[1.1];
+    @apply font-display text-3xl font-bold text-ink md:text-[2.6rem] md:leading-[1.1];
+    letter-spacing: -0.022em;
   }
   .mk-lead {
     @apply mt-4 max-w-2xl text-base leading-relaxed text-ink-soft md:text-lg;
+    text-wrap: pretty;
   }
   .mk-card {
     @apply rounded-xl border border-hairline bg-surface/70 p-6 backdrop-blur transition duration-300;
@@ -191,6 +205,33 @@ h1, h2, h3, h4, h5, h6 {
   .mk-card:hover {
     @apply -translate-y-1 border-accent/40 shadow-elevated;
   }
+  /* Capability tile: a card whose top edge carries a brand accent rule that
+     draws itself across on hover. Transform/opacity only, so it stays cheap. */
+  .mk-tile {
+    @apply relative overflow-hidden rounded-xl border border-hairline bg-surface/60 p-6 backdrop-blur transition duration-300;
+  }
+  .mk-tile::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgb(var(--accent)), rgb(var(--gold)));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .mk-tile:hover {
+    @apply -translate-y-1 border-accent/40 shadow-elevated;
+  }
+  .mk-tile:hover::before {
+    transform: scaleX(1);
+  }
+  .mk-tile-index {
+    @apply font-mono text-[11px] tracking-[0.2em];
+    color: rgb(var(--gold));
+  }
+
   /* "Instrument tag": a technical, brand-specific badge — mono micro-caps under
      a sharp-cornered hairline, marked with the gold "+" from the SM cross —
      rather than a generic rounded pill with a pulsing dot. */
@@ -243,6 +284,7 @@ h1, h2, h3, h4, h5, h6 {
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+  will-change: auto;
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal {
@@ -322,4 +364,56 @@ h1, h2, h3, h4, h5, h6 {
 }
 @media (prefers-reduced-motion: reduce) {
   .mk-scanline { display: none; }
+}
+
+/* ─── Interaction polish ─── */
+
+/* Anchor navigation glides instead of jumping (the nav is full of #links),
+   but only for people who haven't asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* A single, visible keyboard focus ring in brand colour — previously the site
+   relied on the UA default, which disappears against the dark theme. */
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-tile,
+  .mk-tile::before {
+    transition: none;
+  }
+  .mk-tile::before {
+    transform: scaleX(1);
+  }
+  .mk-tile:hover {
+    transform: none;
+  }
+}
+
+/* Dark UI can't show a cast shadow against near-black, so depth comes from a
+   1px specular top edge instead — the standard dark-mode elevation cue. */
+.dark .card,
+.dark .mk-card,
+.dark .mk-tile {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.045), var(--tw-shadow, 0 0 #0000);
+}
+
+/* Reduced-motion gaps: the hero's 40s conic orbit and the live dots were
+   running regardless of the user's preference. */
+@media (prefers-reduced-motion: reduce) {
+  .mk-orbit,
+  .mk-live-dot {
+    animation: none;
+  }
+  .mk-trace {
+    transition: none;
+    stroke-dashoffset: 0;
+  }
 }
