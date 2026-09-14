@@ -1,10 +1,14 @@
 # StrataMetric / AI Wound Scan — Engineering Handoff
 
-Repository: `AlbaceteMedDev/WoundsAre3D` at commit `26f6d76` · Document date: 2026-09-08
+Repository: `AlbaceteMedDev/WoundsAre3D` at commit `e648155` · Document date: 2026-09-14
 
-This document is the complete technical handoff for the AI Wound Scan proof of concept: what was built, how it works, what is measured to work, what does not, and the ordered work required to reach a production system. It is written to be read by an engineer or an AI assistant that has the accompanying source bundle and no other context. Chapter 00 is the measured state; chapters 01–07 describe each part of the system; chapter 08 is the complete verified gap register with the phased roadmap and the decisions only the owner can make; chapter 09 explains how to run, verify and continue the work.
+This document is the complete technical handoff for the AI Wound Scan proof of concept: what was built, how it works, what is measured to work, what does not, and the ordered work required to reach a production system. It is written to be read by an engineer or an AI assistant that has the accompanying source bundle and no other context. Chapter 00 is the measured state; chapters 01–07 describe each part of the system; chapter 08 is the complete verified gap register with the phased roadmap and the decisions only the owner can make; chapter 09 explains how to run, verify and continue the work; chapter 10 is the interface design reference.
 
-The verified gap register also ships as data next to this document: `docs/handoff/register.json` (every field per finding), `docs/handoff/register.md` (a flat table) and `docs/handoff/evidence/` (the raw test and probe output this document cites).
+Chapter 10 additionally carries 46 screenshots of every route, in light and dark at desktop and mobile widths, under `docs/handoff/ui/`.
+
+One finding recorded in chapter 08 has been fixed since this audit was taken and is marked resolved there (section 8.10); everything else stands as measured at the commit named above.
+
+The verified gap register also ships as data beside this document: `docs/handoff/register.json` (every field per finding), `docs/handoff/register.md` (a flat table) and `docs/handoff/evidence/` (the raw test and probe output this document cites).
 
 Conventions: code is cited as `path/from/repo/root:line`; findings are cited as `[source-Gn]` / `[contract-source-Fn]` / `[critic-Gn]` and defined in chapter 08; severities are blocker / major / minor / info.
 
@@ -102,6 +106,7 @@ Conventions: code is cited as `path/from/repo/root:line`; findings are cited as 
   - [8.7 Phased roadmap to production](#87-phased-roadmap-to-production)
   - [8.8 Decisions only the owner can make](#88-decisions-only-the-owner-can-make)
   - [8.9 Estimate roll-up](#89-estimate-roll-up)
+  - [8.10 Resolved after this audit](#810-resolved-after-this-audit)
 - [09. How to run, test, verify and bundle; working instructions](#09-how-to-run-test-verify-and-bundle-working-instructions)
   - [9.1 Prerequisites and what the sandbox lacks](#91-prerequisites-and-what-the-sandbox-lacks)
   - [9.2 Engine — install, run, test, verify](#92-engine--install-run-test-verify)
@@ -111,6 +116,19 @@ Conventions: code is cited as `path/from/repo/root:line`; findings are cited as 
   - [9.6 Reproducing the key defects](#96-reproducing-the-key-defects)
   - [9.7 The accompanying bundle](#97-the-accompanying-bundle)
   - [9.8 Working instructions for ChatGPT on this codebase](#98-working-instructions-for-chatgpt-on-this-codebase)
+- [10. The user interface: design system, component library, screen reference](#10-the-user-interface-design-system-component-library-screen-reference)
+  - [10.1 Design language in one page](#101-design-language-in-one-page)
+  - [10.2 Colour tokens](#102-colour-tokens)
+  - [10.3 Typography](#103-typography)
+  - [10.4 Spacing, radius, elevation, borders](#104-spacing-radius-elevation-borders)
+  - [10.5 Motion](#105-motion)
+  - [10.6 Component library](#106-component-library)
+  - [10.7 Screen reference](#107-screen-reference)
+  - [10.8 Responsive behaviour](#108-responsive-behaviour)
+  - [10.9 Theming](#109-theming)
+  - [10.10 Accessibility of the interface](#1010-accessibility-of-the-interface)
+  - [10.11 iOS visual language](#1011-ios-visual-language)
+  - [10.12 Gaps and rules for new work](#1012-gaps-and-rules-for-new-work)
 
 ---
 
@@ -1064,7 +1082,7 @@ No variable configures weight locations, model versions, CORS origins, the metri
 
 ## 2.10 Tests
 
-Counts from `evidence/engine-tests.txt` and `pytest --collect-only` [00.md]: **368 collected** = unit 299 cases (30 files, 297 `def test_` plus 2 extra parametrize cases at `tests/unit/test_synthesis.py:51`) + regulatory 23 cases (11 defs, parametrized) + benchmarks 10 cases (2 defs, parametrized) + integration 36 (`test_api.py` 9, `test_api_extended.py` 23, `test_pipeline.py` 4). The CI gate command `pytest tests/unit tests/regulatory tests/benchmarks` gives **327 passed, 5 skipped** in 11.9 s; `pytest tests/integration` **36 passed**; the full coverage run **363 passed, 5 skipped, 3401 statements / 338 missed = 90%** against `fail_under = 90` (`pyproject.toml:132`) — zero margin. `scripts/check_traceability.py` prints `OK: 48 requirements traced`.
+Counts from `evidence/engine-tests.log` and `pytest --collect-only` [00.md]: **368 collected** = unit 299 cases (30 files, 297 `def test_` plus 2 extra parametrize cases at `tests/unit/test_synthesis.py:51`) + regulatory 23 cases (11 defs, parametrized) + benchmarks 10 cases (2 defs, parametrized) + integration 36 (`test_api.py` 9, `test_api_extended.py` 23, `test_pipeline.py` 4). The CI gate command `pytest tests/unit tests/regulatory tests/benchmarks` gives **327 passed, 5 skipped** in 11.9 s; `pytest tests/integration` **36 passed**; the full coverage run **363 passed, 5 skipped, 3401 statements / 338 missed = 90%** against `fail_under = 90` (`pyproject.toml:132`) — zero margin. `scripts/check_traceability.py` prints `OK: 48 requirements traced`.
 
 Markers (`pyproject.toml:81-90`): `slow`, `regulatory`, `integration`, `benchmark` under `--strict-markers`; only `regulatory` (`tests/regulatory/*.py:19, 26`) and `benchmark` (`tests/benchmarks/test_clinical_accuracy.py:23`) are applied; `integration` and `slow` are declared and unused; `asyncio_mode = auto` with zero async tests. There is no `conftest.py`; `tests/integration/test_api.py:13-17` and `test_api_extended.py:23-27` set `WS_JWT_SIGNING_KEY`, `WS_ALLOW_DEV_LOGIN=1` and `WS_DEV_*` via bare `os.environ` assignments with no teardown [engine-tests-docs-packaging-G10].
 
@@ -4663,6 +4681,49 @@ Each decision below either commits the company to an external statement, spends 
 
 **What the total means.** About 285–395 engineer-days of focused work, of which roughly 120–190 are the register's own figures, 80–115 are estimates added here for entries that carried none (dominated by the 65–95 days of regulatory artefacts under `contract-regulatory-F10`), and about 86 are the internal share of studies and launch procedures. For one engineer working alone at 200 productive days a year that is roughly 1.5–2 years of calendar time before the external clocks are added; for a team of three (engine, iOS, web/infrastructure) with a part-time regulatory lead, Phases 0–4 fit in roughly four to six months and Phase 5's engineering share runs alongside them, so the calendar is then set by the external items rather than by engineering. Those external items are **not** in the total: phantom fabrication (4–8 weeks of vendor lead time and its cost), regulatory counsel and any 513(g) or Pre-Submission cycle (about 60 days of FDA review), the clinical study if the determination requires one (IRB 6–10 weeks, enrolment 3–6 months, site and EDC costs), the penetration-test vendor, the SOC 2 auditor, legal drafting of the privacy, terms and BAA documents, and the AWS/Vercel/Apple running costs. Nor does the total include review time, the owner's own decision latency (8.8), or rework when a decision reverses a default. The low end of every range assumes the register's low estimate and no surprises in the unwired modules; the honest planning figure for a single engineer is the high end, and the honest planning figure for a team is the critical-path chain in 8.7.8 plus the longest external clock that applies.
 
+## 8.10 Resolved after this audit
+
+The register above records the state at commit `26f6d76`. One finding has since been fixed on the
+same branch; it is left in the register with its original wording so the audit trail stays intact,
+and its resolution is recorded here.
+
+### engine-core-math-G3 — undermining formulas wrong and the module unwired — RESOLVED
+
+**What was wrong.** `geometry/undermining.py` integrated `½u²h dθ`, which is a sector of a disc of
+radius u, and never received the wound's own size — so the `R·u` term of the annulus was missing
+entirely. The error is a factor of `1 + 2R/u`: four-fold for a 24 mm wound with 8 mm of
+undermining, twenty-fold for a 60 mm wound with 3 mm. The returned "surface area" (`2∫u·h dθ`)
+multiplied an extent by a depth and was not a meaningful quantity. The unit test asserted `π·u²·h`
+as truth, so it encoded the defect rather than the geometry. Nothing called the module: there was
+no undermining field on the request, no field on the response, and no call from the pipeline, so
+undermining was not measured at all.
+
+**What changed.**
+
+| Area | Change |
+|---|---|
+| `woundscan-engine/src/woundscan/geometry/undermining.py` | Rewritten. `compute_undermining()` takes the real boundary polygon and returns undermined area, visible area, total area, volume and 95 % confidence intervals. The region is evaluated on a 0.25 mm raster — the set of points outside the boundary within `u(s)` of it — which cannot self-intersect on concave wounds the way an offset polygon does. Extents are splined in **arc length**, not azimuth, so lobes are not over-weighted. `annulus_undermining()` provides the closed form `A = π((R+u)² − R²)`, and `integrate_undermining()` now requires `wound_edge_radius_mm` rather than silently returning a wrong number. Readings at 0 and 12 o'clock are deduplicated instead of raising from the spline. |
+| `api/models/measurement.py` | `UnderminingInput` (clock position, extent, probe type, force) on the request; `UnderminingOut` on the response. |
+| `api/pipeline.py` | `_undermining_block()` computes it every measurement. Pocket height is taken as the mean bed depth within 2 mm of the edge and reported with its basis, because the probe does not measure pocket height. |
+| `output/pdf_report.py`, `api/routes/measurements.py` | Three rows in the measurements table plus a footnote stating the figures are clinician-probed, not instrument-derived, and that the volume additionally assumes a pocket height. |
+| `docs/math_reference.md` | Undermining section rewritten; the reference to a non-existent "sidewall fitting module" removed. |
+| `tests/unit/test_undermining.py`, `tests/integration/test_pipeline.py` | 26 unit tests and 2 end-to-end tests, against closed-form truths rather than against the implementation. |
+
+**Validation.** The tests assert against the P10 two-part phantom (chamber Ø40 × 12 mm, lid hole
+Ø24 mm): undermined area 804.25 mm², undermined volume 9 650.97 mm³. The implementation returns
+804.75 mm² (0.06 %) for the concentric lid and 805.38 mm² (0.14 %) for the 6 mm-offset lid. That
+second case is the sharp one: both lids enclose the same pocket, so the area must not move even
+though the per-clock extents swing from a uniform 8.000 mm to a 2.000–14.000 mm spread. A
+regression test also pins the ratio between the superseded model and the correct one, so the old
+formula cannot return unnoticed.
+
+Engine suite after the change: 386 passed, 5 skipped, coverage 90.33 % against the 90 % gate,
+traceability 48/48, `ruff` and `black` clean.
+
+**Still open in this area.** Undermining remains clinician-entered — nothing optical sees beneath
+intact skin — and no iOS capture screen collects it yet, so the request field has no producer. The
+portal does not display the new response fields. Both are Phase 2 and Phase 4 work.
+
 ---
 
 # 09. How to run, test, verify and bundle; working instructions
@@ -4712,7 +4773,7 @@ Dev-login env vars (checked in `src/woundscan/api/routes/auth.py:70-91`): set `W
 
 The full suite runs in ~22 s. **Do not pass `--timeout`.**
 
-| Command | Result (verified on `26f6d76`, matches `evidence/engine-tests.txt` and `[00.md]`) |
+| Command | Result (verified on `26f6d76`, matches `evidence/engine-tests.log` and `[00.md]`) |
 |---|---|
 | `pytest tests/unit tests/regulatory tests/benchmarks` (what `engine-ci.yml` gates on) | **327 passed, 5 skipped** (~11.9 s) |
 | `pytest tests/integration` | **36 passed** (~7.8 s), in-process `TestClient` — never touches Postgres/S3 |
@@ -4994,3 +5055,818 @@ curl -s -X POST https://www.stratametricai.com/api/auth/login \
 ```
 
 Treat a `mode:"demo"` response, or a login that succeeds with junk credentials, as proof the engine is still unreachable from Vercel (`API_URL` unset) — the top production blocker to clear `[contract-env-secrets-F9]`, `[web-marketing-G5]`. There is no engine health endpoint to probe in production because the engine is not deployed; once it is, `GET <api-host>/healthz` and `GET /readyz` are the checks (`src/woundscan/api/routes/health.py`).
+
+---
+
+# 10. The user interface: design system, component library, screen reference
+
+The product presents one visual language across two surfaces — a public marketing site and a clinician portal — built from 20 CSS custom properties, three Google fonts, and 37 hand-written component/utility classes in a single 419-line stylesheet. It is a dark-first design: the dark palette passes WCAG AA on every text/background token pair measured in §10.10, the light palette fails 9 of 20, and dark mode has an elevation treatment (a 1px specular top edge) that light mode does not. There is no component library in the software sense — buttons, cards, badges and tables are CSS class recipes applied inline, and 29 single-file helper components re-solve the same half-dozen problems across pages. No design source of truth exists outside the code: no token export, no component documentation, no visual regression tests, and no design tool file in the repository. This chapter is the reference needed to add a screen that matches the existing language; chapter 04 covers what each route *does* and where its data comes from, and is not repeated here.
+
+All screenshots in §10.7 were captured from a production build (`npm run build` + `next start`) at 1440×900 and 390×844, light and dark, with a seeded `ws_session` cookie for portal routes.
+
+## 10.1 Design language in one page
+
+**The instrument metaphor.** The visual vocabulary is that of a measuring instrument, not a consumer health app. Every recurring motif is a piece of technical apparatus: a mono micro-caps "instrument tag" with a gold `+` prefix under a sharp 3px-radius hairline (`.mk-chip`, `woundscan-web/src/styles/globals.css:238-245`); a mono index number in gold on each capability tile (`.mk-tile-index`, `:230-233`); a section eyebrow drawn as a 22px accent rule followed by 11px uppercase letterspaced-0.18em display type (`.eyebrow`, `:108-117`); a 44px technical grid masked to an ellipse behind the hero (`.mk-grid-bg`, `:255-261`); an animated scanline sweeping a container (`.mk-scanline`, `:357-364`); dashed SVG flow lines on the architecture diagram (`.mk-flow`, `:331-334`). The 3D viewer's own HUD prints `· orient: free / · lighting: studio / · mode: Realistic` as a mono readout (`woundscan-web/src/components/mesh/MeshWorkspace.tsx`).
+
+**Dark-first.** Verified, not asserted: (a) the dark theme is the only one with an elevation cue — `.dark .card`, `.dark .mk-card`, `.dark .mk-tile` get `inset 0 1px 0 rgb(255 255 255 / 0.045)` (`globals.css:402-406`), a specular top edge that has no light-mode counterpart; (b) the shadow ramp strengths are 0.05/0.07/0.09 in light and 0.50/0.65/0.75 in dark (`:32-34`, `:65-67`), and the comment at `tailwind.config.ts:40-41` records that dark previously had `--shadow: 0 0 0` — i.e. no shadow at all — which is why the specular edge exists; (c) every dark text/background token pair measured passes AA at 4.5:1, while nine light pairs fail (§10.10); (d) the OG social card is composed entirely from dark-theme values (`woundscan-web/scripts/generate-og.py:19-26`). Light mode is a derived skin, not a co-equal theme.
+
+**Two accents, one slot.** `--accent` is not a fixed brand colour. It is cyan-700 `#0891b2` in light and gold `#d4a94a` in dark (`globals.css:20`, `:53`), following two different brand identities — the comments name them: light = "WoundScan logo: navy ink on paper, teal/cyan accent", dark = "albacetemeddev.com: ink black, gold accent". A separate `--gold` token exists in both themes (`:37`, `:70`) for the wordmark's "Metric" and the chip `+`, so in dark mode `--accent` and `--gold` are near-duplicates (`#d4a94a` vs `#e6c06b`) while in light mode they diverge completely (cyan vs `#b0821e`). `.mk-tile::before` draws a gradient from `--accent` to `--gold` (`:219`), which is a visible two-colour rule in light and an almost-flat gold rule in dark.
+
+**Mono for data.** `font-mono` (IBM Plex Mono) appears 87 times and is reserved for machine-produced values: version strings, region names, UDI codes, hashes, timestamps, percentages on progress bars, axis labels, the 3D HUD, and the `+`-tagged chips. Numeric KPI values use the display face with `tabular-nums` (`woundscan-web/src/components/portal/KpiTile.tsx:35`). Prose never uses mono.
+
+**Negative space is a marketing-only property.** The claim holds for the public site and not for the portal, and the numbers are opposite. Marketing sections are `py-20 md:py-28` (11 occurrences) inside `.mk-section` (`max-w-7xl px-6 md:px-8`, `globals.css:191-193`). The portal is deliberately dense: the dominant paddings are `p-4` (71), `p-3` (40), `p-2` (22) and the dominant gaps `gap-2` (72), `gap-3` (58), `gap-4` (37), with 6-across KPI strips at `lg:grid-cols-6`. A dashboard fits 13 tiles, three charts, a schedule rail and an activity log above 1600px. Do not carry marketing rhythm into portal screens or vice versa.
+
+**Surfaces are translucent.** Marketing cards sit at `bg-surface/70` (`.mk-card`) and `bg-surface/60` (`.mk-tile`) with `backdrop-blur`, over a body that carries two fixed radial accent washes at 10% and 6% alpha (`globals.css:84-87`). Portal chrome uses the same idea at higher opacity: the topbar is `bg-bg/85` with `supports-[backdrop-filter]:bg-bg/65` (`src/components/portal/Topbar.tsx:12`), the status bar `bg-surface/90` (`StatusBar.tsx:11`). Portal content cards are opaque `bg-surface`.
+
+## 10.2 Colour tokens
+
+### The RGB-triplet convention
+
+`tailwind.config.ts:3` defines one helper:
+
+```ts
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+```
+
+Every colour in `theme.extend.colors` is produced by it. Consequently each custom property holds **three space-separated 0-255 integers, not a colour** — `--accent: 8 145 178`, never `#0891b2` or `rgb(8 145 178)`. The reason is Tailwind's `<alpha-value>` placeholder: at build time Tailwind substitutes the modifier from a class such as `bg-accent/10` into the slot, emitting `rgb(8 145 178 / 0.1)`. A token stored as a hex string or a complete `rgb()` function cannot be composed with an alpha modifier, and the entire tint system (`bg-accent/10`, `bg-success/10`, `border-warn/40`, `bg-black/60`) would have to be hand-written per shade. The cost of the convention is that **the raw variables are unusable in plain CSS without wrapping**: every hand-written rule must spell `rgb(var(--ink))` or `rgb(var(--accent) / 0.25)` (see `globals.css:75-76`, `:101`, `:115`, `:219`, `:232`, `:257-258`, `:268`, `:320-321`, `:362`, `:383`). Any new token must follow the same form or it will break both Tailwind and the hand-written rules.
+
+Light values are declared on `:root` (`globals.css:7-38`), dark values on `.dark` (`:40-71`); `darkMode: "class"` (`tailwind.config.ts:7`).
+
+### Complete token table
+
+| Token | Light triplet | Light hex | Dark triplet | Dark hex | Tailwind class | Where used |
+|---|---|---|---|---|---|---|
+| `--bg` | `248 250 252` | `#f8fafc` | `5 7 12` | `#05070c` | `bg-bg`, `text-bg` | `html,body` background (`globals.css:75`); translucent chrome `bg-bg/85`, `/80`, `/95`, `/65`, `/60` (Topbar, Header, MarketingNav). 1 bare + 7 alpha uses. |
+| `--surface` | `255 255 255` | `#ffffff` | `10 14 23` | `#0a0e17` | `bg-surface` | `.card`, `.btn-secondary`, `.input`, `.mk-card/70`, `.mk-tile/60`, `.mk-chip/70`, sidebar, drawers. 48 bare + 13 alpha. |
+| `--surface-2` | `244 247 250` | `#f4f7fa` | `17 24 39` | `#111827` | `bg-surface-2` | Table `thead`, hover rows, inset panels, `.surface-grad` gradient stop. 48 bare + 6 alpha. |
+| `--hairline` | `226 232 240` | `#e2e8f0` | `26 35 50` | `#1a2332` | `border-hairline`, `bg-hairline` | Every 1px rule and card border (135 uses); `bg-hairline` as a progress-bar track (12). Also `stroke="rgb(var(--hairline))"` in `Donut`, `Sparkline`, `TrajectoryChart`. |
+| `--ink` | `5 7 12` | `#05070c` | `245 247 250` | `#f5f7fa` | `text-ink` | All headings (`globals.css:93`), primary values, `::selection` colour. 184 uses. |
+| `--ink-soft` | `71 85 105` | `#475569` | `203 213 225` | `#cbd5e1` | `text-ink-soft` | Default body colour (`globals.css:76`), table cells, secondary prose. 119 uses. |
+| `--ink-muted` | `148 163 184` | `#94a3b8` | `148 163 184` | `#94a3b8` | `text-ink-muted` | Labels, captions, placeholders, axis text. 204 bare + 5 alpha. **Identical in both themes** — the only token that does not flip. |
+| `--accent` | `8 145 178` | `#0891b2` | `212 169 74` | `#d4a94a` | `text-accent`, `bg-accent`, `border-accent`, `ring-accent` | Primary action, links, active nav, focus ring (`globals.css:383`), eyebrow rule, body wash, chart series. 55 `var()` refs + 76 `text-` + 14 `bg-` + 41 `bg-*/α` + 29 `border-`. |
+| `--accent-bright` | `6 182 212` | `#06b6d4` | `230 192 107` | `#e6c06b` | `text-accent-bright`, `bg-accent-bright` | `.btn-primary:hover` (`globals.css:136`), `.text-gradient` middle stop (`:250`), `.mk-scanline` (`:362`), link hover. 9 + 1 uses. |
+| `--accent-soft` | `224 242 254` | `#e0f2fe` | `41 33 12` | `#29210c` | `bg-accent-soft`, `brand-50`, `brand-100` | **Unused.** Zero `var()` references; `bg-accent-soft`/`text-accent-soft` zero uses; the `brand-50/100` aliases zero uses. |
+| `--success` | `22 163 74` | `#16a34a` | `74 222 128` | `#4ade80` | `text-success`, `bg-success`, `border-success` | `.pill-success`, healing states, live dots, uptime. 30 text + 9 bg + 22 bg-α + 9 border-α. |
+| `--warn` | `217 119 6` | `#d97706` | `251 191 36` | `#fbbf24` | `text-warn`, `bg-warn`, `border-warn` | `.pill-warn`, stalled/expiring states, `Sparkline` target line. 20 + 3 + 19 + 11. |
+| `--danger` | `220 38 38` | `#dc2626` | `248 113 113` | `#f87171` | `text-danger`, `bg-danger`, `border-danger` | `.pill-danger`, denied claims, capture errors. 12 + 2 + 6 + 3. |
+| `--on-accent` | `255 255 255` | `#ffffff` | `5 7 12` | `#05070c` | none (raw CSS only) | Foreground on accent fills. Referenced once, at `.btn-primary` (`globals.css:137`). **Not exposed as a Tailwind colour**, which is why `tour/shared.tsx:63` hand-rolls `text-white dark:text-ink` instead and gets it wrong (§10.10). |
+| `--shadow` | `15 23 42` | `#0f172a` | `0 0 0` | `#000000` | none | Shadow colour, consumed only by `tailwind.config.ts:42,44`. |
+| `--shadow-1` | `0.05` | — | `0.50` | — | none | Contact-shadow alpha, `tailwind.config.ts:42,44`. Not a colour; a bare number. |
+| `--shadow-2` | `0.07` | — | `0.65` | — | none | Ambient-shadow alpha. |
+| `--shadow-3` | `0.09` | — | `0.75` | — | none | Far-ambient alpha, `shadow-elevated` only. |
+| `--wm-metric` | `37 99 235` | `#2563eb` | `34 211 238` | `#22d3ee` | none | **Unused.** Zero references anywhere. Intended for the wordmark's "Metric"; `Wordmark.tsx:24` hardcodes `text-[#0891b2] dark:text-[#22d3ee]` instead, and `Wordmark.tsx:10` renders "Metric" in `--gold`, contradicting the comments at `globals.css:30` and `:63` [web-marketing-G9]. |
+| `--gold` | `176 130 30` | `#b0821e` | `230 192 107` | `#e6c06b` | none (raw CSS only) | `.mk-tile::before` gradient end (`:219`), `.mk-tile-index` colour (`:232`), `.mk-chip::before` `+` (`:242`), `Wordmark.tsx:10`. 9 references. |
+
+`color-scheme: light` / `dark` is also set on `:root` / `.dark` (`globals.css:8`, `:41`) so the UA paints form controls, scrollbars and the canvas ground to match.
+
+**Font variables** are injected by `next/font` onto `<html>` (`src/app/layout.tsx:180`): `--font-display` (Sora), `--font-body` (DM Sans), `--font-mono` (IBM Plex Mono). Two component-scoped variables carry animation timing: `--reveal-delay` (`Reveal.tsx:43`, read at `globals.css:281`) and `--rise-delay` (`Hero.tsx`, read at `:304`).
+
+### Dead entries in the token layer
+
+| Item | Defined at | Uses | Action |
+|---|---|---|---|
+| `--wm-metric` | `globals.css:36`, `:69` | 0 | Delete, or switch `Wordmark.tsx:24` to it and fix the `--gold` mismatch. |
+| `--accent-soft` | `globals.css:22`, `:55` | 0 | Delete with the `brand-*` aliases, or use it for the pill tints (§10.10 shows the current `/10` tints fail contrast in light). |
+| `brand.50/100/500/600/700` | `tailwind.config.ts:24-31` | 0 | Delete. Comment says "so older `brand-*` classes keep compiling"; no such class exists in `src/`. |
+| `boxShadow.accent` | `tailwind.config.ts:45` | 0 | Delete or adopt for the primary CTA. |
+| `transitionTimingFunction['out-quart']` | `tailwind.config.ts:56` | 0 | Delete; only `ease-out-expo` is used (once). |
+| `.surface-grad` | `globals.css:183-185` | 0 | Delete. |
+| `.mk-noise` | `globals.css:262-271` | 0 | Delete. |
+| `WordmarkLockup` | `src/components/marketing/Wordmark.tsx:20-31` | 0 | Delete or wire up; the login page and footer use `BrandImage` PNGs instead. |
+
+### Hard-coded colours that bypass the token system
+
+Grep of `src/components` and `src/app` for hex literals and `rgb(`/`rgba(` with numeric arguments. 3D material colours are a legitimate exception (three.js takes colour instances, not CSS variables), but they are still unreviewable and un-themeable today.
+
+| File:line | Literal | Context | Legitimate? |
+|---|---|---|---|
+| `src/components/marketing/Wordmark.tsx:24` | `text-[#0891b2] dark:text-[#22d3ee]` | "AI WOUND SCAN" tagline | No — `--wm-metric` exists for exactly this. |
+| `src/components/mesh/MeshWorkspace.tsx:124` | `#e6c06b` inline style | "Metric" in the viewer watermark | No — `--gold` dark value, copied. |
+| `src/components/mesh/MeshWorkspace.tsx:108-110,326-328` | `rgb(245 158 11)`, `rgb(239 68 68)`, `rgb(120 113 108)` | Tissue-composition legend and bar | No — should be tokens; these are amber-500/red-500/stone-500. |
+| `src/components/portal/boards/ClaimsBoard.tsx:17,19` | `rgb(135 140 160)`, `rgb(180 180 200)` | Donut payer segments | No — no chart palette token exists. |
+| `src/app/(portal)/reports/page.tsx:129,139` | `rgb(135 140 160)` | Donut segment + legend | No — duplicated from ClaimsBoard. |
+| `src/app/(portal)/patients/page.tsx:226,230-232` | `bg-[#0a1428]`, `#7a1d1d`, `#b34141`, `#3a2a2a` | Wound thumbnail gradient | No. |
+| `src/app/(portal)/routes/page.tsx:199,206,220` | `#0a1428`, `rgba(34,211,238,…)`, `rgba(212,169,74,…)`, `rgb(0 0 0 / 0.5)` | Map canvas background and grid | No — the cyan/gold are token values copied by hand. |
+| `src/components/marketing/tour/RoutesView.tsx:167` | `#fff` | Stop-marker label | No. |
+| `src/components/marketing/tour/WoundRecordView.tsx:44,52-65` | `#0a1428`, `#03060d`, `#12233d`, `#1d3a5f`, `#2c5d8f`, `#3f83bd`, `#22d3ee`, `#7dd3fc`, `#fbbf24` | Synthetic wound-bed SVG | Partly — an illustration, but the accent/warn values are token duplicates. |
+| `src/components/marketing/HeroScene.tsx:19,27,28,31,45,48,166,178,198` | `#0a1428`, `#03060d`, `#7dd3fc`, `#0e3a5e`, `#155e75`, `#22d3ee`, `bg-[#03060d]/80`, `shadow-[0_0_14px_rgba(34,211,238,0.25)]` | three.js scene, lights, grid, callout chips | Scene colours yes; the callout chip classes no. |
+| `src/components/marketing/Hero.tsx:11` | `#0a1428`, `#03060d` | Canvas loading-state gradient | Duplicated from HeroScene. |
+| `src/components/mesh/MeshCanvas.tsx:56,64,65,71,72,106,109,166,242,254,343-347,407` | `#03060d`, `#0a1428`, `#7dd3fc`, `#e0f2fe`, `#0e3a5e`, `#22d3ee`, `#9b3838`, `#b34141` | Scene background, fog, lights, grid, mesh/tissue ramp, bbox lines | Scene colours yes. The consequence is that the viewer ignores the light theme entirely (§10.9). |
+| `src/app/layout.tsx:109-110` | `#f8fafc`, `#05070c` | `viewport.themeColor` per `prefers-color-scheme` | Necessary — metadata cannot read CSS variables. Values match `--bg`; keep them in sync manually. |
+| `scripts/generate-og.py:19-26` | `(245,247,250)`, `(176,190,208)`, `(128,145,168)`, `(34,211,238)`, `(230,192,107)`, `(12,26,48)`, `(4,7,13)` | OG card palette, labelled "dark theme tokens" | Necessary (Python), but `INK_SOFT` and `INK_MUTED` **do not match** `--ink-soft` `203 213 225` or `--ink-muted` `148 163 184`, and `BG_TOP` is not a token at all. |
+
+Raw Tailwind palette classes also appear outside the token system: `text-white` ×7, `bg-white` ×5, `text-cyan-100` ×7, `text-cyan-200` ×4, `bg-cyan-300` ×4, `border-cyan-300` ×5, `text-gray-500` ×4, `text-gray-400` ×2, `bg-gray-100` ×2, `bg-black` ×2, `text-slate-400`, `text-emerald-200`, `text-amber-100/200`, `bg-amber-500`, `bg-cyan-500`. The `bg-white` / `bg-gray-100` / `text-gray-*` uses are all on the three legacy admin pages and are the reason those pages render a white table on a black page in dark mode (§10.7, §10.9) [web-portal-G8].
+
+## 10.3 Typography
+
+### The three families
+
+| Role | Family | CSS variable | Tailwind name | Weights loaded | Declared at |
+|---|---|---|---|---|---|
+| Display | Sora | `--font-display` | `font-display` | 400, 500, 600, 700, 800 | `src/app/layout.tsx:31-36`, `tailwind.config.ts:34` |
+| Body | DM Sans | `--font-body` | `font-sans` (and the `body` default) | 400, 500, 600, 700 | `layout.tsx:45-50`, `tailwind.config.ts:35` |
+| Mono | IBM Plex Mono | `--font-mono` | `font-mono` | 400, 500 | `layout.tsx:38-43`, `tailwind.config.ts:36` |
+
+All three are `next/font/google` with `display: "swap"`, fetched at build time, so the build requires network access to Google Fonts. Fallback stacks are `system-ui, sans-serif` for display/sans and `ui-monospace, SFMono-Regular, monospace` for mono (`tailwind.config.ts:34-36`).
+
+`body` gets DM Sans via `font-family: var(--font-body)` (`globals.css:83`); `h1`–`h6` get Sora at weight 600, `letter-spacing: -0.011em`, `line-height: 1.15`, `text-wrap: balance` (`:91-98`). `font-display` is applied explicitly 96 times (headings inside cards, KPI values, nav links, buttons via `.btn`); `font-mono` 87 times; `font-sans` once (`.mk-chip::before`, to render the `+` in the body face). The global smoothing block sets `-webkit-font-smoothing: antialiased` and `text-rendering: optimizeLegibility` (`:77-79`).
+
+### The scale as actually used
+
+| Class | Computed size | Occurrences | Typical role |
+|---|---|---|---|
+| `text-[9px]` | 9px | 3 | `MiniMetric` key in the portal tour |
+| `text-[10px]` | 10px | 48 | Version/region strings, chip labels, tour micro-labels |
+| `text-[10.5px]` | 10.5px | 1 (CSS) | `.mk-chip` (`globals.css:239`) |
+| `text-[11px]` | 11px | 99 | KPI labels, deltas, table sub-lines, `.eyebrow` (CSS), `.field-hint` (CSS) |
+| `text-xs` | 12px | 130 | Captions, table headers, secondary values |
+| `text-[13px]` | 13px | 3 (+1 CSS) | `TechnologySection.tsx:111`, `PortalTourSection.tsx:98`, `ReportSection.tsx:310`; also `.mk-chip::before` (`globals.css:244`) |
+| `text-sm` | 14px | 108 | Body copy in the portal, `.btn`, `.input`, `.table-base` |
+| `text-base` | 16px | 40 | Card headings, marketing lead paragraph base |
+| `text-lg` | 18px | 14 | `.card-title`, tour view titles, portal H1 at `md` |
+| `text-xl` | 20px | 6 | `Wordmark` in the lockup |
+| `text-2xl` | 24px | 18 | Page H1s on legacy/auth screens, `TrendBadge` value |
+| `text-3xl` | 30px | 7 | `KpiTile` value, `.mk-h2` base, 404 H1, `/demo` H1 at `md` |
+| `text-4xl` | 36px | 3 (1 responsive) | Hero H1 base, `Wordmark` at `md` in the CTA |
+| `text-5xl` | 48px | 3 (all responsive) | Hero H1 at `sm`, StatsBand numbers at `md` |
+| `text-6xl` | 60px | 1 (responsive) | Hero H1 at `xl` |
+| `md:text-[2.6rem]` | 41.6px | 1 (CSS) | `.mk-h2` at `md` (`globals.css:195`) |
+
+Responsive steps in use: `md:text-sm` ×3, `md:text-base`, `md:text-lg` ×4, `md:text-2xl`, `md:text-3xl`, `md:text-4xl`, `md:text-5xl` ×2, `sm:text-5xl`, `xl:text-6xl`, `md:text-[2.6rem]`, `md:leading-[1.1]` ×2.
+
+### Weights and tracking
+
+Only three weight classes appear: `font-semibold` (100), `font-medium` (55), `font-bold` (23). `font-normal`, `font-light` and `font-extrabold` are never used, although Sora 800 and DM Sans 700 are downloaded. Regular weight always comes from inheritance.
+
+| Tracking value | Occurrences | Where |
+|---|---|---|
+| `tracking-[0.14em]` | 20 | `.mk-chip` (CSS), KPI labels, sidebar "Platform status" |
+| `tracking-[0.16em]` | 6 | `TrendBadge` status word, tour status rows |
+| `tracking-[0.18em]` | 3 | `.eyebrow` (CSS), `MobileCapture` header kicker |
+| `tracking-[0.2em]` | 2 | `.mk-tile-index` (CSS), 404 "Error 404" |
+| `tracking-[0.22em]` | 2 | `WordmarkLockup` taglines |
+| `tracking-[0.24em]` | 1 | one marketing label |
+| `tracking-[0.4em]` | 1 | one marketing label |
+| `tracking-wider` (0.05em) | 6 | `MiniMetric`, table `thead` via `.table-base` |
+| `tracking-widest` (0.1em) | 2 | two marketing labels |
+| `tracking-tight` (-0.025em) | 6 | Hero H1, `Wordmark`, 404 H1 |
+| `-0.011em` | CSS | all `h1`–`h6` (`globals.css:95`) |
+| `-0.022em` | CSS | `.mk-h2` (`globals.css:196`) |
+
+### Where the scale is inconsistent
+
+1. **Below 14px the scale is arbitrary, not tokenised.** 153 of the 483 size declarations in `src/**/*.tsx` are bracket values (`9px`, `10px`, `11px`, `13px`, plus `10.5px` in the stylesheet) — more than any single named step except `text-xs` (130). Four of the five sit within 2px of each other. There is no `text-2xs`/`text-3xs` extension in `tailwind.config.ts`, so every one of them is a one-off.
+2. **Seven letter-spacings for one visual role.** The "micro-caps label" pattern — 10–11px, uppercase, semibold, muted — is rendered with 0.14em, 0.16em, 0.18em, 0.2em, 0.22em, 0.24em, 0.4em, `wider` and `widest` depending on the file. `.eyebrow` (0.18em) and `.mk-chip` (0.14em) are the two that are actually defined as classes; everything else is inline.
+3. **Two competing H2 treatments.** Marketing uses `.mk-h2` (30px → 41.6px, bold, −0.022em); the portal uses inline `font-display text-base font-semibold text-ink` for the same structural level (`dashboard/page.tsx:57`, `compliance/page.tsx:58`, `reports/page.tsx:77`, `inventory/page.tsx:114`). A card-level heading recipe exists — `.card-title` (18px semibold) — and is used 4 times, all on `/wounds/[id]`.
+4. **Heading weight disagrees with the base rule.** `globals.css:94` sets all headings to 600; `.mk-h2` and the Hero H1 override to `font-bold` (700), and the legacy admin pages use `text-2xl font-bold` with no `font-display`, so they render the H1 in DM Sans while every other page renders it in Sora.
+5. **The OG card uses a different type system entirely**: Outfit Bold, Work Sans Regular, JetBrains Mono (`scripts/generate-og.py:28-33`) against the site's Sora / DM Sans / IBM Plex Mono [web-marketing-G12].
+
+## 10.4 Spacing, radius, elevation, borders
+
+### Spacing
+
+No custom spacing scale is defined; the stock Tailwind 4px scale is used. The distribution is tight and consistent within each surface:
+
+| Surface | Section padding | Card padding | Grid gap |
+|---|---|---|---|
+| Marketing section | `py-20 md:py-28` (11×), plus `md:pt-36`/`md:pb-24` on the hero | `p-6` on `.mk-card`/`.mk-tile`, `md:p-8` once | `gap-12`, `gap-16`, `lg:gap-16`, `sm:gap-x-20`, `lg:gap-x-28` |
+| Portal page | `px-4 py-5 md:px-6 md:py-6` on `<main>` (`AppShell.tsx:18`) | `p-4` (71×), `p-3` (40×) | `gap-3` (58×), `gap-4` (37×) |
+| Controls | `px-4 py-2` (`.btn-primary`), `px-3 py-1.5` (`.btn-secondary`, `.btn-ghost`), `px-2 py-1.5` (`.input`), `px-2 py-0.5` (`.pill`), `px-2.5 py-1` (`.mk-chip`) | — | `gap-2` (72×), `gap-1.5` (21×) |
+
+`.mk-section` is the one container primitive: `mx-auto w-full max-w-7xl px-6 md:px-8` (`globals.css:191-193`), used 16 times. It sets the 1280px content column and the page gutters for the whole marketing site. The portal has **no equivalent** — `AppShell`'s `<main>` is full-bleed inside the sidebar with its own `px-4 md:px-6`, and individual pages set their own `max-w-*` only occasionally (`max-w-7xl` ×8, all on `Header`-based or marketing layouts).
+
+### Radius
+
+`tailwind.config.ts:47-52` **overrides** four of Tailwind's named radii and leaves the rest at stock values. This produces two traps:
+
+| Class | Value here | Stock Tailwind | Note |
+|---|---|---|---|
+| `rounded` (no suffix) | **4px** (not overridden) | 4px | 52 uses |
+| `rounded-sm` | **6px** | 2px | **larger than `rounded`**; 2 uses |
+| `rounded-md` | **10px** | 6px | 50 uses — the portal default |
+| `rounded-lg` | **16px** | 8px | 12 uses — `.card` |
+| `rounded-xl` | **24px** | 12px | 4 uses — `.mk-card`, `.mk-tile` |
+| `rounded-2xl` | 16px (not overridden) | 16px | 3 uses — **renders identically to `rounded-lg`** |
+| `rounded-full` | 9999px | 9999px | 62 uses — pills, dots, avatars |
+| `rounded-[3px]` | 3px | — | 1 use — `.mk-chip`, deliberately sharp |
+| `4px` | — | — | `:focus-visible` ring radius (`globals.css:384`) |
+
+The intended ladder is 6 / 10 / 16 / 24. In practice the most-used radius is the un-overridden 4px `rounded`, applied to `.btn`, `.input`, `.pill` and `.table-base` cells — so the interactive controls are visibly squarer than the cards that contain them, which is a deliberate-looking result reached by accident.
+
+### Elevation
+
+Three shadow tokens, all built from `--shadow` + the three alpha strengths (`tailwind.config.ts:38-46`):
+
+| Token | Definition | Uses |
+|---|---|---|
+| `shadow-soft` | `0 1px 2px …/α1, 0 6px 16px -4px …/α2` | 3 — `.card` (`globals.css:120`), active pipeline step |
+| `shadow-elevated` | adds `0 24px 56px -12px …/α3` | 8 — `.mk-card:hover`, `.mk-tile:hover`, the mobile nav drawer |
+| `shadow-accent` | `0 8px 30px rgb(var(--accent) / 0.18)` | **0** |
+| `shadow-sm` | stock Tailwind | 1 — `.input` (`globals.css:147`) |
+| `shadow-[0_0_14px_rgba(34,211,238,0.25)]` | inline | 1 — HeroScene callout chip |
+
+In dark mode `--shadow` is pure black, so the ramps are visible only as a darkening; the actual depth cue is the specular inset top edge on `.card`, `.mk-card`, `.mk-tile` (`globals.css:402-406`).
+
+### Borders
+
+The hairline convention is absolute: **one token, one width, no variants.** `border-hairline` appears 135 times and is the only border colour used for structure. Hover states promote it to `border-accent` (13 bare + 16 alpha) and status states to `border-success/40`, `border-warn/40`, `border-danger/40` (23 combined, always at 40% alpha — see `KpiTile.tsx:14-20`, `TrendBadge.tsx:11-13`, `MobileCapture.tsx:276-279`). `border-transparent` (3) holds layout space for a border that appears on hover. `border-dashed` appears twice. No `border-2` anywhere.
+
+Measured contrast of the hairline against its own background is **1.18:1 in light and 1.28:1 in dark** (§10.10) — below the 3:1 WCAG non-text threshold, so card and table boundaries are decorative rather than perceivable as structure.
+
+## 10.5 Motion
+
+All shared motion lives in `globals.css:274-419` plus one inline `@keyframes` in a component. There is no animation library; `@react-three/fiber`'s `useFrame` drives the 3D scenes.
+
+| Name | Definition | Timing / easing | Trigger | `prefers-reduced-motion` |
+|---|---|---|---|---|
+| `.reveal` / `.is-visible` | `globals.css:275-288` | 0.8s `cubic-bezier(0.19,1,0.22,1)` on opacity + `translateY(28px)`, delay `var(--reveal-delay)` | `IntersectionObserver` in `Reveal.tsx:23-35`, threshold 0.15, `rootMargin 0 0 -40px 0`, unobserves after first hit | **Honoured** — `:289-295` forces opacity 1, no transform, no transition |
+| `mk-rise` | `globals.css:298-305` | 0.9s same easing, delay `var(--rise-delay)` | plays on load, no observer; used 6× in the hero | **Honoured** — `:306-308` |
+| `mk-spin` / `.mk-orbit` | `:311-316` | 40s linear infinite rotation | conic ring behind the hero canvas | **Honoured** — `:410-414` |
+| `mk-pulse` / `.mk-live-dot` | `:319-325` | 2.4s ease-out infinite box-shadow ring | "live" dots | **Honoured** — `:410-414` |
+| `mk-dash` / `.mk-flow` | `:328-334` | 1.4s linear infinite `stroke-dashoffset`, `stroke-dasharray 6 6` | 13 SVG flow lines in the architecture diagram | **Honoured** — `:335-337` |
+| `.mk-trace` | `:340-348` | 2.2s `cubic-bezier(0.65,0,0.35,1)` + 0.2s delay, `stroke-dashoffset 1000 → 0` | `.is-visible` ancestor or `.is-on` | **Honoured** — `:415-418` |
+| `mk-scan` / `.mk-scanline` | `:351-364` | 4.5s ease-in-out infinite top sweep | 1 use | **Honoured** — `:365-367` sets `display: none` |
+| `.mk-tile::before` | `:220-229` | 0.45s `cubic-bezier(0.19,1,0.22,1)` `scaleX(0 → 1)` from the left | `:hover` | **Honoured** — `:387-398` disables the transition, pins `scaleX(1)`, kills the lift |
+| `html { scroll-behavior: smooth }` | `:373-377` | — | anchor navigation | **Honoured** — wrapped in `@media (prefers-reduced-motion: no-preference)` |
+| `mk-progress` | **inline `<style>` at `PipelineSection.tsx:190`** | 5200ms linear forwards | active pipeline step's progress rail | **Not honoured** |
+| `animate-ping` (Tailwind) | stock | 1s cubic-bezier infinite | `Sidebar.tsx:82`, `MobileNav.tsx:113` status dots | **Not honoured** — no override exists |
+| `Reveal` stagger | `Reveal.tsx:43` | `--reveal-delay` in ms, passed per call | — | inherited from `.reveal` |
+| `CountUp` | `CountUp.tsx:32-64` | 1600ms default, ease-out-expo computed in JS, `requestAnimationFrame` | `IntersectionObserver` threshold 0.4 | **Honoured** — `matchMedia` check at `:36`, jumps to final value at `:43-45` |
+| `PipelineSection` auto-advance | `PipelineSection.tsx:58,77-81` | `setInterval` 5200ms, paused when out of view or after a click | `IntersectionObserver` threshold 0.25 | **Not honoured** [web-marketing-G10] |
+| `AdminView` verify ticker | `tour/AdminView.tsx:47` | `setInterval` 260ms per row | button press | **Not honoured** |
+| `HeroScene` `SpinGroup` | `HeroScene.tsx:104-106` | `useFrame`, +0.18 rad/s about Y | continuous | **Not honoured** [web-marketing-G10] |
+| `HeroScene` `ScanRing` | `HeroScene.tsx:189-194` | `useFrame`, 3.2s radius+opacity cycle | continuous | **Not honoured** [web-marketing-G10] |
+| `MeshCanvas` `PlaceholderMesh` | `MeshCanvas.tsx:403-405` | `useFrame`, +0.15 rad/s | while no mesh is loaded | **Not honoured** |
+| `OrbitControls autoRotate` | `MeshCanvas.tsx:118-119` | speed 0.7 | user toggle, default off | user-controlled |
+| `CaptureHandoff` poll | `boards/CaptureHandoff.tsx:61` | `setInterval` | pairing wait | not motion |
+
+**Transition classes.** `transition` (Tailwind default, 150ms) is used 70 times — every button, nav item and input. Explicit durations: `duration-300` ×7 (`.mk-card`, `.mk-tile`, `MarketingNav`, pipeline steps), `duration-500`, `duration-200`, `duration-150` once each. Explicit easings: `ease-out` ×2, `ease-out-expo` ×1, `ease-in-out` ×1; the custom `ease-out-quart` is never used.
+
+**Summary of the reduced-motion position.** Every CSS animation is gated. Nothing driven by JavaScript or WebGL is gated except `CountUp`. A user with the OS preference set still gets a continuously rotating 3D hero, a sweeping scan ring, a 5.2-second auto-advancing carousel, two pinging dots and an animated progress rail. This is [web-marketing-G10] (minor, half a day); the remediation list in that finding is the authoritative fix.
+
+## 10.6 Component library
+
+### What exists, and what does not
+
+There are **no React primitives**. Buttons, cards, badges, inputs and tables are CSS class recipes in `@layer components` (`globals.css:107-180`, `:190-246`), applied by hand as `className` strings. There is no `<Button>`, `<Card>`, `<Badge>`, `<Input>`, `<Table>` or `<Modal>` anywhere in `src/components/`. The consequence is 29 locally-defined helper components that re-solve the same problems file by file:
+
+| Helper name | Defined in | Count |
+|---|---|---|
+| `Field` | `GraftPanel.tsx:171`, `NotesPanel.tsx:462`, `ReimbursementPanel.tsx:176`, `notes/page.tsx:223`, `settings/page.tsx:121` | 5 |
+| `Row` | `dashboard/page.tsx:282`, `routes/page.tsx:158`, `ClaimsBoard.tsx:322`, `OrdersBoard.tsx:245` | 4 |
+| `Chip` | `tour/shared.tsx:47`, `patients/page.tsx:93`, `inventory/page.tsx:160`, `routes/page.tsx:146` | 4 |
+| `Legend` | `dashboard/page.tsx:296`, `reports/page.tsx:197`, `MeshWorkspace.tsx:333` | 3 |
+| `Stat` | `ReimbursementPanel.tsx:148`, `patients/page.tsx:244`, `admin/ml/page.tsx:31` | 3 |
+| `Select` | `NotesPanel.tsx:495`, `ReimbursementPanel.tsx:212` | 2 |
+| `Line` | `MeshCanvas.tsx:353`, `OrdersBoard.tsx:233` | 2 |
+| `Card`, `Tab`, `Bar`, `Group`, `Pane`, `Metric` | `settings/page.tsx:112`, `wounds/page.tsx:75,87`, `notes/page.tsx:212`, `MobileCapture.tsx:275`, `CaptureHandoff.tsx:219` | 1 each |
+
+Four of the `Chip` implementations differ in radius, padding and active state; three of the `Legend` implementations differ only in whether `pct` is optional.
+
+### Class recipes (the actual primitives)
+
+```css
+/* globals.css:119-130 — card */
+.card          { @apply rounded-lg border border-hairline bg-surface shadow-soft; }
+.card-header   { @apply flex items-start justify-between gap-4 border-b border-hairline p-4; }
+.card-title    { @apply text-lg font-semibold text-ink; }
+.card-subtitle { @apply text-xs text-ink-muted; }
+
+/* globals.css:132-144 — buttons */
+.btn           { @apply inline-flex items-center justify-center gap-2 rounded font-display
+                        text-sm font-semibold tracking-wide transition; }
+.btn-primary   { @apply bg-accent px-4 py-2 hover:bg-accent-bright disabled:opacity-50;
+                 color: rgb(var(--on-accent)); }
+.btn-secondary { @apply border border-hairline bg-surface px-3 py-1.5 text-ink
+                        hover:border-accent hover:text-accent disabled:opacity-50; }
+.btn-ghost     { @apply px-3 py-1.5 text-ink-soft hover:text-ink; }
+
+/* globals.css:146-154 — form */
+.input      { @apply w-full rounded border border-hairline bg-surface px-2 py-1.5 text-sm text-ink
+                     shadow-sm transition placeholder:text-ink-muted
+                     focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent; }
+.label      { @apply mb-1 block text-xs font-medium text-ink-soft; }
+.field-hint { @apply mt-1 block text-[11px] text-ink-muted; }
+
+/* globals.css:156-163 — badges */
+.pill         { @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium; }
+.pill-success { @apply bg-success/10 text-success; }
+.pill-warn    { @apply bg-warn/10 text-warn; }
+.pill-danger  { @apply bg-danger/10 text-danger; }
+.pill-neutral { @apply bg-ink-muted/15 text-ink-soft; }
+.pill-accent  { @apply bg-accent/10 text-accent; }
+
+/* globals.css:165-179 — table */
+.table-base          { @apply w-full text-sm; }
+.table-base thead    { @apply bg-surface-2 text-xs uppercase tracking-wide text-ink-muted; }
+.table-base th       { @apply p-3 text-left font-medium; }
+.table-base tbody tr { @apply border-t border-hairline; }
+.table-base td       { @apply p-3 text-ink-soft; }
+
+/* globals.css:202-206 — marketing card */
+.mk-card       { @apply rounded-xl border border-hairline bg-surface/70 p-6 backdrop-blur
+                        transition duration-300; }
+.mk-card:hover { @apply -translate-y-1 border-accent/40 shadow-elevated; }
+```
+
+Usage counts: `.card` 94, `.pill` 76 (+ 102 modifier uses), `.btn` 59 (`.btn-primary` 31, `.btn-secondary` 26, `.btn-ghost` 2), `.eyebrow` 68, `.input` 22, `.table-base` 17, `.mk-section` 16, `.mk-h2` 11, `.mk-lead` 10, `.mk-card` 8, `.mk-chip` 7, `.text-gradient` 7, `.mk-grid-bg` 3, `.mk-tile` 2, `.card-header`/`.card-title`/`.card-subtitle` 4 each, `.field-hint` 1, `.mk-tile-index` 1.
+
+Note the asymmetries: `.card-header`/`.card-title` exist but only `/wounds/[id]` uses them — every other page writes the card header inline. `.mk-tile` is a fully built interactive tile used twice. `.btn-ghost` is used twice.
+
+### Data display
+
+| Component | File | Purpose | Props | Variants | Used by |
+|---|---|---|---|---|---|
+| `KpiTile` | `portal/KpiTile.tsx` | Labelled KPI with optional delta line | `label: string`, `value: string`, `delta?: string`, `tone?` | `tone`: `neutral` \| `accent` \| `warn` \| `success` \| `danger` — drives border alpha and value colour | 13 files: `/dashboard`, `/patients`, `/inventory`, `/reports`, `/routes`, `ClaimsBoard`, `OrdersBoard`, 6 tour views |
+| `Donut` | `portal/Donut.tsx` | Segmented SVG donut with centre label | `segments: {value,color,label?}[]`, `size=120`, `thickness=16`, `centerLabel?`, `centerSub?` | none | 5 files. `color` is caller-supplied — callers pass raw `rgb()` literals |
+| `Sparkline` | `portal/Sparkline.tsx` | Area+line chart, 600×`height` viewBox, 3 gridlines, optional target line | `data: {x,y,label?}[]`, `height=140`, `targetLine?` | none | 6 files. Renders an empty "No data" div for `data.length === 0` |
+| `TrajectoryChart` | `TrajectoryChart.tsx` | Three Recharts `LineChart` panels (volume / area / max depth) | `series: {date,volume,surfaceArea,maxDepth}[]` | none | `/wounds/[id]` only. The only Recharts use in the app |
+| `TrendBadge` | `TrendBadge.tsx` | Healing/stalled/tracking summary block | `trend: ProgressionTrend` | derived from `is_healing`/`is_stalled` | `/wounds/[id]` only |
+| `DepthSparkline` | `mesh/DepthSparkline.tsx` | 220×60 depth-history polyline | `series: number[]` | none | `MeshWorkspace` only |
+| `.table-base` | CSS recipe | The only table style | — | — | 17 tables |
+
+`Donut`, `Sparkline`, `DepthSparkline` and `TrajectoryChart` all read `rgb(var(--…))` directly inside SVG attributes, so they follow the theme; `Donut`'s segment colours do not, because they come from the caller.
+
+### Portal chrome
+
+| Component | File | Purpose | Props | Notes |
+|---|---|---|---|---|
+| `AppShell` | `portal/AppShell.tsx` | Page frame: `Sidebar` + `Topbar` + `<main>` + `StatusBar` | `title`, `subtitle?`, `user: {name,role} \| null`, `children` | Used by all 14 portal pages. `auditCount={142}` is hardcoded at `:19` [web-portal-G9] |
+| `Sidebar` | `portal/Sidebar.tsx` | 240px fixed nav, 12 items with inline SVG icons, brand lockup, platform-status footer | none (reads `usePathname`) | `lg:flex`, hidden below. Active state = `bg-accent/10 text-accent`. No sign-out control [web-portal-G1]. No admin entries [web-portal-G8] |
+| `Topbar` | `portal/Topbar.tsx` | Sticky title bar: hamburger, H1+subtitle, search, two selects, theme toggle, user chip | `title`, `subtitle?`, `user` | Search and both selects are decorative and `xl`-only [web-portal-G9] |
+| `MobileNav` | `portal/MobileNav.tsx` | Hamburger drawer below `lg`: 288px panel, `bg-black/60` scrim, body-scroll lock, closes on route change | none | Duplicates the `NAV` array from `Sidebar.tsx:13-26` as label/href pairs without icons |
+| `StatusBar` | `portal/StatusBar.tsx` | Sticky bottom compliance strip | `auditCount`, `systemStatus=99.99`, `compliance=98` | Certifications and uptime are hardcoded [web-portal-G9] |
+| `Header` | `Header.tsx` | **Legacy** top bar used only by the three admin pages | none (reads session) | Links to `/phantom` (does not exist) and `/logout` (500s) [web-portal-G8] [web-portal-G1] |
+
+### Marketing sections
+
+14 body section components under `src/components/marketing/`, composed in order by `src/app/page.tsx:35-48` between `MarketingNav` and `Footer`. Anchor ids: `#overview`, `#technology`, `#pipeline`, `#report`, `#demo`, `#portal`, `#platform`, `#partnership`, `#compliance` — all with `scroll-mt-20`.
+
+| Component | Anchor | What it renders |
+|---|---|---|
+| `MarketingNav` | — | Fixed glass bar, scroll-progress hairline, 8 anchor links (`xl:flex`), theme toggle, sign-in CTA (`sm:inline-flex`), mobile sheet |
+| `Hero` / `HeroScene` | — | H1 + lead + two CTAs + 3 `HeroStat`s; right column is a dynamically imported `<Canvas>` (`ssr: false`) with the demo OBJ, spin group, scan ring and 3D callouts |
+| `StatsBand` | — | Four `CountUp` figures on a hairline-bounded band |
+| `AtAGlanceSection` | `#overview` | Plain-language orientation grid |
+| `ProblemSection` | — | Three problem cards with inline SVG icons |
+| `PipelineSection` | `#pipeline` | Five-step tab list with 5.2s auto-advance and a progress rail |
+| `ReportSection` | `#report` | Three-tab report mock (`top` / `section` / `summary`) with `.mk-trace` boundary draw-on |
+| `DemoSection` | `#demo` | Embeds the real `MeshWorkspace` with the bundled OBJ |
+| `PortalTourSection` | `#portal` | Simulated portal window: reuses `Sidebar` plus 10 `tour/*View` components |
+| `TechnologySection` | `#technology` | Tab list over engine capability copy |
+| `ArchitectureSection` | `#platform` | Pure-SVG AWS pipeline diagram with `.mk-flow` dashes [web-marketing-G3] |
+| `PartnershipSection` | `#partnership` | Partner credential block; not linked from the nav [web-marketing-G8] |
+| `ComplianceSection` | `#compliance` | Compliance claim grid on `bg-surface/40` |
+| `BenefitsSection` | — | Four-quadrant value grid |
+| `CtaSection` | — | Closing CTA with the text `Wordmark` |
+| `Footer` | — | `BrandImage` lockup + link columns |
+| `Reveal` | — | Scroll-reveal wrapper: `children`, `delay=0`, `className`, `as: "div" \| "section" \| "li" \| "span"`. Used in 13 of the 14 body sections — all but `Hero`, which uses `mk-rise` instead |
+| `CountUp` | — | `to`, `decimals=0`, `duration=1600`, `prefix`, `suffix`, `className`. Used once, by `StatsBand` |
+| `tour/shared.tsx` | — | `ViewHeader`, `MiniMetric`, `Chip`, `visitsFor()` deterministic 6-visit history generator |
+
+### 3D and mesh
+
+| Component | File | Props | Notes |
+|---|---|---|---|
+| `MeshWorkspace` | `mesh/MeshWorkspace.tsx` | `measurementId: string \| null`, `latest: LatestSummary \| null`, `depthSeries: number[]`, `meshUrlOverride?` | Three-column workspace: parameters rail, canvas + HUD + tool bar, render-mode/display/export rail. Used by `/wounds/[id]/mesh`, `/demo`, `DemoSection`, `tour/ScanView`. Several controls are inert [web-portal-G10]; the `Generate Report` link 401s on the public demo [critic-G14] |
+| `MeshCanvas` | `mesh/MeshCanvas.tsx` | `meshUrl`, `mode: "realistic"\|"wireframe"\|"tissue"`, `layers: {mesh,depthMap,heatMap,tissueLayers,measurements}`, `analytics`, `autoRotate`, `fitVersion`, `crossSection` | `@react-three/fiber` `<Canvas>` with drei `OrbitControls`/`Grid`. Scene palette is hardcoded; ignores the light theme. Z-sign is inverted relative to engine OBJ output [web-portal-G2] |
+| `MobileCapture` | `mobile/MobileCapture.tsx` | `sessionId: string` | Phase machine `checking → expired \| ready-cam \| ready-file → captured → uploading → uploaded \| error`; local `Pane` component with `warn`/`success`/`danger` tones; 100svh, `max-w-md` |
+
+### Brand and theme
+
+| Component | File | Props | Notes |
+|---|---|---|---|
+| `BrandImage` | `BrandImage.tsx` | `variant: "lockup"\|"wordmark"\|"symbol"\|"mark"`, `className?`, `alt`, `priority?` | Renders both PNGs, reveals one via `dark:hidden` / `hidden dark:block`. Intrinsic sizes at `:11-14`. 7 consumers |
+| `Wordmark` | `marketing/Wordmark.tsx:6` | `className?` | Text wordmark: "Strata" in `--ink`, "Metric" in `--gold`. 1 consumer (`CtaSection.tsx:16`) |
+| `WordmarkLockup` | `marketing/Wordmark.tsx:20` | `className?` | **0 consumers** |
+| `ThemeBootstrap` | `theme/ThemeBootstrap.tsx` | none | Pre-paint inline script, rendered in `<head>` (`layout.tsx:175`) |
+| `ThemeToggle` | `theme/ThemeToggle.tsx` | none | 36×36 icon button; both icons rendered, one `hidden`; `aria-label` flips with state. 3 consumers |
+
+### Brand assets
+
+| File | Dimensions | Alpha | Size | Used for |
+|---|---|---|---|---|
+| `public/logo-light.png` | 1869×842 | yes | 892 KB | `BrandImage variant="lockup"` — sidebar, drawer, login, 404, footer |
+| `public/logo-dark.png` | 1870×841 | yes | 1.07 MB | same, dark |
+| `public/wordmark-light.png` | 1200×146 | yes | 69 KB | `variant="wordmark"` — marketing nav |
+| `public/wordmark-dark.png` | 1198×143 | yes | 69 KB | same, dark; also the OG card (`generate-og.py:142`) |
+| `public/symbol-light.png` | 410×383 | yes | 79 KB | `variant="symbol"` — marketing nav |
+| `public/symbol-dark.png` | 407×378 | yes | 77 KB | same, dark; also the OG card (`generate-og.py:137`) |
+| `public/icon-light.png` | 1254×1254 | no | 908 KB | favicon for light UA (`layout.tsx:96`) |
+| `public/icon-dark.png` | 1254×1254 | no | 996 KB | favicon for dark UA, apple-touch icon, JSON-LD logo |
+| `public/og-v2.png` | 1200×630 | no | 182 KB | OG + Twitter card |
+| `public/og.png` | 1200×630 | no | 182 KB | byte-identical legacy duplicate |
+| `public/demo-wound.obj` | — | — | 90 KB | the mesh every public 3D surface renders |
+
+A 1254×1254 PNG served as a favicon and a 1.07 MB lockup are both oversized for their rendered sizes (44px and 176px wide respectively) [web-marketing-G6]. There is no SVG version of any mark, so the wordmark cannot be recoloured or rendered crisply at arbitrary size; `Wordmark.tsx` exists as a text substitute but is used once.
+
+### The OG card composition
+
+`scripts/generate-og.py` writes `public/og-v2.png` and `public/og.png` (1200×630) with Pillow. Layer order: vertical gradient `#0c1a30 → #04070d` (`:56`) → 48px white-12α grid masked to an ellipse (`:59-68`) → cyan glow at 30%/42% and gold glow at 86%/80% (`:71-72`) → a 15×15 isometric Gaussian-crater wireframe whose edge colour lerps cyan→gold with depth and whose alpha is `78 + 172·z` (`:79-125`) → the formula `V = ∫∫ d(x,y) dA` in gold mono with `OVER THE WOUND BED` beneath (`:130-133`) → `symbol-dark.png` at 46px plus `wordmark-dark.png` at 30px, top-left, 74px gutter (`:136-145`) → 60px Outfit Bold headline in two lines (`:150-153`) → three 23px Work Sans support lines (`:157-163`) → three gold-`+` credential tags in 15px JetBrains Mono (`:167-172`) → a hairline rule and the domain/byline at 16px (`:175-183`). The script is not wired into `package.json` and its Pillow dependency is undocumented [web-marketing-G12]; the middle credential tag prints the unsupported `±0.3 MM @ 95% CI` claim [web-marketing-G1].
+
+## 10.7 Screen reference
+
+Screenshots were captured at 1440×900 (shown downscaled to 1240px wide) and 390×844, in both themes, from a production build. Portal routes were reached with a seeded `ws_session` cookie (`role: "clinician"`, future `expiresAt`); admin routes with `role: "admin"`. `/` was captured signed-out, because `src/app/page.tsx:29` redirects any session holder to `/dashboard`.
+
+### `/` — marketing home
+
+Full page: 13,399 px tall at 1440, 22,507 px at 390. Skeleton: fixed `MarketingNav` → `Hero` (two-column `lg:grid-cols-[1.05fr_1fr]`, H1 + lead + CTAs + 3 stats left, WebGL canvas right) → `StatsBand` → 12 further sections, each `.mk-section` inside `py-20 md:py-28`, alternating plain background and `bg-surface/40` bands → `Footer`. Composes `MarketingNav`, `Hero`/`HeroScene`, `StatsBand`+`CountUp`, `AtAGlanceSection`, `ProblemSection`, `PipelineSection`, `ReportSection`, `DemoSection`+`MeshWorkspace`, `PortalTourSection`+`Sidebar`+10 tour views, `TechnologySection`, `ArchitectureSection`, `PartnershipSection`, `ComplianceSection`, `BenefitsSection`, `CtaSection`+`Wordmark`, `Footer`, with `Reveal` wrappers in 13 of them. Visual state: complete and polished; the WebGL hero, the embedded 3D viewer and the simulated portal all render. The content claims are the problem, not the visuals [web-marketing-G1] [web-marketing-G2] [web-marketing-G3] [web-marketing-G4].
+
+![Marketing home, desktop, dark](docs/handoff/ui/home-desktop-dark.jpg)
+
+![Marketing home, desktop, light](docs/handoff/ui/home-desktop-light.jpg)
+
+![Marketing home, mobile, dark](docs/handoff/ui/home-mobile-dark.jpg)
+
+![Marketing home, mobile, light](docs/handoff/ui/home-mobile-light.jpg)
+
+### `/login` — portal sign in
+
+Skeleton (`login/page.tsx:39-51`): `main.mx-auto.flex.min-h-screen.max-w-md.flex-col.justify-center.px-6.py-12`, `BrandImage variant="lockup"` at `w-56` (224px), then a single `.card p-6` containing `.eyebrow` "Provider portal", a 24px bold H1 "Sign in", three `.input` fields (email, password, TOTP) each wrapped in a `<label>` with a `.label` span, and a full-width `.btn-primary`. A mailto line sits below the card. The only route with a `login/layout.tsx` for metadata (it is a client component). Visual state: complete; the form is the cleanest screen in the app. Any credentials succeed when no engine answers [web-portal-G7] [contract-env-secrets-F1].
+
+![Login, desktop, dark](docs/handoff/ui/login-desktop-dark.jpg) ![Login, mobile, dark](docs/handoff/ui/login-mobile-dark.jpg)
+
+![Login, desktop, light](docs/handoff/ui/login-desktop-light.jpg) ![Login, mobile, light](docs/handoff/ui/login-mobile-light.jpg)
+
+### `/demo` — public 3D viewer
+
+Skeleton: `main` → `header` with a breadcrumb `nav`, H1 and a two-line explanation (`demo/page.tsx:30-46`) → `MeshWorkspace` in a `max-w-7xl` wrapper — a `lg:grid-cols-[280px_1fr_300px]` layout of parameters `aside` / canvas / controls `aside`, closing with a credit line. No site nav, no `Footer`, no theme toggle: a visitor who lands here has no way to reach the rest of the site except the breadcrumb. Visual state: functional. The canvas keeps its own near-black ground in light mode (see the light capture), which is intentional for a depth render but is achieved with hardcoded hex rather than a token. The `Generate Report` button 401s for anonymous visitors [critic-G14].
+
+![Demo viewer, desktop, light](docs/handoff/ui/demo-desktop-light.jpg)
+
+![Demo viewer, desktop, dark](docs/handoff/ui/demo-desktop-dark.jpg)
+
+![Demo viewer, mobile, light](docs/handoff/ui/demo-mobile-light.jpg) ![Demo viewer, mobile, dark](docs/handoff/ui/demo-mobile-dark.jpg)
+
+### `/dashboard` — clinical operating dashboard
+
+Skeleton: `AppShell` → 6-across `KpiTile` strip (`grid-cols-2 md:grid-cols-3 lg:grid-cols-6`) → 7-across secondary metric strip (`lg:grid-cols-7`) → `lg:grid-cols-[1fr_320px]` split: left holds a `Sparkline` healing-velocity card with three summary tiles, then a three-card row (`Donut` healing progress, `Donut` documentation integrity, claims card), then an activity log, then a two-card row (scan-volume `Sparkline`, snapshot grid); right holds the visit-schedule rail and a route-summary card. Closes with a 6-button quick-actions row. Visual state: the densest and most finished portal screen. In the captures the "Scan volume · this week" panel renders axis labels but no bars — the chart is drawn from a data shape the panel does not populate. All numbers are fixtures [web-portal-G13].
+
+![Dashboard, desktop, dark](docs/handoff/ui/dashboard-desktop-dark.jpg)
+
+![Dashboard, desktop, light](docs/handoff/ui/dashboard-desktop-light.jpg)
+
+![Dashboard, mobile, dark](docs/handoff/ui/dashboard-mobile-dark.jpg) ![Dashboard, mobile, light](docs/handoff/ui/dashboard-mobile-light.jpg)
+
+### `/wounds` — wound list
+
+Skeleton: `AppShell` → a row of four local `Tab` pills plus a right-aligned hint → one `.card overflow-hidden` wrapping a `.table-base` with 8 columns (patient, wound, last capture, area, volume, healing bar, quality pill, action link). Rows link to `/wounds/{id}/mesh`. Visual state: complete at desktop. At 390px the `overflow-hidden` on the card **clips columns 4-8 with no way to scroll to them** — the document does not overflow, the content is simply unreachable (§10.8).
+
+![Wound list, desktop, dark](docs/handoff/ui/wounds-desktop-dark.jpg)
+
+![Wound list, desktop, light](docs/handoff/ui/wounds-desktop-light.jpg)
+
+![Wound list, mobile, light](docs/handoff/ui/wounds-mobile-light.jpg) ![Wound list, mobile, dark](docs/handoff/ui/wounds-mobile-dark.jpg)
+
+### `/wounds/[id]` — wound detail
+
+Skeleton: `AppShell` with a computed title → header block with latest measurement figures → `TrendBadge` → `TrajectoryChart` (three Recharts panels, `md:grid-cols-3`) → `.card` + `.card-header`/`.card-title`/`.card-subtitle` measurement-history table (the only place those recipes are used) → `GraftPanel`, `ReimbursementPanel`, `NotesPanel`. This is the only route that composes the engine-backed panels. Visual state: renders fully, but with `mockProgression()` fallback data because no engine is reachable [contract-web-engine-F6].
+
+![Wound detail, desktop, dark](docs/handoff/ui/wound-detail-desktop-dark.jpg)
+
+![Wound detail, desktop, light](docs/handoff/ui/wound-detail-desktop-light.jpg)
+
+![Wound detail, mobile, dark](docs/handoff/ui/wound-detail-mobile-dark.jpg) ![Wound detail, mobile, light](docs/handoff/ui/wound-detail-mobile-light.jpg)
+
+### `/wounds/[id]/mesh` — 3D wound analysis
+
+Skeleton: `AppShell` → breadcrumb → `MeshWorkspace` (same three-rail layout as `/demo`) with parameters, tissue-composition bar and legend on the left; the canvas with watermark, HUD readout, `3D View`/`Analytics` tab pair, four tool buttons and a `Generate Report` CTA in the centre; render-mode select, five display checkboxes, `DepthSparkline`, `Export OBJ` and a capture/quality block on the right. Visual state: the highest-fidelity screen in the product. Length/width/tissue figures are fabricated and several controls are inert [web-portal-G10]; the Z convention is inverted for engine-produced meshes [web-portal-G2].
+
+![3D wound analysis, desktop, dark](docs/handoff/ui/wound-mesh-desktop-dark.jpg)
+
+![3D wound analysis, desktop, light](docs/handoff/ui/wound-mesh-desktop-light.jpg)
+
+![3D wound analysis, mobile, dark](docs/handoff/ui/wound-mesh-mobile-dark.jpg) ![3D wound analysis, mobile, light](docs/handoff/ui/wound-mesh-mobile-light.jpg)
+
+### `/notes` — audit-safe notes
+
+Skeleton: `AppShell` → status strip → `lg:grid-cols-[1fr_320px]`: left is one `.card overflow-hidden p-0` holding a long structured form built from a local `Group` component (wound type & history, tissue composition "locked from measurement", tunneling & undermining in a `grid-cols-2 md:grid-cols-4`, subjective findings, plan & follow-up, procedure); right is a compliance/preview rail. Deepest heading nesting in the portal (H1 → H2 → seven H3s). Visual state: complete-looking; every field is a fixture and nothing submits.
+
+![Notes, desktop, dark](docs/handoff/ui/notes-desktop-dark.jpg)
+
+![Notes, desktop, light](docs/handoff/ui/notes-desktop-light.jpg)
+
+![Notes, mobile, dark](docs/handoff/ui/notes-mobile-dark.jpg) ![Notes, mobile, light](docs/handoff/ui/notes-mobile-light.jpg)
+
+### `/settings` — organisation settings
+
+Skeleton: `AppShell` → a `grid-cols-1 lg:grid-cols-3` of ten local `Card` blocks (organisation profile, clinic locations, roles & permissions, notifications, integrations, note templates, security, HIPAA/audit, data retention, and one more), each a `.card` with an H2 and a stack of local `Field` rows. Visual state: purely presentational — no control on the page is wired. Contains fictional but real-looking practice identifiers (NPI, Tax ID, phone, `ops@albacetemeddev.com`) [web-portal-G13] [web-marketing-G9].
+
+![Settings, desktop, dark](docs/handoff/ui/settings-desktop-dark.jpg)
+
+![Settings, desktop, light](docs/handoff/ui/settings-desktop-light.jpg)
+
+![Settings, mobile, dark](docs/handoff/ui/settings-mobile-dark.jpg) ![Settings, mobile, light](docs/handoff/ui/settings-mobile-light.jpg)
+
+### `/admin/audit` and `/admin/ml` — legacy admin
+
+Skeleton: `Header` (the pre-`AppShell` bar) → `main.mx-auto.max-w-7xl.p-6` → `text-2xl font-bold` H1 → a placeholder table or stat grid. These are the only screens not on `AppShell`, and the only ones using raw Tailwind palette classes. Visual state: **broken in dark mode.** `bg-white`, `bg-gray-100` and `text-gray-400/500` render a white table block on the near-black page (visible in the dark capture below), and the `Header` nav links to `/phantom`, which does not exist, and `/logout`, which returns 500 [web-portal-G8] [web-portal-G1]. Both pages say "Loaded from /admin/... at runtime" and never fetch. `/admin/products` is the same shape and additionally overflows the viewport at 390px.
+
+![Admin audit log, desktop, dark](docs/handoff/ui/admin-audit-desktop-dark.jpg)
+
+![Admin audit log, desktop, light](docs/handoff/ui/admin-audit-desktop-light.jpg)
+
+![Admin ML metrics, desktop, dark](docs/handoff/ui/admin-ml-desktop-dark.jpg)
+
+![Admin ML metrics, desktop, light](docs/handoff/ui/admin-ml-desktop-light.jpg)
+
+![Admin audit, mobile, dark](docs/handoff/ui/admin-audit-mobile-dark.jpg) ![Admin ML, mobile, dark](docs/handoff/ui/admin-ml-mobile-dark.jpg)
+
+![Admin audit, mobile, light](docs/handoff/ui/admin-audit-mobile-light.jpg) ![Admin ML, mobile, light](docs/handoff/ui/admin-ml-mobile-light.jpg)
+
+### `/m/[id]` — phone capture
+
+Skeleton: no shell. `main.mx-auto.max-w-md` at `min-h-[100svh]`, `px-4 py-5 text-sm`: a kicker + H1 header, then one `Pane` whose border/background tone reflects the phase, then a footer disclaimer. The only screen with its own local layout system. Visual state: renders the `error` phase for any unknown id, because capture sessions live in a process-local `Map` [contract-web-engine-F4]; the capture below shows "Session not found." with a `Try again` button. This is the honest state of the route — a valid pairing id cannot be produced without a live desktop session on the same server process.
+
+![Phone capture, mobile, dark](docs/handoff/ui/m-test-mobile-dark.jpg) ![Phone capture, mobile, light](docs/handoff/ui/m-test-mobile-light.jpg)
+
+### Routes not screenshotted
+
+`/patients`, `/inventory`, `/routes`, `/orders`, `/claims`, `/compliance`, `/reports`, `/capture/handoff` and `/admin/products` all render 200 and follow the same `AppShell` + KPI-strip + split-grid pattern documented above; they were probed but not captured (§10.8 records their measured overflow behaviour). `/logout` returns **HTTP 500** in a production build — `cookies().delete()` is called during a Server Component render, which Next 14.2.x forbids [web-portal-G1]; the server log shows `Cookies can only be modified in a Server Action or Route Handler`. `/nope` correctly renders the branded 404 (`src/app/not-found.tsx`).
+
+## 10.8 Responsive behaviour
+
+Stock Tailwind breakpoints; no `screens` override in `tailwind.config.ts`.
+
+| Prefix | Min width | Uses | What changes |
+|---|---|---|---|
+| `sm:` | 640px | 12 | Hero H1 36→48px; the "Portal sign in" CTA appears (`MarketingNav.tsx:82`); three `sm:grid-cols-*` in tour views |
+| `md:` | 768px | 110 | The main layout breakpoint. Section padding `py-20 → py-28`; `.mk-section` gutter `px-6 → px-8`; `.mk-h2` 30 → 41.6px; `.mk-lead` 16 → 18px; `AppShell` main padding `px-4 py-5 → px-6 py-6`; most card grids go 1 → 2/3/4 columns; the Topbar subtitle and the user-chip name/role appear |
+| `lg:` | 1024px | 56 | `Sidebar` appears (`lg:flex`) and `MobileNav` disappears (`lg:hidden`); KPI strips go to 6-8 columns; the two-column page splits activate (`lg:grid-cols-[1fr_320px]`, `[1fr_360px]`, `[1fr_400px]`, `[280px_1fr_300px]`, `[440px_1fr]`, …) |
+| `xl:` | 1280px | 9 | The marketing nav link bar appears (`MarketingNav.tsx:68`) and the hamburger disappears; the Topbar search field and both filter selects appear and the decorative mobile search button disappears (`Topbar.tsx:20,31,38,48`); Hero H1 48 → 60px; one `xl:grid-cols-4` |
+| `2xl:` | 1536px | 0 | Nothing. The layout stops adapting above 1280px; `.mk-section`'s `max-w-7xl` caps the marketing column at 1280px while the portal runs full-bleed |
+
+### Measured behaviour at 390×844
+
+Document `scrollWidth` vs `clientWidth`, measured on every route in a production build:
+
+| Route | 390px | Result |
+|---|---|---|
+| `/`, `/login`, `/demo`, `/dashboard`, `/patients`, `/wounds`, `/wounds/[id]`, `/wounds/[id]/mesh`, `/notes`, `/routes`, `/claims`, `/compliance`, `/reports`, `/settings`, `/capture/handoff`, `/m/[id]`, `/admin/audit`, `/admin/ml` | 390 / 390 | no horizontal page scroll |
+| `/inventory` | **417 / 390** | `.table-base` + a `.btn-secondary` push 27px past the viewport |
+| `/orders` | **396 / 390** | 6px overflow inside the board |
+| `/admin/products` | **419 / 390** | the raw `mt-6 w-full divide-y rounded border bg-white` table pushes 29px past the viewport |
+
+### Tables have no mobile treatment
+
+`.table-base` sets no minimum width, no `overflow-x` container and no stacked/card fallback. Which of the two failure modes a table hits depends only on whether its wrapper has `overflow-hidden`:
+
+| Route | Table wrapped in an `overflow-x` ancestor? | Result at 390px |
+|---|---|---|
+| `/patients`, `/inventory`, `/orders`, `/claims`, `/wounds/[id]` | yes (via `.card overflow-hidden` + scroll container) | scrollable or overflowing |
+| `/wounds`, `/notes`, `/reports`, `/admin/audit`, `/admin/products` | **no** | columns are clipped by `overflow-hidden` and unreachable, or push the page sideways |
+
+The `/wounds` mobile capture in §10.7 shows the first case directly: "Last capture", "Area", "Volume", "Healing", "Quality" and the "Open 3D" link are all cut off at the card edge with no scrollbar.
+
+### Other mobile gaps
+
+- **`StatusBar`** is `sticky bottom-0` inside the scroll container, so on short viewports it sits over content rather than below it (visible in the mobile captures of `/wounds` and `/dashboard`).
+- **1024–1279px laptops** get the marketing hamburger instead of the link bar, and the portal Topbar loses its search and filters [web-marketing-G8].
+- **The 3D workspace** at 390px stacks to one column and the canvas drops to roughly a third of the screen; the tool buttons remain 36px targets.
+- **`PortalTourSection`** renders a simulated desktop portal (including the 240px `Sidebar`) inside a fixed-aspect window, so on a phone the tour shows desktop-density tables at roughly one-third scale.
+- **No route uses a container query, `clamp()`, or a fluid type scale.** Every responsive step is a discrete breakpoint jump.
+
+## 10.9 Theming
+
+### End to end
+
+1. **Pre-hydration.** `ThemeBootstrap` (`src/components/theme/ThemeBootstrap.tsx:7-14`) is rendered inside `<head>` (`layout.tsx:175`) as an inline `dangerouslySetInnerHTML` script. It runs before paint:
+
+   ```js
+   var s = localStorage.getItem('ws-theme');
+   var d = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+   document.documentElement.classList.toggle('dark', d);
+   ```
+
+   Precedence: explicit stored choice → OS scheme. Wrapped in `try/catch`, so a blocked-storage browser silently falls through to the OS scheme. `<html>` carries `suppressHydrationWarning` (`layout.tsx:180`) because the server cannot know the class.
+2. **Storage key**: `ws-theme`, values `"light"` / `"dark"` (`ThemeBootstrap.tsx:9`, `ThemeToggle.tsx:25`). Per-browser; never synced, never sent to the server, and not covered by the session cookie.
+3. **Toggle.** `ThemeToggle.tsx:22-27` flips the `dark` class on `<html>`, writes `localStorage`, and updates local state. It reads the *current class*, not storage (`:7-11`), so it stays correct if the class was set by the OS branch. A `mounted` gate (`:17-20`, `:38-42`) prevents an icon flash; before mount both icons resolve to the moon. Present in `MarketingNav`, `Topbar` and the legacy `Header` — i.e. every surface except `/login`, `/demo`, `/m/[id]`, `/logout` and `not-found`, which inherit whatever the bootstrap decided and offer no way to change it.
+4. **Token swap.** `.dark` on `<html>` redefines all 20 custom properties (`globals.css:40-71`); `darkMode: "class"` makes every `dark:` variant follow.
+5. **Asset swap.** `BrandImage` (`BrandImage.tsx:33-55`) renders both the light-ground and dark-ground PNG through `next/image` and shows exactly one with `dark:hidden` / `hidden dark:block`. Because the hidden one is `display: none`, it leaves the accessibility tree, so both can safely carry identical `alt` text. The swap is instant on toggle — no re-fetch, since both variants are already in the document. The cost is that **every page that shows a mark downloads both PNGs**; for the lockup that is 892 KB + 1.07 MB.
+6. **Favicon.** Cannot read the in-page class, so `layout.tsx:94-99` registers `icon-light.png` and `icon-dark.png` with `media: "(prefers-color-scheme: …)"` — the browser chrome follows the OS, not the toggle. Same for `viewport.themeColor` (`:107-111`), whose two hex values duplicate `--bg` by hand.
+7. **UA surfaces.** `color-scheme: light` / `dark` (`globals.css:8`, `:41`) makes native selects, scrollbars and form controls match.
+
+### What breaks in light mode
+
+| Symptom | Location | Severity of the visual result |
+|---|---|---|
+| Nine token pairs fail WCAG AA (§10.10), including every muted label and every status pill | `globals.css:7-38` | Widespread; light mode is legible but low-contrast throughout |
+| The 3D canvas keeps a near-black ground | `MeshCanvas.tsx:56,64,65`, `HeroScene.tsx:19,27,28`, `Hero.tsx:11` | Intentional for a depth render, but it is a hardcoded `#03060d`/`#0a1428` island on a white page — see the `/demo` light capture |
+| The routes map, the patient wound thumbnails and the tour wound-bed SVG are dark-only | `routes/page.tsx:199-206`, `patients/page.tsx:226-232`, `tour/WoundRecordView.tsx:44-65` | Same island effect |
+| `.dark .card` specular edge has no light equivalent | `globals.css:402-406` | Light cards rely on `shadow-soft` at 0.05/0.07 alpha — nearly invisible on `#f8fafc` |
+| Tour `Chip` active state uses `text-white` on `bg-accent` | `tour/shared.tsx:63` | 3.68:1 — fails AA for 11px text |
+| `.text-gradient` runs `--accent → --accent-bright → --accent` | `globals.css:249-254` | In light the middle stop `#06b6d4` is 2.43:1 on white; the headline's brightest passage is its least legible |
+
+### What breaks in dark mode
+
+| Symptom | Location |
+|---|---|
+| The three admin pages render a white table with grey text on the near-black page | `admin/{audit,ml,products}/page.tsx` — `bg-white`, `bg-gray-100`, `text-gray-500`, `text-gray-400` [web-portal-G8] |
+| Tour `Chip` active state resolves to `text-ink` (`#f5f7fa`) on gold `#d4a94a` — **2.04:1** | `tour/shared.tsx:63`; `--on-accent` exists for exactly this and is not exposed as a Tailwind class |
+| `--accent` and `--gold` are near-identical (`#d4a94a` / `#e6c06b`), so `.mk-tile::before`'s two-colour gradient reads as one colour | `globals.css:219` |
+
+### Dynamic class names do not compile
+
+`compliance/page.tsx:243-247` builds class names by interpolation — `border-${tone}/40`, `bg-${tone}/10` and `text-${tone}` inside a local `Cell` component. Tailwind's JIT scans `./src/**/*.{ts,tsx}` (`tailwind.config.ts:6`) for complete literal class strings and there is no `safelist`, so those utilities are never generated and the borders silently do not render in either theme. `wounds/page.tsx:92` avoids the same trap by writing `background: rgb(var(--${tone}))` as an inline style rather than a class — which works, but only because it bypasses Tailwind entirely.
+
+## 10.10 Accessibility of the interface
+
+Computed with the WCAG 2.x relative-luminance formula from the token triplets in `globals.css:7-71`. Thresholds: 4.5:1 for normal text, 3:1 for large text (≥18.66px bold or ≥24px) and for non-text UI boundaries.
+
+### Light theme
+
+| Pair | Foreground | Background | Ratio | AA normal (4.5) | AA large / UI (3.0) |
+|---|---|---|---|---|---|
+| `--ink` on `--bg` | `#05070c` | `#f8fafc` | 19.26:1 | pass | pass |
+| `--ink` on `--surface` | `#05070c` | `#ffffff` | 20.15:1 | pass | pass |
+| `--ink` on `--surface-2` | `#05070c` | `#f4f7fa` | 18.74:1 | pass | pass |
+| `--ink-soft` on `--bg` | `#475569` | `#f8fafc` | 7.24:1 | pass | pass |
+| `--ink-soft` on `--surface` | `#475569` | `#ffffff` | 7.58:1 | pass | pass |
+| **`--ink-muted` on `--bg`** | `#94a3b8` | `#f8fafc` | **2.45:1** | **fail** | **fail** |
+| **`--ink-muted` on `--surface`** | `#94a3b8` | `#ffffff` | **2.56:1** | **fail** | **fail** |
+| **`--ink-muted` on `--surface-2`** | `#94a3b8` | `#f4f7fa` | **2.38:1** | **fail** | **fail** |
+| **`--accent` on `--bg`** | `#0891b2` | `#f8fafc` | **3.52:1** | **fail** | pass |
+| **`--accent` on `--surface`** | `#0891b2` | `#ffffff` | **3.68:1** | **fail** | pass |
+| **`--accent-bright` on `--surface`** | `#06b6d4` | `#ffffff` | **2.43:1** | **fail** | **fail** |
+| **`--success` on `--surface`** | `#16a34a` | `#ffffff` | **3.30:1** | **fail** | pass |
+| **`--warn` on `--surface`** | `#d97706` | `#ffffff` | **3.19:1** | **fail** | pass |
+| `--danger` on `--surface` | `#dc2626` | `#ffffff` | 4.83:1 | pass | pass |
+| **`--on-accent` on `--accent`** (`.btn-primary`) | `#ffffff` | `#0891b2` | **3.68:1** | **fail** | pass |
+| `.btn-primary:hover` (`--on-accent` on `--accent-bright`) | `#ffffff` | `#06b6d4` | **2.43:1** | **fail** | **fail** |
+| **`--gold` on `--surface`** | `#b0821e` | `#ffffff` | **3.47:1** | **fail** | pass |
+| **`--hairline` on `--bg`** | `#e2e8f0` | `#f8fafc` | **1.18:1** | n/a | **fail** |
+| **`--hairline` on `--surface`** | `#e2e8f0` | `#ffffff` | **1.23:1** | n/a | **fail** |
+| `--wm-metric` on `--surface` (unused) | `#2563eb` | `#ffffff` | 5.17:1 | pass | pass |
+
+Pill tints, computed by compositing the 10% (15% for neutral) tint over `--surface`:
+
+| Recipe | Foreground | Effective background | Ratio | AA normal |
+|---|---|---|---|---|
+| `.pill-success` | `#16a34a` | `#e8f6ed` | **2.96:1** | **fail** |
+| `.pill-warn` | `#d97706` | `#fbf1e6` | **2.86:1** | **fail** |
+| `.pill-danger` | `#dc2626` | `#fce9e9` | **4.13:1** | **fail** |
+| `.pill-accent` | `#0891b2` | `#e6f4f7` | **3.27:1** | **fail** |
+| `.pill-neutral` | `#475569` | `#eff1f4` | 6.70:1 | pass |
+
+### Dark theme
+
+| Pair | Foreground | Background | Ratio | AA normal |
+|---|---|---|---|---|
+| `--ink` on `--bg` | `#f5f7fa` | `#05070c` | 18.78:1 | pass |
+| `--ink` on `--surface` | `#f5f7fa` | `#0a0e17` | 17.98:1 | pass |
+| `--ink` on `--surface-2` | `#f5f7fa` | `#111827` | 16.53:1 | pass |
+| `--ink-soft` on `--bg` | `#cbd5e1` | `#05070c` | 13.57:1 | pass |
+| `--ink-soft` on `--surface` | `#cbd5e1` | `#0a0e17` | 13.00:1 | pass |
+| `--ink-muted` on `--bg` | `#94a3b8` | `#05070c` | 7.86:1 | pass |
+| `--ink-muted` on `--surface` | `#94a3b8` | `#0a0e17` | 7.53:1 | pass |
+| `--ink-muted` on `--surface-2` | `#94a3b8` | `#111827` | 6.92:1 | pass |
+| `--accent` on `--bg` | `#d4a94a` | `#05070c` | 9.19:1 | pass |
+| `--accent` on `--surface` | `#d4a94a` | `#0a0e17` | 8.80:1 | pass |
+| `--accent-bright` on `--surface` | `#e6c06b` | `#0a0e17` | 11.14:1 | pass |
+| `--success` on `--surface` | `#4ade80` | `#0a0e17` | 11.08:1 | pass |
+| `--warn` on `--surface` | `#fbbf24` | `#0a0e17` | 11.56:1 | pass |
+| `--danger` on `--surface` | `#f87171` | `#0a0e17` | 6.98:1 | pass |
+| `--on-accent` on `--accent` (`.btn-primary`) | `#05070c` | `#d4a94a` | 9.19:1 | pass |
+| `.btn-primary:hover` | `#05070c` | `#e6c06b` | 11.63:1 | pass |
+| `--gold` on `--surface` | `#e6c06b` | `#0a0e17` | 11.14:1 | pass |
+| `.pill-success` / `.pill-warn` / `.pill-danger` / `.pill-accent` / `.pill-neutral` | — | 10-15% tint over `--surface` | 9.37 / 9.77 / 6.23 / 7.61 / 10.46 | pass |
+| **`--hairline` on `--bg`** | `#1a2332` | `#05070c` | **1.28:1** | **fail (UI 3:1)** |
+| **`--hairline` on `--surface`** | `#1a2332` | `#0a0e17` | **1.22:1** | **fail (UI 3:1)** |
+
+**Reading.** Dark passes every text pair; the only dark failure is the hairline, which is decorative. Light fails 13 of 20 text pairs plus all four coloured pill tints. The palette was tuned in dark and the light values were picked to look right, not to measure. Two literals also fail: `text-[#0891b2]` on light `--bg` is 3.52:1 (`Wordmark.tsx:24`), and the tour `Chip` active state is 3.68:1 in light and **2.04:1 in dark** (`tour/shared.tsx:63`) because it hand-rolls `text-white dark:text-ink` where `--on-accent` should be used. `text-gray-400` on `bg-white` in the admin pages is 2.54:1.
+
+### Focus
+
+One global rule (`globals.css:379-385`):
+
+```css
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+```
+
+Correct in principle: `:focus-visible` only, brand colour, offset, and `:where()` so it carries zero specificity and can be overridden. Two measured problems. First, the ring colour inherits the accent, so its contrast against the page is **9.19:1 in dark but 3.52:1 in light** — passing the 3:1 non-text threshold, but only just, and against `--surface-2` panels it drops further. Second, the selector list omits `[tabindex]`, so any element made focusable with `tabIndex={0}` gets no ring. `.input` adds its own `focus:ring-1 focus:ring-accent` + `focus:border-accent` (`:147`), which stacks with the global outline.
+
+### Keyboard operability
+
+Measured by pressing Tab 14 times from page load on a production build:
+
+- **No skip link on any route.** Verified across all 23 routes probed; `sr-only` appears exactly once in the codebase (`Hero.tsx:131`, a `<dt>`) and no "skip to" string exists [critic-G10].
+- **On every portal page the first 13 tab stops are the sidebar** — the brand link plus all 12 nav items — before the first page control. A clinician using the keyboard tabs through the entire navigation on every single page load.
+- **Landmarks are inconsistent.** `main` is present on every route (1 each). `footer` exists on `/` and `/m/[id]` only — no portal page has one, although `StatusBar` is structurally a footer. `header` counts range 0 to 4 on portal pages depending on how many `<header>` elements the page components happen to emit; `/wounds`, `/routes`, `/compliance`, `/reports`, `/settings` and `/capture/handoff` have **zero** `<header>` landmarks even though the Topbar renders on all of them (it is a `<div>`, `Topbar.tsx:12`).
+- **Exactly one `<h1>` per route** (verified on all 23). Heading order is clean on the marketing home (H1 → H2 → H3, no skips) and on `/notes`, `/settings`, `/compliance`, `/reports`. Two pages skip a level: `/orders` and `/claims` emit H1 → **H3** → H2 (the board components' detail panels use H3 before the list H2).
+- **Zero unlabelled buttons and zero `<img>` without `alt`** on every route probed.
+- **Unlabelled form controls**: 2 on `/` (the pipeline/technology tab controls), 2 on `/demo` and 2 on `/wounds/[id]/mesh` (the render-mode select and one checkbox group), 1 each on `/orders` and `/claims`.
+- **Mouse-only targets**: tab lists in `PipelineSection` and `ReportSection` carry `role="tablist"`/`role="tab"`/`aria-selected` but no `role="tabpanel"`, no `aria-controls` and no arrow-key handling; table rows and SVG stops in the tour views respond to `onClick` on non-focusable elements [web-marketing-G10].
+
+### `aria-*` inventory
+
+| Attribute | Occurrences | Where |
+|---|---|---|
+| `aria-hidden` | 33 | Decorative SVGs, the duplicated theme-toggle icons, backdrop layers, arrow glyphs |
+| `aria-label` | 29 | Brand links, icon buttons, the two Topbar selects, `MarketingNav` nav landmarks, `ThemeToggle` (flips with state) |
+| `aria-pressed` | 3 | Tour `Chip`, mesh tool buttons |
+| `aria-selected` | 2 | `PipelineSection` and `ReportSection` tabs |
+| `aria-expanded` | 2 | `MarketingNav` and `MobileNav` hamburgers |
+| `aria-disabled` | 1 | one mesh control |
+| `role="img"` | 5 | decorative SVG groups |
+| `role="tablist"` / `role="tab"` | 2 / 2 | the two marketing tab sets |
+| `role="menu"` | 1 | one marketing dropdown |
+| `aria-live` | **0** | No status region anywhere — `MobileCapture`'s phase changes, `CaptureHandoff`'s polling result and every form error are announced to nobody |
+| `aria-current` | **0** | Active nav items in `Sidebar`/`MobileNav` are indicated by colour alone |
+| `aria-describedby` | **0** | `.field-hint` is never associated with its input |
+
+The existing findings are authoritative for remediation: [web-marketing-G10] covers the marketing components (reduced-motion gating of the three.js and interval animations, canvas labelling and fallback, tab roles and keyboard support, focusable rows and stops, the unlabelled textarea, the spoken emoji, the heading-in-a-button); [critic-G10] covers the missing skip link and the absence of any automated accessibility check in CI. Neither covers what this chapter adds: the token contrast failures in light mode, the `tour/shared.tsx:63` 2.04:1 chip, the missing `aria-current`/`aria-live`, the 13-stop sidebar prefix, or the `/orders` and `/claims` heading skips. Those should be folded into the same remediation.
+
+## 10.11 iOS visual language
+
+A clinician meets both surfaces: the iPhone app captures, the portal reads. They currently share a name and nothing else.
+
+| Dimension | Web | iOS (`woundscan-ios/WoundScan/`) |
+|---|---|---|
+| Theme | Class-based light/dark with a user toggle, 20 tokens | **Forced light** at the app root (`App/WoundScanApp.swift:11`, `.preferredColorScheme(.light)`), **forced dark** on the one 3D screen (`UI/Screens/MeasurementDetailView.swift:27`) |
+| Colour source | CSS custom properties | **None.** `Assets.xcassets` contains only `AppIcon.appiconset`; there is no colour set, no `AccentColor`, no token file |
+| Palette in use | 20 semantic tokens | `.white` with opacity 0.45/0.55/0.6/0.7/0.8/0.85, `.black.opacity(0.55)`, `.secondary`, `.tertiary`, `.red`, `.orange`, `Color.black`, `.ultraThinMaterial`, `.thinMaterial`, plus three raw `UIColor` values in the SceneKit view (`UI/Components/WoundMeshView.swift:21,30,93,101,111`) |
+| Accent | cyan `#0891b2` / gold `#d4a94a` | System blue — no accent is set anywhere, so `.borderedProminent` buttons (4 uses) render in the iOS default tint |
+| Typography | Sora / DM Sans / IBM Plex Mono, three families, weights 400-800 | System font only: `.caption` ×6, `.headline` ×4, `.callout` ×3, `.caption2.weight(.semibold)` ×3, `.title2` ×2, `.footnote` ×2, `.title3`, plus six `.system(size:)` one-offs (9, 16, 16, 26, 28, 38 pt) — two of which specify `design: .rounded`, a face the web never uses |
+| Corner radii | 6 / 10 / 16 / 24 (with 4px on controls) | 10, 12, 14 — three values, none matching any web value |
+| Spacing | 4px Tailwind scale, dominant 8/12/16 | `spacing:` 0, 2, 4, 6, 8, 10, 12, 16; `.padding()` 10, 12, 14, 20 and `.padding(.vertical, 4/6/8/10/14/16)` — no scale, chosen per call site |
+| Iconography | 12 hand-written inline SVG nav icons (`Sidebar.tsx:95-199`), 16px, `strokeWidth 1.7`, plus one-off SVGs in `Topbar`, `StatusBar`, `ThemeToggle`, `MobileNav` | 16 SF Symbols (`square.grid.2x2`, `person.2.fill`, `camera.viewfinder`, `circle.hexagongrid.fill`, `ellipsis.circle`, `doc.text.fill`, `shippingbox.fill`, `map.fill`, `cart.fill`, `doc.richtext.fill`, `checkmark.shield.fill`, `chart.bar.fill`, `slider.horizontal.3`, `clock.fill`, `cube.transparent`, `gearshape.fill`, …) — none of which resembles its web counterpart |
+| Navigation | 240px `Sidebar` (12 items) at `lg`, hamburger drawer below | `TabView` with 5 tabs (Dashboard, Patients, Capture, Wounds, More) and a `More` `List` carrying the other 8 portal destinations (`UI/Screens/MainTabView.swift`) |
+| Chrome | Custom `AppShell` | Stock SwiftUI `NavigationStack`, `Form`, `List`, `Section`, `TabView` — zero custom chrome |
+| Brand | Theme-aware PNG lockup on every surface | Nothing. `LoginView.swift:48` sets `.navigationTitle("WoundScan")` — the **old product name**; the wordmark, symbol and lockup appear nowhere [contract-env-secrets-F10] |
+| 3D viewer | `@react-three/fiber` + drei, `#03060d` ground, cyan wireframe | SceneKit, `UIColor(white: 0.06)` ground, warm key `(1.0, 0.94, 0.86)` + cool fill `(0.7, 0.82, 1.0)` — a different lighting model and a different ground value from the web's `#03060d` |
+
+**The divergence that matters to a clinician.** The two surfaces do not look like the same product. The iPhone app is stock iOS in forced light with system blue buttons and a stale product name; the portal is a dark gold-accented instrument. The one place they meet — the 3D mesh — renders on two different engines with two different grounds, two different lighting rigs and (per [web-portal-G2]) two different Z conventions, of which only the iOS one matches the engine's OBJ output. When the app embeds the portal in a `WKWebView` (`UI/Components/PortalWebView.swift`, 8 destinations in `MoreMenu`), the user crosses from forced-light system chrome straight into whatever theme the web app's `localStorage` last held — a hard visual seam inside a single navigation push, on top of the broken cookie handoff [ios-app-G3] [contract-ios-engine-F6].
+
+**Minimum to converge.** Add a colour set to `Assets.xcassets` carrying the same 20 tokens with light and dark values; set `AccentColor` from `--accent`; remove `.preferredColorScheme(.light)` so the app follows the system and the portal's OS-scheme default; set `PortalWebView` to seed `ws-theme` into the web view's `localStorage` so the embedded portal matches the host; replace `"WoundScan"` with the current wordmark; and align the SceneKit ground and Z handling with the web viewer once [web-portal-G2] is fixed.
+
+## 10.12 Gaps and rules for new work
+
+### What is missing entirely
+
+| Gap | Evidence | Consequence |
+|---|---|---|
+| No design source of truth outside the code | no design-tool file, no token export, no `tokens.json`, no Storybook config in the tree | The stylesheet *is* the spec; any divergence is invisible until someone looks at two screens side by side |
+| No component documentation | no `.stories.*`, no `README` in `src/components/`, no prop docs beyond inline comments | New work is written by copying the nearest-looking page |
+| No visual regression tests | `.github/workflows/web-ci.yml` runs lint/typecheck/build only; `npm test` is `vitest run --passWithNoTests` with zero web tests [00.md] | Nothing catches a token change that breaks a screen, or a class-recipe edit that reflows every card |
+| No automated accessibility check | same workflow [critic-G10] | The contrast failures in §10.10 have never been surfaced |
+| No React primitives | grep: no `Button`/`Card`/`Badge`/`Input`/`Table` component anywhere | 29 duplicated local helpers (§10.6) |
+| No chart palette token | `Donut` segment colours are raw `rgb()` literals in 3 files | Chart colours cannot be themed and are inconsistent between `/reports` and `ClaimsBoard` |
+| No empty / loading / error states as a system | only `Sparkline.tsx:12` ("No data"), `DepthSparkline.tsx:5` ("No history yet") and `MobileCapture`'s `Pane` tones | Every new screen invents its own |
+| No `aria-live` region, no `aria-current` | §10.10 | Status changes and active nav are not announced |
+| No focus-trap or dialog primitive | `MobileNav` is the only overlay; its scrim is a `<button>` and focus is not trapped | Any future modal will repeat the problem |
+
+### Rules for adding a screen
+
+**Colour.**
+1. Never write a hex or `rgb()` literal in a component. Use `bg-*` / `text-*` / `border-*` token classes, or `rgb(var(--token))` / `rgb(var(--token) / 0.15)` inside a hand-written rule or an SVG attribute (`Donut.tsx:23,44,49` and `Sparkline.tsx:38,43,50-51,62` are the pattern to copy).
+2. New tokens go in **both** `:root` (`globals.css:7-38`) and `.dark` (`:40-71`), as a space-separated RGB triplet, and get a `token()` entry in `tailwind.config.ts` if components will use it as a class.
+3. Foreground on an accent fill is `rgb(var(--on-accent))`, never `text-white` and never `dark:text-ink`. `tour/shared.tsx:63` is the counter-example — do not copy it.
+4. Do not build class names by interpolation. `border-${tone}/40` does not compile (`compliance/page.tsx:243-247`); write a full-literal lookup object like `KpiTile.tsx:14-20`.
+5. Before shipping a light-mode surface, compute the contrast. The light palette is not safe by default (§10.10).
+
+**Type.**
+6. Headings use `font-display`; body inherits DM Sans; only machine-produced values use `font-mono`.
+7. For a section heading on marketing, use `.mk-h2` + `.mk-lead`. For a card heading in the portal, use `.card-title` + `.card-subtitle` — not another inline `font-display text-base font-semibold text-ink`.
+8. For a micro-caps label use `.eyebrow` (marketing) or `text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted` (portal — the `KpiTile.tsx:32` spelling, which is the most common of the seven). Do not introduce an eighth letter-spacing.
+
+**Layout.**
+9. Marketing sections: `<section id="…" className="relative scroll-mt-20 py-20 md:py-28">` with a `.mk-section` inside. Portal pages: `<AppShell title subtitle user>`, then a KPI strip at `grid-cols-2 md:grid-cols-3 lg:grid-cols-6`, then a `lg:grid-cols-[1fr_320px]` split.
+10. Radius: `rounded-md` (10px) for portal controls and panels, `.card` (`rounded-lg`, 16px) for cards, `rounded-xl` (24px) for marketing cards, `rounded-full` for pills and dots. Do not use `rounded-sm` (it is *larger* than `rounded`) or `rounded-2xl` (it duplicates `rounded-lg`).
+11. Every 1px rule is `border-hairline`. Do not introduce a second border colour or a `border-2`.
+12. **Every table goes in an `overflow-x-auto` wrapper.** `.card overflow-hidden` around a `.table-base` silently hides columns on a phone (`/wounds`, `/notes`, `/reports` — §10.8). If the table has more than four columns, also plan a stacked mobile form; none exists to copy today.
+13. Check `document.scrollWidth` at 390px before merging. `/inventory`, `/orders` and `/admin/products` currently fail this.
+
+**Motion.**
+14. Reuse `Reveal` for scroll entrances and `mk-rise` for above-the-fold entrances; both already honour `prefers-reduced-motion`.
+15. Any JS- or WebGL-driven motion must check `window.matchMedia('(prefers-reduced-motion: reduce)')`. `CountUp.tsx:36,43-45` is the one correct example in the codebase; every three.js `useFrame` and every `setInterval` is a counter-example.
+16. Keep new keyframes in `globals.css` with the `mk-` prefix and a reduced-motion guard. Do not add inline `<style>` blocks (`PipelineSection.tsx:190`).
+
+**Accessibility.**
+17. One `<h1>` per route, no level skips (`/orders` and `/claims` currently skip).
+18. Use real `<button>`/`<a>` for anything clickable; do not put `onClick` on a `<tr>`, `<div>`, `<circle>` or `<g>`.
+19. Label every input; associate `.field-hint` with `aria-describedby`.
+20. Mark the active nav item with `aria-current="page"` and give async status changes an `aria-live` region — neither pattern exists yet, so the first screen to need one establishes it.
+21. Do not rely on the hairline to communicate structure; it measures 1.2:1.
+
+**What not to copy.**
+22. The three `/admin/*` pages: legacy `Header`, raw `bg-white`/`text-gray-*`, dead `/phantom` and `/logout` links, placeholder table bodies [web-portal-G8].
+23. `Header.tsx` at all — [web-portal-G8] recommends deleting it.
+24. Local `Field` / `Row` / `Chip` / `Legend` / `Stat` / `Select` helpers. Promote the best of each into `src/components/` before writing a sixth `Field`.
+25. `Wordmark.tsx:24`'s hardcoded hex — use `--wm-metric`, or delete the token.
+26. `src/lib/sample.ts` fixtures on any surface a real user will see: they contain 12 full patient names with MRNs, an NPI, a Tax ID, a phone number and a real-domain email [web-portal-G13].
+
+### Suggested sequencing (est., engineer-days)
+
+| Work | Est. | Why first |
+|---|---|---|
+| Fix the light-mode token contrast (raise `--ink-muted`, `--accent`, `--success`, `--warn`, `--gold`; darken pill tints or use `--accent-soft`) and the `tour/shared.tsx:63` chip | 1.0 est. | Changes 20 values in one file; unblocks any honest accessibility claim |
+| Delete the dead token/alias/utility layer (§10.2 table) and add `--on-accent` + a chart palette to `tailwind.config.ts` | 0.5 est. | Removes the ambiguity a new screen would otherwise inherit |
+| Extract `Button`, `Card`, `Badge`, `Input`, `Field`, `Select`, `DataTable` (with a built-in `overflow-x` wrapper) into `src/components/ui/` and migrate the 29 local helpers | 3.0 est. | Every later fix then lands in one place |
+| Gate the three.js and interval animations on `prefers-reduced-motion`; add a skip link | covered by [web-marketing-G10] (half a day) + [critic-G10] (0.5 day) | Existing findings |
+| Add axe-core (or Lighthouse CI with an a11y budget) plus Playwright screenshot baselines for `/`, `/login`, `/demo` and three portal routes × 2 themes × 2 viewports to `web-ci.yml` | 1.5 est. | Without it every fix above regresses silently |
+| Rebuild the three admin pages on `AppShell` and delete `Header.tsx` | covered by [web-portal-G8] (1 day) | Existing finding |
+| Add an iOS colour set from the tokens, drop `.preferredColorScheme(.light)`, seed `ws-theme` into `PortalWebView` | 1.0 est. | Closes the visible seam between the two surfaces |
