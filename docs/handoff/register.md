@@ -85,7 +85,7 @@
 | 83 | `engine-api-auth-storage-G13` | **major** | engine-api-auth-storage | Schema is unmanaged: no Alembic migrations, no RLS, no column encryption, naive DateTimes, missing tables | confirmed | 3-4 days |  |
 | 84 | `engine-api-auth-storage-G6` | **major** | engine-api-auth-storage | Sessions are not server-side: logout is a no-op, no idle refresh, hard 15-minute expiry | confirmed | 2 days |  |
 | 85 | `engine-api-auth-storage-G8` | **major** | engine-api-auth-storage | Audit log is in-memory only and its hash chain can never be verified | confirmed | 2-3 days |  |
-| 86 | `engine-core-math-G3` | **major** | engine-core-math | Undermining volume/surface formulas are physically wrong and the module is unwired; sidewall module absent | confirmed | 1-2 d |  |
+| 86 | `engine-core-math-G3` (RESOLVED) | **major** | engine-core-math | Undermining volume/surface formulas are physically wrong and the module is unwired; sidewall module absent | confirmed | 1-2 d |  |
 | 87 | `engine-core-math-G4` | **major** | engine-core-math | Fiducial scale check is wrong for the documented 4-corner marker layout and unused | adjusted | 2-4 h |  |
 | 88 | `engine-core-math-G5` | **major** | engine-core-math | All calibration constants are assumed, not measured, and several are silently hardcoded on the production path | confirmed | 1-2 wk |  |
 | 89 | `engine-core-math-G6` | **major** | engine-core-math | Regulatory and benchmark 'ground truth' for irregular and clinical wounds is tautological | confirmed | 4-8 h | engine-tests-docs-packaging-G1 |

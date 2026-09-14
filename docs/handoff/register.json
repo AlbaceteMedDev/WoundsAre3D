@@ -1908,7 +1908,9 @@
   "verdict": "confirmed",
   "verifier_evidence": "undermining.py:8-11 (docstring says annulus around the wound opening), :58-61 (no edge-radius input), :68-73 and :109-110 (V = 1/2 sum u^2 h dtheta; S = 2 sum u h dtheta), :93-101 (argsort then CubicSpline periodic). tests/unit/test_undermining.py:22-36 asserts truth_V = pi*u0^2*h and truth_S = 4*pi*u0*h. docs/math_reference.md:60-72 states the same wedge formulas and a 'sidewall fitting module'; grep for sidewall across src finds only those docstrings; grep 'undermin' in api/, output/, graft/ returns nothing. Reproduced: u=5, h=8 -> code returns V=628.3 mm^3, S=502.7 mm^2; annulus truth h*2pi*(R u + u^2/2) = 3141.6 / 5654.9 / 8168.1 mm^3 for R=10/20/30 (floor+ceiling 785/1414/2042 mm^2, lateral wall 754/1257/1759 mm^2). Measurements at clock 0.0 and 12.0 together raise ValueError '`x` must be strictly increasing sequence'.",
   "source": "engine-core-math",
-  "kind": "subsystem"
+  "kind": "subsystem",
+  "resolved": true,
+  "resolution": "RESOLVED after this audit, on the same branch: geometry/undermining.py rewritten (raster region between the boundary polygon and the probe extents, extents splined in arc length, annulus closed form as the analytic reference, 0/12 o'clock deduped), undermined area/volume added to CreateMeasurementRequest and MeasurementResponse, wired through api/pipeline.py and the PDF, the sidewall reference removed from docs/math_reference.md, and the tests rewritten against the P10 phantom truths (804.25 mm2 undermined area, 9650.97 mm3 undermined volume). See chapter 8.10."
  },
  {
   "id": "engine-core-math-G4",

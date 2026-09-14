@@ -26,6 +26,7 @@ from woundscan.api.models.measurement import (
     MeasurementResponse,
     QualityReportOut,
     UncertaintyValue,
+    UnderminingOut,
 )
 from woundscan.capture.probe import ForceCategory, ProbeMeasurement, ProbeType
 from woundscan.fusion.force_correction import (
@@ -38,6 +39,10 @@ from woundscan.geometry.surface_area import compute_surface_area
 from woundscan.geometry.uncertainty import (
     compute_surface_area_with_uncertainty,
     compute_volume_with_uncertainty,
+)
+from woundscan.geometry.undermining import (
+    UnderminingMeasurement,
+    compute_undermining,
 )
 from woundscan.geometry.volume import compute_mean_depth, compute_volume
 from woundscan.graft.product_db import ProductDatabase
@@ -95,6 +100,71 @@ def _grid_from_boundary(
         shape=(ny, nx),
     )
     return X, Y, dx_mm, dy_mm, mask, (x0, y0)
+
+
+def _undermining_block(
+    request: CreateMeasurementRequest,
+    depth_cm: np.ndarray,
+    mask: np.ndarray,
+    dx_mm: float,
+    dy_mm: float,
+    mean_depth_cm: float,
+) -> UnderminingOut:
+    """Undermined area and volume from the boundary polygon and probe readings.
+
+    The pocket height is not measured by the probe. We use the mean bed depth in
+    a 2 mm band inside the wound edge, which is the depth the undermined shelf
+    actually sits above, and report that choice in ``pocket_height_basis`` so the
+    volume is never mistaken for an instrument reading.
+    """
+    measurements = [
+        UnderminingMeasurement(
+            clock_position_hours=u.clock_position_hours, radial_extent_mm=u.extent_mm
+        )
+        for u in request.undermining
+    ]
+
+    basis = "mean wound bed depth within 2 mm of the edge"
+    pocket_mm = 0.0
+    if mask.any():
+        try:
+            from scipy.ndimage import binary_erosion
+
+            steps = max(int(round(2.0 / max(dx_mm, dy_mm))), 1)
+            band = mask & ~binary_erosion(mask, iterations=steps)
+            if band.any():
+                pocket_mm = float(np.mean(depth_cm[band]) * 10.0)
+            else:
+                pocket_mm, basis = mean_depth_cm * 10.0, "mean wound bed depth"
+        except Exception:  # pragma: no cover - scipy always present in practice
+            pocket_mm, basis = mean_depth_cm * 10.0, "mean wound bed depth"
+
+    result = compute_undermining(
+        request.boundary.vertices_mm,
+        measurements,
+        pocket_height_mm=max(pocket_mm, 0.0),
+        pocket_height_basis=basis,
+        n_monte_carlo=128 if measurements else 0,
+    )
+    lo_a, hi_a = result.undermined_area_ci95_mm2
+    lo_v, hi_v = result.undermined_volume_ci95_mm3
+    return UnderminingOut(
+        measured=bool(measurements),
+        undermined_area_cm2=result.undermined_area_mm2 / 100.0,
+        undermined_area_ci_95_low_cm2=lo_a / 100.0,
+        undermined_area_ci_95_high_cm2=hi_a / 100.0,
+        visible_area_cm2=result.visible_area_mm2 / 100.0,
+        total_area_with_undermining_cm2=result.total_area_mm2 / 100.0,
+        undermined_volume_cm3=result.undermined_volume_mm3 / 1000.0,
+        undermined_volume_ci_95_low_cm3=lo_v / 1000.0,
+        undermined_volume_ci_95_high_cm3=hi_v / 1000.0,
+        max_extent_mm=result.max_extent_mm,
+        max_extent_clock_hours=result.max_extent_clock_hours,
+        involved_clock_positions=list(result.involved_clock_positions),
+        pocket_height_mm=result.pocket_height_mm,
+        pocket_height_basis=result.pocket_height_basis,
+        n_measurements=result.n_measurements,
+    )
 
 
 def _synthetic_camera_anchors(
@@ -236,6 +306,9 @@ def run_measurement_pipeline(
         n_samples=300,
     )
 
+    # 5b. Undermining (clinician probe readings; nothing optical sees under skin)
+    undermining_out = _undermining_block(request, depth_cm, mask, dx_mm, dy_mm, mean_depth_cm)
+
     # 6. Plausibility
     plaus = run_geometric_plausibility_checks(
         volume_cm3=V,
@@ -358,6 +431,7 @@ def run_measurement_pipeline(
         mean_depth_cm=mean_depth_cm,
         perimeter_cm=perimeter_cm,
         footprint_area_cm2=footprint_cm2,
+        undermining=undermining_out,
         quality=QualityReportOut(
             grade=quality.grade.value,
             overall_score=quality.overall_score,
@@ -399,6 +473,9 @@ def _empty_response(
         mean_depth_cm=0.0,
         perimeter_cm=0.0,
         footprint_area_cm2=0.0,
+        undermining=_undermining_block(
+            request, np.zeros((1, 1)), np.zeros((1, 1), dtype=bool), 1.0, 1.0, 0.0
+        ),
         quality=QualityReportOut(
             grade="F",
             overall_score=0.0,
