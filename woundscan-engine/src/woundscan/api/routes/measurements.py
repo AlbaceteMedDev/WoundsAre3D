@@ -198,6 +198,7 @@ def _render_pdf_for(response: MeasurementResponse) -> bytes:
         quality_grade=response.quality.grade,
         quality_components=response.quality.components,
         graft_recommendations=[r.model_dump() for r in response.graft_recommendations],
+        undermining=response.undermining.model_dump(),
         methodology_notes=(
             "Volume = double Simpson integral of fused depth field. "
             "3D surface area = gradient integral. "
