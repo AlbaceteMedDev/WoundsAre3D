@@ -1,3 +1,7 @@
+> **Revision A — superseded. Do not print.** These notes describe the earlier STL set, which
+> failed a print service's wall-thickness inspection. The cavity geometry and truth values
+> below still hold; the hollowing described here does not. See `INDEX.md` for revision B.
+
 # StrataMetric wound-measurement phantom set
 
 Six 80 × 80 mm blocks, 9–29 mm tall (each only as thick as its cavity needs), with one cavity of

@@ -1,3 +1,7 @@
+> **Revision A — superseded. Do not print.** These notes describe the earlier STL set, which
+> failed a print service's wall-thickness inspection. The cavity geometry and truth values
+> below still hold; the hollowing described here does not. See `INDEX.md` for revision B.
+
 # StrataMetric wound phantoms — complex set (P7–P10 + lids)
 
 Companion to the basic set (P1–P6). Same conventions: watertight binary STL in **millimetres**,

@@ -1,0 +1,132 @@
+[
+  {
+    "id": "P1",
+    "file": "P1_hemisphere_r15.step",
+    "part": "block",
+    "height_mm": 19.0,
+    "cavity_volume_mm3": 7068.583,
+    "opening_area_mm2": 706.858,
+    "max_depth_mm": 15.0,
+    "material_mm3": 58662.8,
+    "hollow": true
+  },
+  {
+    "id": "P2",
+    "file": "P2_hemisphere_r25.step",
+    "part": "block",
+    "height_mm": 29.0,
+    "cavity_volume_mm3": 32724.923,
+    "opening_area_mm2": 1963.495,
+    "max_depth_mm": 25.0,
+    "material_mm3": 73488.3,
+    "hollow": true
+  },
+  {
+    "id": "P3",
+    "file": "P3_cone_r20_d10.step",
+    "part": "block",
+    "height_mm": 14.0,
+    "cavity_volume_mm3": 4188.79,
+    "opening_area_mm2": 1256.637,
+    "max_depth_mm": 10.0,
+    "material_mm3": 52201.9,
+    "hollow": true
+  },
+  {
+    "id": "P4",
+    "file": "P4_paraboloid_30x20_d12.step",
+    "part": "block",
+    "height_mm": 16.0,
+    "cavity_volume_mm3": 11309.734,
+    "opening_area_mm2": 1884.956,
+    "max_depth_mm": 12.0,
+    "material_mm3": 54466.1,
+    "hollow": true
+  },
+  {
+    "id": "P5",
+    "file": "P5_paraboloid_12x8_d4.step",
+    "part": "block",
+    "height_mm": 9.0,
+    "cavity_volume_mm3": 603.186,
+    "opening_area_mm2": 301.593,
+    "max_depth_mm": 4.0,
+    "material_mm3": 56923.3,
+    "hollow": false
+  },
+  {
+    "id": "P6",
+    "file": "P6_flat_plate.step",
+    "part": "block",
+    "height_mm": 9.0,
+    "cavity_volume_mm3": 0.0,
+    "opening_area_mm2": 0.0,
+    "max_depth_mm": 0.0,
+    "material_mm3": 57526.1,
+    "hollow": false
+  },
+  {
+    "id": "P7",
+    "file": "P7_lobed_r18_d9.step",
+    "part": "block",
+    "height_mm": 13.0,
+    "cavity_volume_mm3": 4677.547,
+    "opening_area_mm2": 1039.455,
+    "max_depth_mm": 9.0,
+    "material_mm3": 52542.5,
+    "hollow": true
+  },
+  {
+    "id": "P8",
+    "file": "P8_trough_L40_r9_d8.step",
+    "part": "block",
+    "height_mm": 12.0,
+    "cavity_volume_mm3": 4857.876,
+    "opening_area_mm2": 974.469,
+    "max_depth_mm": 8.0,
+    "material_mm3": 55593.8,
+    "hollow": true
+  },
+  {
+    "id": "P9",
+    "file": "P9_paraboloid_on_cyl_r60.step",
+    "part": "block",
+    "height_mm": 22.0,
+    "cavity_volume_mm3": 7068.583,
+    "opening_area_mm2": 1413.717,
+    "max_depth_mm": 10.0,
+    "material_mm3": 73734.4,
+    "hollow": true
+  },
+  {
+    "id": "P10",
+    "file": "P10_undermining_base.step",
+    "part": "block",
+    "height_mm": 19.0,
+    "cavity_volume_mm3": 15079.645,
+    "opening_area_mm2": 1256.637,
+    "max_depth_mm": 12.0,
+    "material_mm3": 59178.2,
+    "hollow": true
+  },
+  {
+    "id": "L1",
+    "file": "L1_lid_concentric_r12.step",
+    "part": "lid",
+    "thickness_mm": 3.0,
+    "outer_dia_mm": 56.0,
+    "hole_dia_mm": 24.0,
+    "hole_offset_mm": 0.0,
+    "material_mm3": 6031.9
+  },
+  {
+    "id": "L2",
+    "file": "L2_lid_offset6_r12.step",
+    "part": "lid",
+    "thickness_mm": 3.0,
+    "outer_dia_mm": 56.0,
+    "hole_dia_mm": 24.0,
+    "hole_offset_mm": 6.0,
+    "material_mm3": 6031.9
+  }
+]
