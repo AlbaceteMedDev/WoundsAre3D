@@ -1,0 +1,13 @@
+id,file,part,shape,opening,max_depth_mm,opening_area_mm2,perimeter_mm,cavity_volume_mm3,cavity_volume_cm3,key_line_mm,fiducial_square_mm
+P1,P1_hemisphere_r15.stl,block,hemisphere,circle 30.000 mm dia,15.0,706.86,,7068.58,7.0686,50.000,64.000
+P2,P2_hemisphere_r25.stl,block,hemisphere,circle 50.000 mm dia,25.0,1963.5,,32724.92,32.7249,50.000,64.000
+P3,P3_cone_r20_d10.stl,block,cone,circle 40.000 mm dia,10.0,1256.64,,4188.79,4.1888,50.000,64.000
+P4,P4_paraboloid_30x20_d12.stl,block,ell. paraboloid,ellipse 60.000 x 40.000 mm,12.0,1884.96,,11309.73,11.3097,50.000,64.000
+P5,P5_paraboloid_12x8_d4.stl,block,ell. paraboloid,ellipse 24.000 x 16.000 mm,4.0,301.59,,603.19,0.6032,50.000,64.000
+P6,P6_flat_plate.stl,block,flat plate,none (flat reference),0.0,0.0,,0.0,0.0,50.000,64.000
+P7,P7_lobed_r18_d9.stl,block,lobed paraboloid,"lobed, R 13.132-22.868 mm",9.0,1039.45,126.816,4677.55,4.6775,50.000,64.000
+P8,P8_trough_L40_r9_d8.stl,block,stadium trough,stadium 58.000 x 18.000 mm,8.0,974.47,136.549,4857.88,4.8579,50.000,64.000
+P9,P9_paraboloid_on_cyl_r60.stl,block,ell. paraboloid,ellipse 50.000 x 36.000 mm,10.0,1413.72,,7068.58,7.0686,50.000,64.000
+P10,P10_undermining_base.stl,block,cyl. well + lid,circle 40.000 mm dia,12.0,1256.64,125.664,15079.64,15.0796,50.000,64.000
+L1,L1_lid_concentric_r12.stl,lid,disc with through hole,hole dia 24.000 offset 0.000,3.0,,,,,,
+L2,L2_lid_offset6_r12.stl,lid,disc with through hole,hole dia 24.000 offset 6.000,3.0,,,,,,

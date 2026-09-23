@@ -59,17 +59,44 @@ for ML-only segmentations.
 
 ## Undermining
 
-The undermined region at azimuth θ extends radially u(θ) from the wound
-edge. We fit a periodic cubic spline to the (clock_position, extent)
-measurements and integrate:
+A clinician probes under the wound edge at clock positions and records the
+extent u. The undermined region is the set of points lying outside the wound
+boundary but within u of it:
 
 ```
-V_undermining = ∫₀^{2π} ½ u(θ)² h(θ) dθ
-S_undermining = ∫₀^{2π} 2 u(θ) h(θ) dθ        (top + bottom of annulus)
+U = { p ∉ W : dist(p, ∂W) ≤ u(s(p)) }
 ```
 
-where h(θ) is the wound bed depth at the edge. Sidewall lateral surface
-is added by the sidewall fitting module.
+where s(p) is the arc-length coordinate of the boundary point nearest p and
+u is a periodic cubic spline through the readings, splined **in arc length**
+rather than azimuth (on an irregular wound equal angles are not equal
+distances along the edge). The area is evaluated on a raster at 0.25 mm,
+which is robust to concave boundaries; offsetting ∂W directly would
+self-intersect wherever u exceeds the local radius of curvature.
+
+```
+A_undermining = area(U)
+V_undermining = A_undermining · h
+```
+
+For a circular edge of radius R with uniform extent u this reduces to the
+annulus, which is the analytic reference the implementation is tested
+against:
+
+```
+A = π((R + u)² − R²) = ∫₀^{2π} (R u + ½u²) dθ
+```
+
+The R·u term is the dominant one. Dropping it — integrating ½u² dθ, which is
+a sector of a disc of radius u rather than a band outside an edge at radius R
+— understates the result by a factor of 1 + 2R/u: four-fold for a 24 mm wound
+with 8 mm of undermining, twenty-fold for a 60 mm wound with 3 mm.
+
+h is the pocket height. The probe does not measure it; the engine uses the
+mean bed depth within 2 mm of the edge and reports that choice alongside the
+value, so the volume is never mistaken for an instrument reading. Nothing
+optical sees beneath intact skin, so every undermining figure is labelled
+probe-derived.
 
 ## Heteroscedastic Gaussian process fusion
 
