@@ -76,3 +76,6 @@ WoundScan 20*-*-* *-*-*/
 
 # asc upload-screenshots output
 bin/screenshots-out/
+
+# AWS CDK
+cdk.out/
