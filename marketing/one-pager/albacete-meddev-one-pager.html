@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Albacete MedDev One-Pager</title>
+<style>
+  @font-face { font-family: "Sora"; src: url("assets/Sora-var.woff2") format("woff2"); font-weight: 100 800; }
+  @font-face { font-family: "DM Sans"; src: url("assets/DMSans-var.woff2") format("woff2"); font-weight: 100 1000; }
+
+  /* Albacete MedDev palette (albacetemeddev.com) + Ovena Health palette (Bloom brand) */
+  :root {
+    --ink: #080e16;
+    --gold: #d4a94a;
+    --gold-bright: #e6c06b;
+    --forest: #22493d;
+    --forest-dark: #16392e;
+    --paper: #f8f7f2;
+    --paper-alt: #eff2eb;
+    --rule: #d7ded3;
+    --text: #243b35;
+    --muted: #5b6862;
+    --mist: #cbd5e1;
+    --ovena-navy: #1f3f6d;
+    --ovena-blue: #348dc5;
+    --ovena-sky: #70b0de;
+  }
+
+  @page { size: 8.5in 11in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #9aa3ad; }
+  body { font-family: "DM Sans", system-ui, sans-serif; color: var(--text); font-size: 9.4pt; line-height: 1.38;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1, h2, h3, h4 { font-family: "Sora", system-ui, sans-serif; }
+  img { display: block; }
+
+  .page { width: 8.5in; height: 11in; margin: 0.25in auto; background: var(--paper); position: relative; overflow: hidden;
+          display: flex; flex-direction: column; }
+  @media print { html, body { background: none; } .page { margin: 0; page-break-after: always; break-after: page; } }
+
+  .eyebrow { font-family: "Sora", sans-serif; font-weight: 600; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-bright) 40%, var(--forest)); }
+  ul.ticks { list-style: none; }
+  ul.ticks li { position: relative; padding-left: 12px; margin: 2px 0; }
+  ul.ticks li::before { content: ""; position: absolute; left: 0; top: .5em; width: 5.5px; height: 5.5px; border-radius: 1px; background: var(--gold); transform: rotate(45deg); }
+  .photo { object-fit: cover; width: 100%; }
+
+  /* ---------- Front: hero ---------- */
+  .hero { background: var(--ink); color: #fff; position: relative; display: grid; grid-template-columns: 1fr 3.05in; height: 3.55in; }
+  .hero-text { padding: .4in .3in .3in .55in; display: flex; flex-direction: column; }
+  .hero-text .logo { height: .7in; width: auto; align-self: flex-start; }
+  .hero h1 { font-size: 24pt; line-height: 1.06; font-weight: 700; letter-spacing: -.02em; margin-top: 8px; }
+  .hero h1 em { font-style: normal; color: var(--gold-bright); }
+  .hero p.lede { margin-top: 9px; font-size: 9.8pt; color: #d6dde6; }
+  .hero-photo { position: relative; }
+  .hero-photo img { height: 100%; }
+  .hero-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--ink) 0%, rgba(8,14,22,0) 32%); z-index: 1; }
+  .hero-photo .badge { position: absolute; right: 14px; bottom: 16px; z-index: 2; background: rgba(8,14,22,.82); border: 1px solid rgba(230,192,107,.5);
+                       color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 7.6pt; line-height: 1.45; text-align: right; }
+  .hero-photo .badge b { color: var(--gold-bright); font-weight: 600; }
+
+  /* ---------- Front: services ---------- */
+  .front-body { padding: .24in .55in .2in; flex: 1; display: flex; flex-direction: column; }
+  .services { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .svc { background: #fff; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .svc .media { position: relative; height: 1.56in; background: #eef1f4; }
+  .svc .media img { height: 100%; }
+  .svc .media.frame { background: var(--ink); padding: 36px 10px 0; }
+  .svc .media.frame img.shot { border-radius: 6px 6px 0 0; object-fit: cover; object-position: left top; }
+  .svc .chip { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 6px; background: var(--ink); color: var(--gold-bright);
+               font-family: "Sora", sans-serif; font-weight: 700; font-size: 7pt; letter-spacing: .12em; padding: 4px 9px 4px 5px; border-radius: 999px; }
+  .svc .chip svg { width: 15px; height: 15px; background: var(--gold); border-radius: 50%; padding: 2.5px; stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .svc .sample { position: absolute; right: 12px; top: 11px; color: #cbd5e1 !important; background: none !important; font-size: 6.4pt; color: #5b6862; background: rgba(255,255,255,.88); padding: 1px 6px; border-radius: 4px; }
+  .svc .body { padding: 10px 13px 11px; }
+  .svc h2 { font-size: 11.6pt; line-height: 1.16; color: var(--ink); font-weight: 700; letter-spacing: -.01em; margin-bottom: 5px; }
+  .svc ul { font-size: 8.8pt; }
+
+  .why { margin-top: 12px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-alt); }
+  .why div { padding: 8px 12px; border-right: 1px solid var(--rule); }
+  .why div:last-child { border-right: 0; }
+  .why b { display: block; font-family: "Sora", sans-serif; font-size: 12.5pt; color: var(--forest); font-weight: 700; line-height: 1.1; }
+  .why span { font-size: 7.6pt; color: var(--muted); line-height: 1.25; display: block; margin-top: 2px; }
+
+  .front-foot { margin-top: auto; padding-top: 9px; display: flex; justify-content: space-between; align-items: center; font-size: 7.8pt; color: var(--muted); }
+  .front-foot .turn { font-family: "Sora", sans-serif; font-weight: 600; color: var(--forest); }
+
+  /* ---------- Back ---------- */
+  .back-head { background: var(--ink); color: #fff; padding: .28in .55in .24in; display: flex; justify-content: space-between; align-items: flex-end; position: relative; }
+  .back-head h2 { font-size: 18pt; font-weight: 700; letter-spacing: -.01em; margin-top: 3px; }
+  .back-head img { height: .52in; }
+
+  .back-body { padding: .22in .55in .2in; flex: 1; display: flex; flex-direction: column; }
+  .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
+  .cat { background: #fff; border: 1px solid var(--rule); border-radius: 9px; overflow: hidden; }
+  .cat .media { height: 1.36in; position: relative; }
+  .cat .media img { height: 100%; }
+  .cat .media .tag { position: absolute; left: 8px; top: 8px; font-size: 6.3pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+                     background: var(--ink); color: var(--gold-bright); padding: 3px 7px; border-radius: 4px; }
+  .cat .body { padding: 7px 10px 8px; border-top: 3px solid var(--gold); }
+  .cat h3 { font-size: 9.8pt; color: var(--ink); font-weight: 700; margin-bottom: 3px; line-height: 1.2; }
+  .cat ul { font-size: 8pt; line-height: 1.32; }
+  .cat ul li { margin: 1px 0; }
+
+  .ovena { margin-top: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #cfdcea; background: #fff; }
+  .ov-top { display: grid; grid-template-columns: 1.75in 1fr; align-items: center; background: linear-gradient(180deg, #f3f8fc, #fff); border-bottom: 1px solid #e3ebf3; }
+  .ov-top .brand { background: #fff; align-self: stretch; display: flex; flex-direction: column; justify-content: center; padding: 10px 14px; border-right: 1px solid #e3ebf3; text-align: center; }
+  .ov-top .brand img { width: 1.4in; margin: 0 auto; }
+  .ov-top .brand .url { font-family: "Sora", sans-serif; font-weight: 700; color: var(--ovena-navy); font-size: 10.5pt; margin-top: 5px; }
+  .ov-top .intro { padding: 9px 16px; }
+  .ov-top .intro .eyebrow { color: var(--ovena-blue); }
+  .ov-top .intro h3 { font-size: 12pt; color: var(--ovena-navy); margin: 2px 0 3px; font-weight: 700; }
+  .ov-top .intro p { color: #4a5a6c; font-size: 8.6pt; }
+  .ov-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .ov-item { text-align: center; padding: 7px 4px 8px; border-right: 1px solid #edf2f7; }
+  .ov-item:last-child { border-right: 0; }
+  .ov-item img { width: 100%; height: .98in; object-fit: contain; }
+  .ov-item .grp { font-size: 5.8pt; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ovena-blue); margin-top: 4px; }
+  .ov-item .nm { font-size: 7.4pt; line-height: 1.2; color: var(--ovena-navy); font-weight: 600; margin-top: 1px; }
+
+  .cta { margin-top: auto; background: var(--forest-dark); color: #fff; border-radius: 12px; padding: 13px 18px; display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; align-items: center; }
+  .cta h3 { font-size: 12.5pt; font-weight: 700; line-height: 1.2; }
+  .cta p { color: #b9cbc2; font-size: 8.4pt; margin-top: 3px; }
+  .cta .lines { font-size: 8.9pt; line-height: 1.65; border-left: 2px solid var(--gold); padding-left: 14px; }
+  .cta .lines b { color: var(--gold-bright); font-weight: 600; display: inline-block; width: 50px; font-size: 7.2pt; letter-spacing: .12em; text-transform: uppercase; }
+
+  .fine { font-size: 6.4pt; color: #7b867f; margin-top: 7px; line-height: 1.33; }
+</style>
+</head>
+<body>
+
+<!-- ======================= FRONT ======================= -->
+<section class="page">
+  <header class="hero">
+    <div class="hero-text">
+      <img class="logo" src="assets/albacete-logo-white.png" alt="Albacete MedDev">
+      <div style="margin-top:auto">
+        <div class="eyebrow">Wound Care &amp; Practice Support</div>
+        <h1>Advanced wound care.<br><em>A stronger practice.</em></h1>
+        <p class="lede">Products, documentation, compliance, and patient tracking from one partner, so your team can focus on the patient.</p>
+      </div>
+    </div>
+    <div class="hero-photo">
+      <img class="photo" src="assets/img/care-hero-v2.jpg" alt="Clinician preparing a wound covering with a patient">
+      <div class="badge"><b>albacetemeddev.com</b><br>551-497-3428</div>
+    </div>
+    <div class="bar"></div>
+  </header>
+
+  <div class="front-body">
+    <div class="services">
+      <article class="svc">
+        <div class="media">
+          <img class="photo" src="assets/img/peptides.jpg" alt="Clinicians reviewing documentation">
+          <span class="chip"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 7-7"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>01 CONSULTING</span>
+        </div>
+        <div class="body">
+          <h2>Documentation &amp; Compliance Consultations</h2>
+          <ul class="ticks">
+            <li>Audit-readiness chart &amp; documentation reviews</li>
+            <li>CPT / HCPCS coding by product and payer</li>
+            <li>Denial root-cause analysis &amp; remediation</li>
+            <li>LCD, Medicare &amp; commercial coverage review</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div class="media frame">
+          <img class="photo shot" src="assets/img/dashboard.jpg" alt="Clinical operating dashboard">
+          <span class="chip"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>02 SOFTWARE</span>
+          <span class="sample">Sample data</span>
+        </div>
+        <div class="body">
+          <h2>Patient Treatment Tracking Dashboards</h2>
+          <ul class="ticks">
+            <li>Every patient &amp; wound with healing trajectories</li>
+            <li>4-second iPhone LiDAR scan: area, depth, volume</li>
+            <li>Auto-generated notes &amp; claims compliance checks</li>
+            <li>Graft inventory with serial, lot &amp; UDI</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div class="media">
+          <img class="photo" src="assets/img/ovena.jpg" alt="Caregiver with an Ovena wound care dressing kit">
+          <span class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-35 12 12)"/><path d="M10 12h.01M14 12h.01M12 10h.01M12 14h.01"/></svg>03 STANDARD OF CARE</span>
+        </div>
+        <div class="body">
+          <h2>Conservative Wound Care</h2>
+          <ul class="ticks">
+            <li>Collagen dressings, powder &amp; care kits</li>
+            <li>Hydrocolloid dressings &amp; sterile saline wash</li>
+            <li>Graduated 20–30 mmHg compression</li>
+            <li>Clinic-to-home supply through Ovena Health</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div class="media">
+          <img class="photo" style="object-position:center 0%" src="assets/img/biolab-membrane-wrap.jpg" alt="BioLab Sciences membrane allograft">
+          <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>04 ADVANCED MODALITIES</span>
+        </div>
+        <div class="body">
+          <h2>Advanced Wound Care Solutions</h2>
+          <ul class="ticks">
+            <li>Placental membranes &amp; skin substitutes (CAMPs)</li>
+            <li>Collagen, ECM &amp; antimicrobial matrices</li>
+            <li>Ultrasound debridement, MIST &amp; NPWT</li>
+            <li>Autologous therapy &amp; surgical allografts</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+
+    <div class="why">
+      <div><b>20+ yrs</b><span>wound care practice experience</span></div>
+      <div><b>20+</b><span>products across membranes, matrices &amp; devices</span></div>
+      <div><b>1 lead</b><span>same advisor from review to implementation</span></div>
+      <div><b>Clinic → home</b><span>supply continuity through Ovena Health</span></div>
+    </div>
+
+    <div class="front-foot">
+      <span>One partner. Every operational layer.</span>
+      <span class="turn">Product categories &amp; Ovena Health on reverse →</span>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BACK ======================= -->
+<section class="page">
+  <header class="back-head">
+    <div>
+      <div class="eyebrow">The Albacete Portfolio</div>
+      <h2>Product categories</h2>
+    </div>
+    <img src="assets/albacete-logo-white.png" alt="Albacete MedDev">
+    <div class="bar" style="height:3px"></div>
+  </header>
+
+  <div class="back-body">
+    <div class="cats">
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/amchoplast.jpg" alt="Placental membrane allograft"><span class="tag">Advanced</span></div>
+        <div class="body">
+          <h3>Placental Membranes</h3>
+          <ul class="ticks">
+            <li>Palisade dual-membrane · Sentry SL</li>
+            <li>AmchoPlast · Activate Matrix</li>
+            <li>Membrane Wrap · Hydro · Tri-Membrane</li>
+            <li>XCell Amnio Matrix · PalinGen</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/myriad-matrix.jpg" alt="ECM wound matrix"><span class="tag">Advanced</span></div>
+        <div class="body">
+          <h3>Matrices &amp; Wound Coverings</h3>
+          <ul class="ticks">
+            <li>APIS collagen + Mānuka honey</li>
+            <li>Microlyte SAM · PainGuard</li>
+            <li>Myriad Matrix · Resolve Matrix</li>
+            <li>Interfyl · XCelliStem (flowable / powder)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/ultramist.jpg" alt="UltraMIST ultrasound device"><span class="tag">Advanced</span></div>
+        <div class="body">
+          <h3>Wound Care Devices</h3>
+          <ul class="ticks">
+            <li>Arobella Qoustic ultrasonic debridement</li>
+            <li>UltraMIST non-contact ultrasound</li>
+            <li>MicroDoc single-use NPWT</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/actigraft.jpg" alt="ActiGraft kit"><span class="tag">Autologous</span></div>
+        <div class="body">
+          <h3>Autologous Wound Care</h3>
+          <ul class="ticks">
+            <li>ActiGraft: clot prepared from the patient’s own blood</li>
+            <li>Point-of-care system</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/exosomes.jpg" alt="Laboratory research"><span class="tag">Specialty</span></div>
+        <div class="body">
+          <h3>Surgical &amp; Specialty</h3>
+          <ul class="ticks">
+            <li>Surgical allografts for the OR</li>
+            <li>Physician-directed peptide catalog</li>
+            <li>Exosome &amp; birth-tissue review</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="media"><img class="photo" src="assets/img/wholesaler.jpg" alt="Wound dressings and supplies"><span class="tag" style="background:var(--forest);color:#fff">Conservative</span></div>
+        <div class="body" style="border-top-color:var(--forest)">
+          <h3>Dressings &amp; Facility Supplies</h3>
+          <ul class="ticks">
+            <li>Collagen &amp; hydrocolloid dressings</li>
+            <li>Wound cleansing &amp; compression</li>
+            <li>Facility medical-supply program</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="ovena">
+      <div class="ov-top">
+        <div class="brand">
+          <img src="assets/ovena-logo.png" alt="Ovena Health">
+          <div class="url">ovenahealth.com</div>
+        </div>
+        <div class="intro">
+          <div class="eyebrow">Wound care supplies &amp; compression socks</div>
+          <h3>Continue care at home with Ovena Health</h3>
+          <p>Clinic-grade wound care, skin care, and compression for patients and caregivers. Clinician-led, shipped direct, individually or in bulk. Also on Amazon.</p>
+        </div>
+      </div>
+      <div class="ov-grid">
+        <div class="ov-item"><img src="assets/img/ovena-collagen-dressing.jpg" alt=""><div class="grp">Collagen</div><div class="nm">Collagen dressing (510(k))</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-collagen-powder.jpg" alt=""><div class="grp">Collagen</div><div class="nm">Collagen powder (510(k))</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-collagen-kit.jpg" alt=""><div class="grp">Collagen</div><div class="nm">Dressing kit</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-hydrocolloid-roll.jpg" alt=""><div class="grp">Wound &amp; skin</div><div class="nm">Hydrocolloid roll</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-sterile-saline.jpg" alt=""><div class="grp">Wound &amp; skin</div><div class="nm">Care Wash sterile saline</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-compression-socks.jpg" alt=""><div class="grp">Compression</div><div class="nm">20–30 mmHg knee-high socks</div></div>
+        <div class="ov-item"><img src="assets/img/ovena-sock-aid.jpg" alt=""><div class="grp">Accessory</div><div class="nm">Sock aid</div></div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div>
+        <h3>Bring a product question, a workflow challenge, or a compliance concern.</h3>
+        <p>We will review your current workflow and identify the next step for your wound care program.</p>
+      </div>
+      <div class="lines">
+        <b>Call</b> 551-497-3428<br>
+        <b>Email</b> gabe@albacetemeddev.com<br>
+        <b>Web</b> albacetemeddev.com<br>
+        <b>Shop</b> ovenahealth.com
+      </div>
+    </div>
+
+    <p class="fine">Product selection remains a clinical decision. Review current manufacturer instructions for use and patient-specific considerations. Availability, coverage, and reimbursement vary by payer and are not guaranteed. Imagery includes illustrative product presentations; dashboard shows sample data, not patient data. StrataMetric AI Wound Scan is a StrataMetric product, part of the Albacete MedDev ecosystem. Product names are trademarks of their respective manufacturers. © 2026 Albacete MedDev LLC.</p>
+  </div>
+</section>
+
+</body>
+</html>
