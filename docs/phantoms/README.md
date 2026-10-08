@@ -1,6 +1,7 @@
 > **Revision A — superseded. Do not print.** These notes describe the earlier STL set, which
 > failed a print service's wall-thickness inspection. The cavity geometry and truth values
-> below still hold; the hollowing described here does not. See `INDEX.md` for revision B.
+> below still hold; the hollowing, labelling and printing advice described here do not — revision
+> C is printed in MJF PA12, not SLA. See `INDEX.md` and `ORDER-SHEET.md` for revision C.
 
 # StrataMetric wound-measurement phantom set
 

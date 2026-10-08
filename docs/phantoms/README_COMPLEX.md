@@ -1,6 +1,7 @@
 > **Revision A — superseded. Do not print.** These notes describe the earlier STL set, which
 > failed a print service's wall-thickness inspection. The cavity geometry and truth values
-> below still hold; the hollowing described here does not. See `INDEX.md` for revision B.
+> below still hold; the hollowing, labelling and printing advice described here do not — revision
+> C is printed in MJF PA12, not SLA. See `INDEX.md` and `ORDER-SHEET.md` for revision C.
 
 # StrataMetric wound phantoms — complex set (P7–P10 + lids)
 
@@ -14,7 +15,7 @@ a non-convex boundary, an elongated wound, a wound on a curved limb, and undermi
 
 | ID | File | What it tests | True volume | Max depth | Opening area | Perimeter |
 |---|---|---|---|---|---|---|
-| P7 | `P7_lobed_r18_d9.stl` | non-convex, stellate boundary — segmentation, area, perimeter | 4 677.55 mm³ | 9.000 mm | 1 039.46 mm² | 126.816 mm |
+| P7 | `P7_lobed_r18_d9.stl` | non-convex, stellate boundary — segmentation, area, perimeter | 4 677.55 mm³ | 9.000 mm | 1 039.45 mm² | 126.819 mm |
 | P8 | `P8_trough_L40_r9_d8.stl` | elongated dehisced trough — length/width axes, aspect ratio | 4 857.88 mm³ | 8.000 mm | 974.47 mm² | 136.549 mm |
 | P9 | `P9_paraboloid_on_cyl_r60.stl` | wound on a **curved limb** — reference-surface fitting | 7 068.58 mm³ | 10.000 mm | 1 413.72 mm² | — |
 | P10 | `P10_undermining_base.stl` + a lid | **undermining** — hidden volume and probe extent | see below | see below | see below | — |
@@ -23,7 +24,8 @@ Every value above is closed-form, not numerically fitted:
 
 - **P7** lobed paraboloid, R(θ) = 18(1 + 0.18·cos3θ + 0.10·cos(5θ+0.7)), depth = h(1−(r/R)²).
   V = (π·h·R₀²/4)(2 + Σaₖ²), A = (π·R₀²/2)(2 + Σaₖ²). Rim radius runs 13.132–22.868 mm.
-  Perimeter 126.816 mm (integrated over 65 536 steps; converged to better than 1e-6 mm).
+  Perimeter 126.819 mm. (`truth.json` and `truth.csv` say 126.816: their integration over
+  65 536 steps dropped the interval that closes the loop.)
 - **P8** stadium trough, radius 9 mm about a 40 mm segment. V = 4hR·L/3 + πhR²/2,
   A = 2RL + πR², perimeter = 2L + 2πR — all exact.
 - **P9** elliptic paraboloid a = 25, b = 18, h = 10 **cut into a cylinder of radius 60.000 mm**
@@ -90,8 +92,16 @@ the cavity, do not scale. The lids are thin discs — print them flat, and keep 
 
 A note on the two-part fit: the pocket is modelled at Ø56.400 and the lids at Ø56.000, giving
 0.200 mm radial clearance. If your printer runs tight, sand the lid edge rather than the pocket.
-The nominal volumes above assume zero clearance; the 0.2 mm ring contributes about 106 mm³
-(0.6 % of the total), so if you need the tighter number, measure the assembled gap and subtract.
+The clearance changes no volume or area above: the 0.2 mm ring between lid and pocket wall sits
+over the pocket ledge, sealed off from the chamber by the lid resting on that ledge, so it is
+not part of the wound. What it does change is where the hole can sit — up to 0.2 mm off
+centre — which moves each clock-position extent by up to ±0.2 mm.
+
+**Orientation.** The clock table assumes 12 o'clock is +y — the edge of P10 opposite its
+50 mm key line — and that L2's hole is offset towards 3 o'clock (+x). Nothing on these
+revision A parts enforces that — the lid turns freely in its round seat — so turn L2 by hand
+until its hole sits nearest 3 o'clock. Revision C keys it: an index groove on P10's top at
+3 o'clock and a notch in each lid's rim on its offset side.
 
 ## Before the first scan
 
