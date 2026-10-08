@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Albacete MedDev One-Pager</title>
+<style>
+  @font-face { font-family: "Sora"; src: url("assets/Sora-var.woff2") format("woff2"); font-weight: 100 800; }
+  @font-face { font-family: "DM Sans"; src: url("assets/DMSans-var.woff2") format("woff2"); font-weight: 100 1000; }
+
+  /* Albacete MedDev palette (albacetemeddev.com) + Ovena Health palette (Bloom brand) */
+  :root {
+    --ink: #080e16;
+    --ink-2: #111827;
+    --ink-3: #1a2332;
+    --gold: #d4a94a;
+    --gold-bright: #e6c06b;
+    --forest: #22493d;
+    --forest-dark: #16392e;
+    --paper: #f8f7f2;
+    --paper-alt: #eff2eb;
+    --rule: #d7ded3;
+    --text: #243b35;
+    --muted: #5b6862;
+    --mist: #cbd5e1;
+    --ovena-navy: #1f3f6d;
+    --ovena-blue: #348dc5;
+    --ovena-sky: #70b0de;
+  }
+
+  @page { size: 8.5in 11in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #9aa3ad; }
+  body { font-family: "DM Sans", system-ui, sans-serif; color: var(--text); font-size: 9.6pt; line-height: 1.42;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1, h2, h3, .display { font-family: "Sora", system-ui, sans-serif; }
+
+  .page { width: 8.5in; height: 11in; margin: 0.25in auto; background: var(--paper); position: relative; overflow: hidden;
+          display: flex; flex-direction: column; }
+  @media print { html, body { background: none; } .page { margin: 0; page-break-after: always; break-after: page; } }
+
+  /* ---------- Shared ---------- */
+  .eyebrow { font-family: "Sora", sans-serif; font-weight: 600; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+  .rule-gold { width: 38px; height: 3px; background: var(--gold); border-radius: 2px; }
+  ul.ticks { list-style: none; }
+  ul.ticks li { position: relative; padding-left: 13px; margin: 2.5px 0; }
+  ul.ticks li::before { content: ""; position: absolute; left: 0; top: .52em; width: 6px; height: 6px; border-radius: 1px; background: var(--gold); transform: rotate(45deg); }
+
+  /* ---------- Front ---------- */
+  .hero { background: radial-gradient(ellipse at 85% 0%, #14263a 0%, var(--ink) 62%); color: #fff; padding: .42in .55in .34in; position: relative; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-bright) 40%, var(--forest)); }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-top img { height: .78in; }
+  .hero-top .contact-mini { text-align: right; font-size: 8pt; color: var(--mist); line-height: 1.6; }
+  .hero-top .contact-mini b { color: #fff; font-weight: 600; }
+  .hero h1 { font-size: 26pt; line-height: 1.06; font-weight: 700; letter-spacing: -.02em; margin-top: .2in; max-width: 6.3in; }
+  .hero h1 em { font-style: normal; color: var(--gold-bright); }
+  .hero p.lede { margin-top: 11px; font-size: 10.5pt; color: #d6dde6; max-width: 6.4in; }
+  .pillbar { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .pill { font-size: 7.6pt; font-weight: 600; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(230,192,107,.45); color: var(--gold-bright); }
+
+  .front-body { padding: .26in .55in .26in; flex: 1; display: flex; flex-direction: column; }
+  .services { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .svc { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 15px 13px; position: relative; }
+  .svc .num { font-family: "Sora", sans-serif; font-weight: 700; font-size: 8pt; color: var(--gold); letter-spacing: .1em; }
+  .svc h2 { font-size: 12.4pt; line-height: 1.18; color: var(--ink); margin: 3px 0 6px; font-weight: 700; letter-spacing: -.01em; }
+  .svc p { color: var(--muted); margin-bottom: 6px; }
+  .svc ul { font-size: 8.9pt; }
+  .svc.dark { background: var(--forest-dark); border-color: var(--forest-dark); color: #e8efe9; }
+  .svc.dark h2 { color: #fff; }
+  .svc.dark p { color: #b9cbc2; }
+  .svc.dark ul.ticks li::before { background: var(--gold-bright); }
+
+  .why { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-radius: 10px; background: var(--paper-alt); }
+  .why div { padding: 10px 12px; border-right: 1px solid var(--rule); }
+  .why div:last-child { border-right: 0; }
+  .why b { display: block; font-family: "Sora", sans-serif; font-size: 13pt; color: var(--forest); font-weight: 700; line-height: 1.1; }
+  .why span { font-size: 7.8pt; color: var(--muted); line-height: 1.3; display: block; margin-top: 2px; }
+
+  .front-foot { margin-top: auto; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 7.8pt; color: var(--muted); }
+  .front-foot .turn { font-family: "Sora", sans-serif; font-weight: 600; color: var(--forest); }
+
+  /* ---------- Back ---------- */
+  .back-head { background: var(--ink); color: #fff; padding: .4in .55in .32in; display: flex; justify-content: space-between; align-items: flex-end; position: relative; }
+  .back-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-bright) 40%, var(--forest)); }
+  .back-head h2 { font-size: 20pt; font-weight: 700; letter-spacing: -.01em; margin-top: 4px; }
+  .back-head img { height: .62in; }
+
+  .back-body { padding: .32in .55in .28in; flex: 1; display: flex; flex-direction: column; }
+  .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+  .cat { background: #fff; border: 1px solid var(--rule); border-top: 3px solid var(--forest); border-radius: 8px; padding: 13px 14px 12px; }
+  .cat.adv { border-top-color: var(--gold); }
+  .cat .tag { font-size: 6.6pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .cat h3 { font-size: 11.2pt; color: var(--ink); font-weight: 700; margin: 2px 0 5px; line-height: 1.2; }
+  .cat ul { font-size: 9pt; }
+  .cat ul li { margin: 3px 0; }
+  .cat .note { font-size: 7.6pt; color: var(--muted); margin-top: 4px; }
+
+  .ovena { margin-top: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #cfdcea; background: #fff; display: grid; grid-template-columns: 2.05in 1fr; }
+  .ovena .brand { background: #fff; padding: 16px 14px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 1px solid #e3ebf3; text-align: center; }
+  .ovena .brand img { width: 1.7in; }
+  .ovena .brand .url { font-family: "Sora", sans-serif; font-weight: 700; color: var(--ovena-navy); font-size: 11pt; margin-top: 10px; }
+  .ovena .brand .sub { font-size: 7.6pt; color: #5a6b80; margin-top: 2px; }
+  .ovena .content { padding: 17px 18px 16px; background: linear-gradient(180deg, #f3f8fc, #fff 60%); }
+  .ovena .content .eyebrow { color: var(--ovena-blue); }
+  .ovena .content h3 { font-size: 13pt; color: var(--ovena-navy); margin: 2px 0 4px; font-weight: 700; }
+  .ovena .content > p { color: #4a5a6c; font-size: 9.2pt; }
+  .ov-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .ov-col h4 { font-family: "Sora", sans-serif; font-size: 8.4pt; color: var(--ovena-navy); font-weight: 700; padding-bottom: 3px; margin-bottom: 4px; border-bottom: 2px solid var(--ovena-sky); }
+  .ov-col ul { font-size: 8.9pt; color: #33414f; }
+  .ov-col ul.ticks li::before { background: var(--ovena-blue); }
+  .ov-foot { margin-top: 8px; font-size: 7.8pt; color: #4a5a6c; }
+  .ov-foot b { color: var(--ovena-navy); }
+
+  .cta { margin-top: auto; background: var(--forest-dark); color: #fff; border-radius: 12px; padding: 18px 20px; display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; align-items: center; }
+  .cta h3 { font-size: 14pt; font-weight: 700; line-height: 1.2; }
+  .cta p { color: #b9cbc2; font-size: 8.6pt; margin-top: 4px; }
+  .cta .lines { font-size: 9pt; line-height: 1.7; border-left: 2px solid var(--gold); padding-left: 14px; }
+  .cta .lines b { color: var(--gold-bright); font-weight: 600; display: inline-block; width: 52px; font-size: 7.4pt; letter-spacing: .12em; text-transform: uppercase; }
+
+  .fine { font-size: 6.6pt; color: #7b867f; margin-top: 8px; line-height: 1.35; }
+</style>
+</head>
+<body>
+
+<!-- ======================= FRONT ======================= -->
+<section class="page">
+  <header class="hero">
+    <div class="hero-top">
+      <img src="assets/albacete-logo-white.png" alt="Albacete MedDev">
+      <div class="contact-mini">
+        <b>albacetemeddev.com</b><br>
+        551-497-3428<br>
+        gabe@albacetemeddev.com
+      </div>
+    </div>
+    <div class="eyebrow" style="margin-top:.22in">Wound Care &amp; Practice Support</div>
+    <h1>Advanced wound care.<br><em>A stronger practice.</em></h1>
+    <p class="lede">Albacete MedDev is a medical device distribution and practice operations partner for specialty and wound care practices. We bring products, documentation, compliance, and patient tracking into one conversation, so your team can focus on the patient.</p>
+    <div class="pillbar">
+      <span class="pill">Documentation &amp; Compliance</span>
+      <span class="pill">Treatment Tracking Dashboards</span>
+      <span class="pill">Conservative Wound Care</span>
+      <span class="pill">Advanced Wound Care</span>
+    </div>
+  </header>
+
+  <div class="front-body">
+    <div class="services">
+      <article class="svc">
+        <div class="num">01 · CONSULTING</div>
+        <h2>Documentation &amp; Compliance Consultations</h2>
+        <p>Chart-level review of how your practice documents, codes, and bills wound care, measured against payer and LCD requirements.</p>
+        <ul class="ticks">
+          <li>Documentation standards &amp; audit-readiness chart reviews</li>
+          <li>CPT / HCPCS coding strategy by product and payer</li>
+          <li>Denial root-cause analysis with remediation plans</li>
+          <li>Medicare, Medicaid &amp; commercial coverage review</li>
+          <li>Revenue cycle analysis and staff workflow training</li>
+        </ul>
+      </article>
+
+      <article class="svc dark">
+        <div class="num">02 · SOFTWARE</div>
+        <h2>Patient Treatment Tracking Dashboards</h2>
+        <p>Provider portal and StrataMetric AI Wound Scan: every patient, wound, and application visible in one place.</p>
+        <ul class="ticks">
+          <li>Patient &amp; wound tracking with healing trajectories</li>
+          <li>4-second iPhone LiDAR scan: area, depth, volume</li>
+          <li>Auto-generated notes with sign-and-lock</li>
+          <li>Claims-documentation compliance checks</li>
+          <li>Graft inventory with serial, lot &amp; UDI capture</li>
+        </ul>
+      </article>
+
+      <article class="svc">
+        <div class="num">03 · STANDARD OF CARE</div>
+        <h2>Conservative Wound Care</h2>
+        <p>First-line products and supplies that support standard-of-care protocols in the clinic and continue at home.</p>
+        <ul class="ticks">
+          <li>Collagen dressings, powders &amp; care kits</li>
+          <li>Hydrocolloid dressings and sterile saline cleansing</li>
+          <li>Graduated 20–30 mmHg compression therapy</li>
+          <li>Facility medical-supply sourcing</li>
+          <li>Patient &amp; caregiver supply through Ovena Health</li>
+        </ul>
+      </article>
+
+      <article class="svc">
+        <div class="num">04 · ADVANCED MODALITIES</div>
+        <h2>Advanced Wound Care Solutions</h2>
+        <p>Options for wounds that stall under conservative care, each presented with its evidence, labeled use, and reimbursement considerations.</p>
+        <ul class="ticks">
+          <li>Placental membranes &amp; skin substitutes (CAMPs)</li>
+          <li>Collagen, ECM &amp; synthetic wound matrices</li>
+          <li>Ultrasound debridement, MIST therapy &amp; NPWT</li>
+          <li>Autologous point-of-care blood-clot therapy</li>
+          <li>Surgical allograft program for the OR</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="why">
+      <div><b>20+ yrs</b><span>wound care practice experience</span></div>
+      <div><b>20+</b><span>products across membranes, matrices &amp; devices</span></div>
+      <div><b>1 lead</b><span>the same advisor from review to implementation</span></div>
+      <div><b>Clinic → home</b><span>supply continuity through Ovena Health</span></div>
+    </div>
+
+    <div class="front-foot">
+      <span>One partner. Every operational layer.</span>
+      <span class="turn">Product categories &amp; Ovena Health on reverse →</span>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BACK ======================= -->
+<section class="page">
+  <header class="back-head">
+    <div>
+      <div class="eyebrow">The Albacete Portfolio</div>
+      <h2>Product categories</h2>
+    </div>
+    <img src="assets/albacete-logo-white.png" alt="Albacete MedDev">
+  </header>
+
+  <div class="back-body">
+    <div class="cats">
+      <div class="cat adv">
+        <div class="tag">Advanced</div>
+        <h3>Placental Membranes</h3>
+        <ul class="ticks">
+          <li>Palisade dual-membrane (amnion + chorion)</li>
+          <li>Sentry SL single-layer amnion</li>
+          <li>AmchoPlast · Activate Matrix</li>
+          <li>Membrane Wrap · Hydro · Tri-Membrane</li>
+          <li>XCell Amnio Matrix · PalinGen</li>
+        </ul>
+      </div>
+      <div class="cat adv">
+        <div class="tag">Advanced</div>
+        <h3>Matrices &amp; Wound Coverings</h3>
+        <ul class="ticks">
+          <li>APIS collagen + Mānuka honey</li>
+          <li>Microlyte SAM · PainGuard</li>
+          <li>Myriad Matrix ECM bioscaffold</li>
+          <li>Resolve collagen matrix</li>
+          <li>Interfyl · XCelliStem (flowable / particulate)</li>
+        </ul>
+      </div>
+      <div class="cat adv">
+        <div class="tag">Advanced</div>
+        <h3>Wound Care Devices</h3>
+        <ul class="ticks">
+          <li>Arobella Qoustic ultrasonic debridement</li>
+          <li>UltraMIST non-contact ultrasound</li>
+          <li>MicroDoc single-use NPWT</li>
+        </ul>
+        <div class="tag" style="margin-top:7px">Autologous</div>
+        <ul class="ticks">
+          <li>ActiGraft point-of-care blood clot</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="tag">Conservative</div>
+        <h3>Dressings &amp; Supplies</h3>
+        <ul class="ticks">
+          <li>Collagen dressings &amp; powder</li>
+          <li>Hydrocolloid dressings</li>
+          <li>Wound cleansing (sterile saline)</li>
+          <li>Facility medical-supply program</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="tag">Conservative</div>
+        <h3>Compression Therapy</h3>
+        <ul class="ticks">
+          <li>20–30 mmHg graduated compression socks</li>
+          <li>Donning accessories (sock aid)</li>
+          <li>Patient-direct ordering via Ovena</li>
+        </ul>
+      </div>
+      <div class="cat">
+        <div class="tag">Across the Practice</div>
+        <h3>Surgical &amp; Specialty</h3>
+        <ul class="ticks">
+          <li>Surgical allografts for the OR</li>
+          <li>Physician-directed peptide catalog</li>
+          <li>Exosome &amp; birth-tissue review</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ovena">
+      <div class="brand">
+        <img src="assets/ovena-logo.png" alt="Ovena Health">
+        <div class="url">ovenahealth.com</div>
+        <div class="sub">Also on Amazon · Individual or bulk</div>
+      </div>
+      <div class="content">
+        <div class="eyebrow">Wound care supplies &amp; compression socks</div>
+        <h3>Continue care at home with Ovena Health</h3>
+        <p>Ovena Health is the Albacete MedDev supply brand for patients and caregivers: clinic-grade wound care, skin care, and compression products, clinician-led and shipped direct.</p>
+        <div class="ov-grid">
+          <div class="ov-col">
+            <h4>Collagen Wound Care</h4>
+            <ul class="ticks">
+              <li>Collagen dressings (510(k)-cleared)</li>
+              <li>Collagen powder</li>
+              <li>Collagen wound care kit</li>
+            </ul>
+          </div>
+          <div class="ov-col">
+            <h4>Wound &amp; Skin Care</h4>
+            <ul class="ticks">
+              <li>Hydrocolloid rolls</li>
+              <li>Sterile saline care wash</li>
+              <li>Dressing-change essentials box</li>
+            </ul>
+          </div>
+          <div class="ov-col">
+            <h4>Compression Therapy</h4>
+            <ul class="ticks">
+              <li>20–30 mmHg compression socks</li>
+              <li>Sock aid</li>
+              <li>Compression &amp; dressing guides</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div>
+        <h3>Bring a product question, a workflow challenge, or a compliance concern.</h3>
+        <p>We will review your current workflow and identify the next step for your wound care program.</p>
+      </div>
+      <div class="lines">
+        <b>Call</b> 551-497-3428<br>
+        <b>Email</b> gabe@albacetemeddev.com<br>
+        <b>Web</b> albacetemeddev.com<br>
+        <b>Shop</b> ovenahealth.com
+      </div>
+    </div>
+
+    <p class="fine">Product selection remains a clinical decision. Review current manufacturer instructions for use and patient-specific considerations. Product availability, coverage, and reimbursement vary by payer and are not guaranteed. StrataMetric AI Wound Scan is a StrataMetric product, part of the Albacete MedDev ecosystem. Product names are trademarks of their respective manufacturers. © 2026 Albacete MedDev LLC.</p>
+  </div>
+</section>
+
+</body>
+</html>
