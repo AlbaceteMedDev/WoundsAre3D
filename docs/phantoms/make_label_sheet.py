@@ -27,7 +27,7 @@ def block_text(p):
     lines = M.bottom_lines(p)
     if p["kind"] == "cylwell":
         a = M.assembled(p, M.LIDS[0])
-        lines += [f"SEEN {a['visible']:.2f} mm3", f"UM AREA {a['undermined_area']:.2f} mm2",
+        lines += [f"SEEN {a['visible']:.2f} MM3", f"UM AREA {a['undermined_area']:.2f} MM2",
                   "12 O'CLOCK: AWAY FROM KEY"]
     return lines
 
