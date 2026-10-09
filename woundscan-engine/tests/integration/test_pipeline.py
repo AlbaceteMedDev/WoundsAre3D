@@ -8,7 +8,7 @@ exercised here.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from uuid import uuid4
 
 import numpy as np
@@ -20,6 +20,7 @@ from woundscan.api.models.measurement import (
     CreateMeasurementRequest,
     FiducialDetectionInput,
     ProbeMeasurementInput,
+    UnderminingInput,
     WoundBoundaryInput,
 )
 from woundscan.api.pipeline import PipelineDependencies, run_measurement_pipeline
@@ -37,6 +38,7 @@ def _make_request(
     n_anchors: int = 9,
     radius_mm: float = 20.0,
     depth_mm: float = 10.0,
+    undermining_mm: float | None = None,
 ) -> CreateMeasurementRequest:
     intr = CameraIntrinsicsInput(fx=500.0, fy=500.0, cx=320.0, cy=240.0, width=640, height=480)
     pose = CapturePoseInput(
@@ -63,7 +65,7 @@ def _make_request(
         )
     return CreateMeasurementRequest(
         wound_id=uuid4(),
-        captured_at=datetime.now(timezone.utc),
+        captured_at=datetime.now(UTC),
         intrinsics=intr,
         rgb_s3_key="key/rgb",
         depth_burst_s3_keys=["key/depth-0", "key/depth-1"],
@@ -84,6 +86,12 @@ def _make_request(
         probe_measurements=probes,
         overlap_delta_cm=0.5,
         selected_product_ids=[],
+        undermining=[
+            UnderminingInput(clock_position_hours=float(k or 12), extent_mm=undermining_mm)
+            for k in range(12)
+        ]
+        if undermining_mm is not None
+        else [],
     )
 
 
@@ -129,3 +137,44 @@ class TestPipeline:
             "intermediate_hashes",
         ):
             assert key in prov
+
+
+class TestPipelineUndermining:
+    """Undermining travels from clinician probe readings to the response."""
+
+    def test_absent_by_default(self):
+        resp = run_measurement_pipeline(
+            _make_request(), PipelineDependencies(product_db=default_product_db())
+        )
+        u = resp.undermining
+        assert u.measured is False
+        assert u.n_measurements == 0
+        assert u.undermined_area_cm2 == 0.0
+        assert u.undermined_volume_cm3 == 0.0
+        assert u.visible_area_cm2 > 0.0
+        assert u.total_area_with_undermining_cm2 == pytest.approx(u.visible_area_cm2)
+
+    def test_uniform_extent_matches_the_annulus(self):
+        """Wound edge r = 20 mm, uniform 8 mm undermining -> pi(28^2 - 20^2) = 1206.37 mm^2."""
+        resp = run_measurement_pipeline(
+            _make_request(undermining_mm=8.0),
+            PipelineDependencies(product_db=default_product_db()),
+        )
+        u = resp.undermining
+        truth_cm2 = float(np.pi * (28.0**2 - 20.0**2)) / 100.0
+        assert u.measured is True
+        assert u.n_measurements == 12
+        assert u.source == "clinician probe"
+        # the 32-gon boundary inscribes the circle, so expect a slight shortfall
+        assert u.undermined_area_cm2 == pytest.approx(truth_cm2, rel=0.03)
+        assert u.total_area_with_undermining_cm2 == pytest.approx(
+            u.visible_area_cm2 + u.undermined_area_cm2
+        )
+        assert u.undermined_area_ci_95_low_cm2 < u.undermined_area_cm2 < u.undermined_area_ci_95_high_cm2
+        assert u.max_extent_mm == pytest.approx(8.0)
+        assert len(u.involved_clock_positions) == 12
+        assert u.pocket_height_mm > 0.0
+        assert u.pocket_height_basis
+        assert u.undermined_volume_cm3 == pytest.approx(
+            u.undermined_area_cm2 * u.pocket_height_mm / 10.0, rel=1e-6
+        )
