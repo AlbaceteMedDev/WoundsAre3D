@@ -9,11 +9,14 @@ Writes parts_sheet.pdf, two US Letter landscape pages:
      clock position and how to orient the lid - plus the scale references on
      every block and the formulas behind the numbers.
 
-Every number comes from truth_step.json, and the script stops if any of them
-disagrees with the closed form in make_phantoms_step.py, so the sheet, the
-engravings and the STEP files cannot drift apart. Depth, area and volume are
-rounded exactly as the parts are engraved. Perimeters are not engraved or in
-truth_step.json; they are integrated here, to far better than the 0.01 mm shown.
+Every number is computed from the closed forms in make_phantoms_step.py and
+rounded once, exactly as the parts are engraved; the script stops if any value
+disagrees with truth_step.json, or if a depth, area or volume it prints is not
+the text engraved on that part, so the sheet, the engravings and the STEP files
+cannot drift apart. (truth_step.json stores values already rounded to 0.001,
+and rounding those again would put P2's area at 1963.49 against its engraved
+1963.50.) Perimeters are not engraved or in truth_step.json; they are
+integrated here, to far better than the 0.01 mm shown.
 """
 import json
 import math
@@ -91,6 +94,20 @@ def lobed_radii(p, n=1 << 20):
 def close(a, b, tol=5e-4):
     assert abs(a - b) <= tol, (a, b)
 
+def truths(p, lid):
+    """Unrounded (depth, area, volume) - for P10, with a lid seated."""
+    if p["kind"] == "cylwell":
+        a = M.assembled(p, lid)
+        return a["depth"], a["area"], a["volume"]
+    vol, ar, dep = M.analytic(p)
+    return dep, ar, vol
+
+def engraved(r, *texts):
+    """Each text must be engraved on the part, word for word."""
+    on = {l["text"] for l in r["labels"]}
+    for t in texts:
+        assert t in on, (r["id"], t)
+
 # ------------------------------------------------------------- descriptions ---
 def wound(p):
     k = p["kind"]
@@ -100,7 +117,8 @@ def wound(p):
         s = f"Elliptic paraboloid, a {length(p['a'])}, b {length(p['b'])}, h {length(p['h'])}"
         return s + (f", on a cylinder R {length(p['cyl'])}" if p.get("cyl") else "")
     if k == "lobed":
-        lb = ", ".join(f"{m}-lobe {A:g}" + (f" phase {q:g}" if q else "") for m, A, q in p["lobes"])
+        lb = ", ".join(f"{m}-lobe amplitude {A:.2f} R0" + (f" at phase {q:g} rad" if q else "")
+                       for m, A, q in p["lobes"])
         return f"Lobed paraboloid, R0 {length(p['R0'])}, h {length(p['h'])}; {lb}"
     if k == "stadium":
         return (f"Trough: parabolic channel {length(p['seg'])} long, R {length(p['R'])}, "
@@ -170,12 +188,14 @@ def parts_table(rows, lids):
         per = perimeter(p)
         if p["kind"] == "cylwell":
             per = 2*math.pi*lids[0]["hole_r"]
-        num = [depth(r["max_depth_mm"]), area(r["opening_area_mm2"]),
-               "—" if per is None else f"{per:.2f}", volume(r["cavity_volume_mm3"])]
-        if p["kind"] == "flat":
-            num = ["0", "0", "—", "0"]
+        dep, ar, vol = truths(p, lids[0])
+        num = [depth(dep), area(ar), "—" if per is None else f"{per:.2f}", volume(vol)]
+        engraved(r, f"DEPTH {num[0]} MM", f"{'PLAN' if p.get('cyl') else 'AREA'} {num[1]} MM2",
+                 f"VOL {num[3]} MM3")
         if p.get("cyl"):
-            num[1] += f"<br/><font color='#555555'>skin {area(r['skin_area_mm2'])}</font>"
+            skin = area(M.skin_area(p))
+            engraved(r, f"SKIN {skin} MM2")
+            num[1] += f"<br/><font color='#555555'>skin {skin}</font>"
         if p["kind"] == "cylwell":
             num[0] += "<br/><font color='#555555'>with a lid</font>"
         body.append([P(p["id"], CELLB), P(r["file"]), P(recognise(p)), P(wound(p)),
@@ -221,6 +241,14 @@ def lid_table(p10, lids, rows):
             row("Hidden under the lid (mm³)", lambda l: volume(a[l["id"]]["hidden"])),
             row("Undermined area (mm²)", lambda l: area(a[l["id"]]["undermined_area"])),
             row("Undermining extent (mm)", rng)]
+    for l in lids:                  # P10's walls carry the lid-seated values
+        x = a[l["id"]]
+        engraved(rows["P10"], f"DEPTH {depth(x['depth'])} MM", f"AREA {area(x['area'])} MM2",
+                 f"VOL {volume(x['volume'])} MM3", f"SEEN {volume(x['visible'])} MM3",
+                 f"HIDDEN {volume(x['hidden'])} MM3", f"UM AREA {area(x['undermined_area'])} MM2")
+    for l in lids:                  # and each lid its hole and offset
+        engraved(rows[l["id"]], f"{l['id']} HOLE D{length(2*l['hole_r'])}",
+                 f"OFFSET {length(l['hole_cx'])} MM")
     t = grid(body, [1.9*inch, 3.0*inch, 3.0*inch])
     clock = [[P("Clock", HDR)] + [P(f"{12 if k == 0 else k}", HDR) for k in range(12)]]
     for l in lids:
@@ -234,7 +262,7 @@ def footer(canvas, doc):
     canvas.setFont("DV", 7)
     canvas.setFillColor(MUTED)
     canvas.drawString(MARGIN, 0.3*inch, "StrataMetric wound phantoms, revision C  ·  part sizes  ·  "
-                      "generated by make_parts_sheet.py from truth_step.json")
+                      "generated by make_parts_sheet.py from make_phantoms_step.py and truth_step.json")
     canvas.drawRightString(PAGE[0] - MARGIN, 0.3*inch, f"Page {doc.page} of 2")
     canvas.restoreState()
 
@@ -273,12 +301,14 @@ def main():
     s.append(Spacer(1, 4))
     s.append(P("Revision C. All dimensions in millimetres. Depth, area and volume are the values "
                "engraved on each part, rounded the same way. Revision B prints have the same file "
-               "names, block sizes and cavities, so they read from this table too.", SUB))
+               "names, block sizes and cavities, so they read from this table too; revision B "
+               "P9 has no fiducial dots (page 2).", SUB))
     s.append(Spacer(1, 8))
     s.append(parts_table(rows, lids))
     s.append(Spacer(1, 7))
     s.append(P("<b>Blocks</b> are 80 × 80 mm; the height is in “How to recognise it”. "
-               "<b>Max depth</b> is from the top surface to the lowest point of the wound. "
+               "<b>Max depth</b> is from the top surface to the lowest point of the wound "
+               "(on P9, from the crown of its curved top). "
                "<b>Opening area</b> and <b>perimeter</b> are measured in plan, looking straight "
                "down; on P9, whose top is curved, the area measured on the curved surface itself "
                "is given as “skin”. <b>Perimeter</b> is not engraved on the parts. P10’s depth, "
@@ -300,9 +330,10 @@ def main():
     s.append(t)
     s.append(Spacer(1, 6))
     r10 = rows["P10"]
-    s.append(P(f"Without a lid: chamber opening Ø{length(2*p10['R'])}, area "
-               f"{area(r10['chamber_area_mm2'])} mm², depth {depth(r10['chamber_depth_mm'])} mm, "
-               f"volume {volume(r10['chamber_volume_mm3'])} mm³.", BODY))
+    cv, ca, cd = M.analytic(p10)
+    s.append(P(f"Without a lid, the chamber alone, measured from the pocket floor "
+               f"{length(p10['pocket_d'])} mm below the top: opening Ø{length(2*p10['R'])}, area "
+               f"{area(ca)} mm², depth {depth(cd)} mm, volume {volume(cv)} mm³.", BODY))
     s.append(Spacer(1, 10))
     s.append(KeepTogether([
         P("Undermining extent at each clock position", H2), Spacer(1, 3),
@@ -311,20 +342,25 @@ def main():
         P("<b>Orientation.</b> 12 o’clock is the edge of P10 nearest the “P10” engraved on its "
           "top; 6 o’clock is the side with the 50.000 key line. On revision C parts, seat the lid "
           "with the notch in its rim at the index groove on P10’s top, which is at 3 o’clock. "
-          "Revision B parts have no groove or notch: seat L2 with its hole nearest 3 o’clock. L1 reads the "
+          "Revision B parts have no groove, no notch and no legible “P10”: take 6 o’clock as the side "
+          "with the key line, and seat L2 with its hole nearest 3 o’clock. L1 reads the "
           "same at every position.", BODY)]))
     s.append(Spacer(1, 10))
     s.append(KeepTogether([
         P("Scale references on every block’s top", H2), Spacer(1, 3),
         P(f"<b>Key line:</b> {M.KEY_LEN:.3f} mm between the centres of its two end ticks. "
           f"<b>Fiducial dots:</b> four Ø{2*M.DOT_R:.3f} dots at the corners of a "
-          f"{2*M.DOT_XY:.3f} mm square, centre to centre.", BODY)]))
+          f"{2*M.DOT_XY:.3f} mm square, centre to centre. "
+          "Revision B P9 has no dots: its powder vents cut them away and left four open slots in "
+          "its top near the corners, so use it for depth, area and volume only, not as a scale "
+          "reference.", BODY)]))
     s.append(Spacer(1, 10))
     s.append(KeepTogether([
         P("Where the numbers come from", H2), Spacer(1, 3),
         P("Hemisphere: V = ⅔πR³, A = πR². Cone: V = ⅓πR²h, A = πR². Elliptic paraboloid: "
-          "V = ½πabh, A = πab. Lobed paraboloid, r(θ) = R0(1 + Σ A cos(mθ + phase)): "
-          "V = ¼πhR0²(2 + ΣA²), A = ½πR0²(2 + ΣA²). Trough, channel length L: "
+          "V = ½πabh, A = πab. Lobed paraboloid, r(θ) = R0(1 + Σ a cos(mθ + φ)), one term per "
+          "set of m lobes with amplitude a and phase φ: "
+          "V = ¼πhR0²(2 + Σa²), A = ½πR0²(2 + Σa²). Trough, channel length L: "
           "V = (4/3)hRL + ½πhR², A = 2RL + πR². P10 with a lid of hole radius r and "
           "thickness t: V = πr²t + πR²h, depth = t + h. Perimeters are integrated numerically "
           "from the same outlines.", BODY)]))
