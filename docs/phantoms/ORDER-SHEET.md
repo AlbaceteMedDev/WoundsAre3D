@@ -88,7 +88,8 @@ Four parts give a working bench: **P6** (flat plate; its depth noise is the sens
 ## Reference values
 
 `truth_step.json` carries the exact geometry and every engraved label of every part.
-`parts_sheet.pdf` is the same in print: how to tell the parts apart, and each one's sizes.
+`parts_sheet.pdf` is the same in print: a picture of each part with its sizes, how to tell
+the parts apart, and the full detail.
 **Measure the printed parts with calipers on arrival and use the measured values as truth** —
 every process shrinks a little, and the measured number is the one that matters.
 

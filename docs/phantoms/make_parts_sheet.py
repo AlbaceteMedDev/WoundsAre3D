@@ -1,11 +1,14 @@
 """Part-size reference: which printed part is which, and what each one measures.
 
-Writes parts_sheet.pdf, two US Letter landscape pages:
+Writes parts_sheet.pdf, three US Letter landscape pages:
 
-  1. every part - its STEP file, how to recognise it on the bench (for prints
+  1. a picture of every part, all at one scale, with its sizes beside it - the
+     pictures are renders/<id>.png, drawn from the STEP files by
+     render_parts.py;
+  2. every part - its STEP file, how to recognise it on the bench (for prints
      whose labels are missing as well as new ones), and its wound's opening,
      depth, area, perimeter and volume;
-  2. P10 and its lids - the lid-seated truths, the undermining extent at each
+  3. P10 and its lids - the lid-seated truths, the undermining extent at each
      clock position and how to orient the lid - plus the scale references on
      every block and the formulas behind the numbers.
 
@@ -18,10 +21,12 @@ and rounding those again would put P2's area at 1963.49 against its engraved
 1963.50.) Perimeters are not engraved or in truth_step.json; they are
 integrated here, to far better than the 0.01 mm shown.
 """
+import io
 import json
 import math
 import os
 import numpy as np
+from PIL import Image as PILImage, ImageOps
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import letter, landscape
@@ -29,12 +34,14 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import (KeepTogether, PageBreak, Paragraph, SimpleDocTemplate,
+from reportlab.pdfgen import canvas as rl_canvas
+from reportlab.platypus import (Image, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate,
                                 Spacer, Table, TableStyle)
 import make_phantoms_step as M
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "parts_sheet.pdf")
+RENDERS = os.path.join(HERE, "renders")
 PAGE = landscape(letter)
 MARGIN = 0.5*inch
 INK, MUTED, RULE, HEAD = (colors.HexColor(c) for c in ("#1a1a1a", "#555555", "#bbbbbb", "#e8ecef"))
@@ -178,6 +185,84 @@ def grid(rows, widths, head_rows=1, extra=()):
 def P(text, s=CELL):
     return Paragraph(text, s)
 
+def sizes(p, r, lid):
+    """A block's numbers as printed, each checked against its engraving."""
+    dep, ar, vol = truths(p, lid)
+    per = 2*math.pi*lid["hole_r"] if p["kind"] == "cylwell" else perimeter(p)
+    d = dict(depth=depth(dep), area=area(ar), per="—" if per is None else f"{per:.2f}",
+             volume=volume(vol))
+    engraved(r, f"DEPTH {d['depth']} MM", f"{'PLAN' if p.get('cyl') else 'AREA'} {d['area']} MM2",
+             f"VOL {d['volume']} MM3")
+    if p.get("cyl"):
+        d["skin"] = area(M.skin_area(p))
+        engraved(r, f"SKIN {d['skin']} MM2")
+    return d
+
+def pictures(ids):
+    """The renders, all cropped to one box so they keep their common scale."""
+    ims = {i: PILImage.open(os.path.join(RENDERS, f"{i}.png")).convert("L") for i in ids}
+    boxes = [ImageOps.invert(im).point(lambda v: 255 if v > 6 else 0).getbbox()
+             for im in ims.values()]
+    w, h = next(iter(ims.values())).size
+    pad = 10
+    box = (max(0, min(b[0] for b in boxes) - pad), max(0, min(b[1] for b in boxes) - pad),
+           min(w, max(b[2] for b in boxes) + pad), min(h, max(b[3] for b in boxes) + pad))
+    return {i: im.crop(box) for i, im in ims.items()}
+
+def picture_cards(rows, lids, width=1.62*inch):
+    """Twelve cards, three across: the picture, and beside it the sizes."""
+    ids = [p["id"] for p in M.PHANTOMS] + [l["id"] for l in lids]
+    pics = pictures(ids)
+    p10 = next(p for p in M.PHANTOMS if p["kind"] == "cylwell")
+    cards = []
+    for p in M.PHANTOMS + lids:
+        r = rows[p["id"]]
+        im = pics[p["id"]]
+        buf = io.BytesIO(); im.save(buf, "PNG"); buf.seek(0)
+        if p in lids:
+            e = M.extents(p10, p)
+            lines = [f"<b>{p['id']}</b>  Lid for P10",
+                     f"Hole Ø{length(2*p['hole_r'])}"]
+            lines += (["Centred"] if not p["hole_cx"] else
+                      [f"{length(p['hole_cx'])} off-centre,", "on the notch side"])
+            lines += [f"Disc Ø{r['outer_dia_mm']:g} × {r['thickness_mm']:g}", "Undermining:",
+                      f"{min(e):.3f} all round" if max(e) - min(e) < 1e-9 else
+                      f"{min(e):.3f}–{max(e):.3f} (page 3)",
+                      "Notch to P10’s groove"]
+        else:
+            d = sizes(p, r, lids[0])
+            lines = [f"<b>{p['id']}</b>  {M.SHAPE[p['kind']].capitalize()}"]
+            if p["kind"] == "cylwell":
+                lines += ["With a lid seated:", "Opening Ø24.000"]
+            elif p["kind"] == "flat":
+                lines += ["No cavity"]
+            else:
+                lines += [opening(p).replace(" (plan)", "")]
+            if p.get("cyl"):
+                lines += [f"On a curved top, R {p['cyl']:g}"]
+            lines += [f"Block 80 × 80 × {p['height']:g}", f"Depth {d['depth']} mm"]
+            lines += ([f"Plan area {d['area']} mm²", f"Skin area {d['skin']} mm²"] if "skin" in d
+                      else [f"Area {d['area']} mm²"])
+            lines += [f"Volume {d['volume']} mm³"]
+            if d["per"] != "—":
+                lines += [f"Perimeter {d['per']} mm"]
+        text = [P(lines[0], style(8.8))] + [P(x, style(7.6)) for x in lines[1:]]
+        text += [Spacer(1, 2), P(r["file"], style(6.3, color=MUTED))]
+        card = Table([[Image(buf, width=width, height=width*im.height/im.width), text]],
+                     colWidths=[width + 4, 3.33*inch - width - 10])
+        card.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                  ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                  ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                                  ("TOPPADDING", (0, 0), (-1, -1), 0),
+                                  ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
+        cards.append(card)
+    t = Table([cards[i:i + 3] for i in range(0, len(cards), 3)], colWidths=[3.33*inch]*3)
+    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                           ("LEFTPADDING", (0, 0), (-1, -1), 2), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                           ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                           ("LINEBELOW", (0, 0), (-1, -2), 0.3, RULE)]))
+    return t
+
 def parts_table(rows, lids):
     head = [P(h, HDR) for h in ("Part", "STEP file", "How to recognise it", "Wound shape (mm)",
                                 "Opening (mm)", "Max depth<br/>(mm)", "Opening area<br/>(mm²)",
@@ -185,17 +270,10 @@ def parts_table(rows, lids):
     body, spans = [head], []
     for p in M.PHANTOMS:
         r = rows[p["id"]]
-        per = perimeter(p)
-        if p["kind"] == "cylwell":
-            per = 2*math.pi*lids[0]["hole_r"]
-        dep, ar, vol = truths(p, lids[0])
-        num = [depth(dep), area(ar), "—" if per is None else f"{per:.2f}", volume(vol)]
-        engraved(r, f"DEPTH {num[0]} MM", f"{'PLAN' if p.get('cyl') else 'AREA'} {num[1]} MM2",
-                 f"VOL {num[3]} MM3")
-        if p.get("cyl"):
-            skin = area(M.skin_area(p))
-            engraved(r, f"SKIN {skin} MM2")
-            num[1] += f"<br/><font color='#555555'>skin {skin}</font>"
+        d = sizes(p, r, lids[0])
+        num = [d["depth"], d["area"], d["per"], d["volume"]]
+        if "skin" in d:
+            num[1] += f"<br/><font color='#555555'>skin {d['skin']}</font>"
         if p["kind"] == "cylwell":
             num[0] += "<br/><font color='#555555'>with a lid</font>"
         body.append([P(p["id"], CELLB), P(r["file"]), P(recognise(p)), P(wound(p)),
@@ -208,7 +286,7 @@ def parts_table(rows, lids):
         body.append([P(l["id"], CELLB), P(r["file"]),
                      P(f"Disc Ø{r['outer_dia_mm']:g} × {r['thickness_mm']:g}, hole {look}"),
                      P(f"Lid for P10: hole Ø{length(r['hole_dia_mm'])}, {off}"),
-                     P("Sets P10's opening and undermining; values on page 2", NOTE),
+                     P("Sets P10's opening and undermining; values on page 3", NOTE),
                      "", "", "", ""])
         spans.append(("SPAN", (4, i), (8, i)))
     w = [0.42, 1.95, 1.62, 1.92, 1.10, 0.62, 0.84, 0.74, 0.79]
@@ -257,14 +335,28 @@ def lid_table(p10, lids, rows):
     return t, c
 
 # --------------------------------------------------------------------- page ---
-def footer(canvas, doc):
-    canvas.saveState()
-    canvas.setFont("DV", 7)
-    canvas.setFillColor(MUTED)
-    canvas.drawString(MARGIN, 0.3*inch, "StrataMetric wound phantoms, revision C  ·  part sizes  ·  "
-                      "generated by make_parts_sheet.py from make_phantoms_step.py and truth_step.json")
-    canvas.drawRightString(PAGE[0] - MARGIN, 0.3*inch, f"Page {doc.page} of 2")
-    canvas.restoreState()
+class Numbered(rl_canvas.Canvas):
+    """Footer with "Page n of N", N known only once every page is laid out."""
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        self.pages = []
+    def showPage(self):
+        self.pages.append(dict(self.__dict__))
+        self._startPage()
+    def save(self):
+        for st in self.pages:
+            self.__dict__.update(st)
+            self.saveState()
+            self.setFont("DV", 7)
+            self.setFillColor(MUTED)
+            self.drawString(MARGIN, 0.3*inch, "StrataMetric wound phantoms, revision C  ·  part "
+                            "sizes  ·  generated by make_parts_sheet.py from make_phantoms_step.py, "
+                            "truth_step.json and renders/")
+            self.drawRightString(PAGE[0] - MARGIN, 0.3*inch,
+                                 f"Page {self._pageNumber} of {len(self.pages)}")
+            self.restoreState()
+            super().showPage()
+        super().save()
 
 def main():
     rows = {r["id"]: r for r in json.load(open(os.path.join(HERE, "truth_step.json")))}
@@ -297,12 +389,24 @@ def main():
                             title="StrataMetric wound phantoms - part sizes",
                             author="StrataMetric", subject="Revision C part-size reference")
     s = []
-    s.append(P("Wound phantoms: which part is which, and what it measures", TITLE))
+    s.append(P("Wound phantoms: match the part to its picture", TITLE))
+    s.append(Spacer(1, 4))
+    s.append(P("Drawn from the STEP files at one scale, cavity up, key line nearest. Sizes in mm, "
+               "as engraved on the parts.", SUB))
+    s.append(Spacer(1, 6))
+    s.append(picture_cards(rows, lids))
+    s.append(Spacer(1, 4))
+    s.append(P("<b>Revision B prints</b> have the same shapes and sizes, but look different in four "
+               "ways: the hollow blocks (all but P5 and P6) have round powder holes through their "
+               "left and right walls; most of the lettering is missing; P9 has four open slots in its "
+               "top instead of the dots; and the lids have no notch.", NOTE))
+    s.append(PageBreak())
+    s.append(P("Every part: file, shape and sizes", TITLE))
     s.append(Spacer(1, 4))
     s.append(P("Revision C. All dimensions in millimetres. Depth, area and volume are the values "
                "engraved on each part, rounded the same way. Revision B prints have the same file "
                "names, block sizes and cavities, so they read from this table too; revision B "
-               "P9 has no fiducial dots (page 2).", SUB))
+               "P9 has no fiducial dots (page 3).", SUB))
     s.append(Spacer(1, 8))
     s.append(parts_table(rows, lids))
     s.append(Spacer(1, 7))
@@ -312,7 +416,7 @@ def main():
                "<b>Opening area</b> and <b>perimeter</b> are measured in plan, looking straight "
                "down; on P9, whose top is curved, the area measured on the curved surface itself "
                "is given as “skin”. <b>Perimeter</b> is not engraved on the parts. P10’s depth, "
-               "area, perimeter and volume are with either lid seated (page 2).", NOTE))
+               "area, perimeter and volume are with either lid seated (page 3).", NOTE))
     s.append(Spacer(1, 3))
     s.append(P("Measure the printed parts with calipers on arrival and use the measured values as "
                "truth: every print process shrinks a little, and the measured number is the one "
@@ -364,7 +468,7 @@ def main():
           "V = (4/3)hRL + ½πhR², A = 2RL + πR². P10 with a lid of hole radius r and "
           "thickness t: V = πr²t + πR²h, depth = t + h. Perimeters are integrated numerically "
           "from the same outlines.", BODY)]))
-    doc.build(s, onFirstPage=footer, onLaterPages=footer)
+    doc.build(s, canvasmaker=Numbered)
     print("wrote", OUT)
 
 if __name__ == "__main__":

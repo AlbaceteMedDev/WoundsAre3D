@@ -19,7 +19,8 @@ these to a print service** with `ORDER-SHEET.md`.
 | `verify_walls.py` | Minimum wall of every hollow part, plain and with every engraving cut. |
 | `verify_step.py` | Re-imports every STEP file cold and checks it is one valid closed solid. |
 | `labels_preview/*.png` | Each labelled face of each part, sectioned 0.5 mm in — what the print should read. |
-| `make_parts_sheet.py`, `parts_sheet.pdf` | Which printed part is which, and each one's opening, depth, area, perimeter and volume; P10's lid-seated values and undermining by clock position. |
+| `make_parts_sheet.py`, `parts_sheet.pdf` | A picture of every part beside its sizes; then each part's file, how to recognise it, and its opening, depth, area, perimeter and volume; P10's lid-seated values and undermining by clock position. |
+| `render_parts.py`, `renders/*.png` | The pictures: each STEP file rendered at one scale and from one angle. |
 | `make_label_sheet.py`, `label_sheet.pdf` | Stick-on labels for parts printed from revision B. |
 | `ORDER-SHEET.md` | What to send a print service. |
 
@@ -76,6 +77,7 @@ underside block faces down and is the copy to expect softest.
     .venv/bin/python verify_walls.py
     .venv/bin/python verify_step.py
     .venv/bin/python make_label_sheet.py
+    .venv/bin/python render_parts.py        # headless Linux also needs: apt install libosmesa6
     .venv/bin/python make_parts_sheet.py    # also needs: .venv/bin/pip install reportlab
 
 The generator needs the DejaVu Sans Mono Bold font file — from `fonts-dejavu-core`, from
