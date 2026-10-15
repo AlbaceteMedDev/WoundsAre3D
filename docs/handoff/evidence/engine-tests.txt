@@ -1,0 +1,89 @@
+=== collect ===
+  /home/user/WoundsAre3D/woundscan-engine/tests/unit/test_postgres_storage.py:157: DeprecationWarning: testcontainers.postgres is deprecated, use testcontainers.community.postgres instead
+    from testcontainers.postgres import PostgresContainer  # noqa: F401
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 368 tests collected in 2.82s =========================
+
+=== unit + regulatory + benchmarks (what CI gates on) ===
+tests/unit/test_quality.py ..............                                [ 67%]
+tests/unit/test_s3_storage.py ........                                   [ 69%]
+tests/unit/test_shape_descriptors.py .......                             [ 71%]
+tests/unit/test_storage.py .......                                       [ 73%]
+tests/unit/test_surface_perimeter_irregular.py .................         [ 78%]
+tests/unit/test_synthesis.py ............                                [ 82%]
+tests/unit/test_tracing.py .....                                         [ 84%]
+tests/unit/test_trajectory_plot.py ....                                  [ 85%]
+tests/unit/test_undermining.py .....                                     [ 86%]
+tests/unit/test_validation.py ...........                                [ 90%]
+tests/regulatory/test_property_invariants.py ........                    [ 92%]
+tests/regulatory/test_synthetic_accuracy.py ...............              [ 96%]
+tests/benchmarks/test_clinical_accuracy.py ..........                    [100%]
+
+=============================== warnings summary ===============================
+tests/unit/test_postgres_storage.py:157
+  /home/user/WoundsAre3D/woundscan-engine/tests/unit/test_postgres_storage.py:157: DeprecationWarning: testcontainers.postgres is deprecated, use testcontainers.community.postgres instead
+    from testcontainers.postgres import PostgresContainer  # noqa: F401
+
+tests/unit/test_auth.py::TestPasswords::test_hash_verify
+  /home/user/WoundsAre3D/woundscan-engine/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+tests/unit/test_bundle_adjustment.py::TestRunBundleAdjustmentLM::test_reduces_reprojection_error_below_tolerance
+  /home/user/WoundsAre3D/woundscan-engine/.venv/lib/python3.11/site-packages/_pytest/fixtures.py:1313: PytestRemovedIn10Warning: Class-scoped fixture defined as instance method is deprecated.
+  Instance attributes set in this fixture will NOT be visible to test methods,
+  as each test gets a new instance while the fixture runs only once per class.
+  Use @classmethod decorator and set attributes on cls instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#class-scoped-fixture-as-instance-method
+    fixturefunc = resolve_fixture_function(fixturedef, request)
+
+tests/unit/test_geometry.py::TestVolumeAnalytic::test_trapezoid_agrees_with_simpson
+  /home/user/WoundsAre3D/woundscan-engine/src/woundscan/geometry/volume.py:101: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    inner = np.trapz(d, dx=dx, axis=1)
+
+tests/unit/test_geometry.py::TestVolumeAnalytic::test_trapezoid_agrees_with_simpson
+  /home/user/WoundsAre3D/woundscan-engine/src/woundscan/geometry/volume.py:102: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    volume = np.trapz(inner, dx=dy)
+
+tests/unit/test_geometry.py::TestUncertainty::test_surface_area_uncertainty_runs
+  /home/user/WoundsAre3D/woundscan-engine/tests/unit/test_geometry.py:316: UserWarning: Computing surface area uncertainty with pointwise-independent noise will produce inflated uncertainty estimates. Provide correlation_length_cm (typical: 0.3-1.0) to get realistic spatially correlated noise.
+    result = compute_surface_area_with_uncertainty(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 327 passed, 5 skipped, 6 warnings in 11.91s ==================
+exit=0
+
+=== integration ===
+============================= test session starts ==============================
+collected 36 items
+
+tests/integration/test_api.py .........                                  [ 25%]
+tests/integration/test_api_extended.py .......................           [ 88%]
+tests/integration/test_pipeline.py ....                                  [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /home/user/WoundsAre3D/woundscan-engine/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv/lib/python3.11/site-packages/starlette/testclient.py:53
+  /home/user/WoundsAre3D/woundscan-engine/.venv/lib/python3.11/site-packages/starlette/testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/integration/test_api_extended.py::TestGrafts::test_expired_application_rejected
+  /home/user/WoundsAre3D/woundscan-engine/src/woundscan/api/routes/grafts.py:92: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    _check_expiration(req.expiration_date)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 36 passed, 3 warnings in 7.77s ========================
+exit=0
+
+=== coverage (fail_under=90 in pyproject) ===
+tests/unit/test_bundle_adjustment.py::TestRunBundleAdjustmentLM::test_reduces_reprojection_error_below_tolerance
+TOTAL                                               3401    338    90%
+================= 363 passed, 5 skipped, 9 warnings in 22.36s ==================
+
+=== traceability ===
+OK: 48 requirements traced.
+exit=0
+ENGINE TEST RUN FINISHED

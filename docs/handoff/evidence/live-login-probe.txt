@@ -1,0 +1,26 @@
+# Live probe of stratametricai.com portal login, 2026-09-07
+POST https://www.stratametricai.com/api/auth/login
+body: {"email":"nobody@example.invalid","password":"not-a-real-password","totp":"000000"}
+
+## response body
+{"status":"ok","mode":"demo"}
+
+## response headers
+HTTP/1.1 200 Connection Established
+
+HTTP/2 200 
+cache-control: public, max-age=0, must-revalidate
+content-type: application/json
+date: Mon, 07 Sep 2026 15:53:01 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+server: Vercel
+set-cookie: ws_session=%257B%2522token%2522%253A%2522demo-session-token%2522%252C%2522expiresAt%2522%253A%25222026-09-08T03%253A53%253A01.750Z%2522%252C%2522role%2522%253A%2522clinician%2522%252C%2522userId%2522%253A%2522demo-clinician%2522%257D; Path=/; Expires=Tue, 08 Sep 2026 03:53:01 GMT; Secure; HttpOnly; SameSite=strict
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-matched-path: /api/auth/login
+x-vercel-cache: MISS
+x-vercel-id: iad1::iad1::fs489-1788796381454-993a01451279
+
