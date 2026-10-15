@@ -272,7 +272,7 @@ def picture_cards(rows, lids, width=2.3*inch):
                 text += [P(f"Opening {opening(p, units=True).replace(' (plan)', '')}", body),
                          P(grey(f"Opening {opening(p, 'cm', units=True, words=False)}"), body)]
             if p.get("cyl"):
-                text += [P(f"On a curved top, R {g(p['cyl'])} mm · {cm(g(p['cyl']))} cm", body)]
+                text += [P(f"On a curved top, {both(g(p['cyl']), pre='R ')}", body)]
             text += [P(f"Block {g(M.L)} × {g(M.L)} × {g(p['height'])} mm · {cm(g(M.L))} × "
                        f"{cm(g(M.L))} × {cm(g(p['height']))} cm", body)]
             vals = [("Depth", d["depth"], 1)]
@@ -286,7 +286,7 @@ def picture_cards(rows, lids, width=2.3*inch):
             if d["per"] != "—":
                 vals += [("Plan perimeter" if p.get("cyl") else "Perimeter", d["per"], 1)]
             foot = "P10’s lids and undermining: page 4." if p["kind"] == "cylwell" else ""
-        mini = Table([[P(lab, body), P(f"{v} mm{POW[k]}", body), P(f"{cm(v, k)} cm{POW[k]}", body)]
+        mini = Table([[P(lab, body), P(f"{v} mm{POW[k]}", body), P(grey(f"{cm(v, k)} cm{POW[k]}"), body)]
                       for lab, v, k in vals], colWidths=[tw - 2*0.84*inch, 0.84*inch, 0.84*inch])
         mini.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                   ("LEFTPADDING", (0, 0), (-1, -1), 0),
@@ -363,13 +363,13 @@ def lid_table(p10, lids, rows):
     def rng(l):
         e = ext[l["id"]]
         return (f"{both(length(min(e)))}, all round" if max(e) - min(e) < 1e-9 else
-                f"{both(length(min(e)))} at 3 o'clock, to {both(length(max(e)))} at 9 o'clock")
+                f"{both(length(min(e)))} at 3\u00a0o'clock, to {both(length(max(e)))} at 9\u00a0o'clock")
     body = [[P("", HDR)] + [P(f"P10 with {l['id']} seated  "
                               f"<font name='DV' size='7'>({rows[l['id']]['file']})</font>", HDR)
                             for l in lids],
             row("Lid hole", lambda l: f"{both(length(2*l['hole_r']), pre='Ø')}, "
                 + ("centred" if not l["hole_cx"] else
-                   f"centre {both(length(l['hole_cx']))} toward 3 o'clock")),
+                   f"centre {both(length(l['hole_cx']))} toward 3\u00a0o'clock")),
             row("Max depth", lambda l: both(depth(a[l["id"]]["depth"])) + "  (top skin to chamber floor)"),
             row("Opening area", lambda l: both(area(a[l["id"]]["area"]), 2)),
             row("Opening perimeter", lambda l: both(f"{2*math.pi*l['hole_r']:.2f}")),
@@ -470,12 +470,14 @@ def main():
     s.append(PageBreak())
     s.append(P("Every part: file, shape and sizes", TITLE))
     s.append(Spacer(1, 4))
-    s.append(P("Revision C. Each size in mm, with cm beneath it in grey; depth, area and volume in mm "
-               "as engraved on the parts. Revision B prints read from this table too.", SUB))
+    s.append(P("Revision C. Opening, depth, area, perimeter and volume in mm, with cm beneath in grey; "
+               "the shape's own dimensions in mm. Depth, area and volume in mm are as engraved on the "
+               "parts. Revision B prints read from this table too.", SUB))
     s.append(Spacer(1, 8))
     s.append(parts_table(rows, lids))
     s.append(Spacer(1, 7))
-    s.append(P("<b>Blocks</b> are 80 × 80 mm; the height is in “How to recognise it”. "
+    s.append(P(f"<b>Blocks</b> are 80 × 80 mm ({cm('80')} × {cm('80')} cm); the height is in "
+               "“How to recognise it”. "
                "<b>Max depth</b> is from the top surface to the lowest point of the wound "
                "(on P9, from the crown of its curved top). "
                "<b>Opening area</b> and <b>perimeter</b> are measured in plan, looking straight "
@@ -517,7 +519,8 @@ def main():
         P("From the edge of the lid’s hole outward to the chamber wall, along a line from the "
           "hole’s centre, as a probe would measure it.", BODY), Spacer(1, 4), c, Spacer(1, 5),
         P("<b>Orientation.</b> 12 o’clock is the edge of P10 nearest the “P10” engraved on its "
-          "top; 6 o’clock is the side with the 50.000 key line. On revision C parts, seat the lid "
+          f"top; 6 o’clock is the side with the key line ({both(length(M.KEY_LEN))}). On revision C "
+          "parts, seat the lid "
           "with the notch in its rim at the index groove on P10’s top, which is at 3 o’clock. "
           "Revision B parts have no groove, no notch and no legible “P10”: take 6 o’clock as the side "
           "with the key line, and seat L2 with its hole nearest 3 o’clock. L1 reads the "
