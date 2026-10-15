@@ -1,14 +1,14 @@
 """Part-size reference: which printed part is which, and what each one measures.
 
-Writes parts_sheet.pdf, three US Letter landscape pages:
+Writes parts_sheet.pdf, four US Letter landscape pages:
 
-  1. a picture of every part, all at one scale, with its sizes beside it - the
-     pictures are renders/<id>.png, drawn from the STEP files by
-     render_parts.py;
-  2. every part - its STEP file, how to recognise it on the bench (for prints
+  1-2. a picture of every part, all at one scale, with its sizes beside it in
+     mm and cm - the pictures are renders/<id>.png, drawn from the STEP files
+     by render_parts.py;
+  3. every part - its STEP file, how to recognise it on the bench (for prints
      whose labels are missing as well as new ones), and its wound's opening,
      depth, area, perimeter and volume;
-  3. P10 and its lids - the lid-seated truths, the undermining extent at each
+  4. P10 and its lids - the lid-seated truths, the undermining extent at each
      clock position and how to orient the lid - plus the scale references on
      every block and the formulas behind the numbers.
 
@@ -19,10 +19,13 @@ the text engraved on that part, so the sheet, the engravings and the STEP files
 cannot drift apart. (truth_step.json stores values already rounded to 0.001,
 and rounding those again would put P2's area at 1963.49 against its engraved
 1963.50.) Perimeters are not engraved or in truth_step.json; they are
-integrated here, to far better than the 0.01 mm shown.
+integrated here, to far better than the 0.01 mm shown. Every size is given in
+cm as well, written by moving the mm figure's decimal point (cm(), below), so
+the cm figures are exactly as precise as the mm ones and never rounded again.
 """
 import io
 import json
+from decimal import Decimal
 import math
 import os
 import numpy as np
@@ -74,6 +77,23 @@ def depth(x):   return f"{x:.3f}"
 def area(x):    return f"{x:.2f}"
 def volume(x):  return f"{x:.2f}"
 def length(x):  return f"{x:.3f}"
+
+POW = {1: "", 2: "²", 3: "³"}
+
+def cm(s, k=1):
+    """The mm figure s (a string, as printed) in cm (k=1), cm² (k=2) or cm³
+    (k=3): its decimal point moved k places, so nothing is rounded twice."""
+    return format(Decimal(s).scaleb(-k), "f")
+
+def both(s, k=1, pre=""):
+    """ "706.86 mm² · 7.0686 cm²"; pre goes before each figure, e.g. "Ø" """
+    return f"{pre}{s} mm{POW[k]} · {pre}{cm(s, k)} cm{POW[k]}"
+
+def g(x):
+    return f"{x:g}"
+
+def grey(text):
+    return f"<font color='#555555'>{text}</font>"
 
 def perimeter(p):
     """Opening perimeter in plan. The integrands are smooth and periodic, so the
@@ -135,18 +155,22 @@ def wound(p):
                 f"under a Ø24.000 lid opening")
     return "None: flat reference"
 
-def opening(p):
+def opening(p, unit="mm", units=False, words=True):
+    """The opening's size in mm or cm; units adds the unit, words the shape."""
+    f = (lambda x: cm(length(x))) if unit == "cm" else length
+    u = f" {unit}" if units else ""
     k = p["kind"]
-    if k in ("hemisphere", "cone"): return f"Ø{length(2*p['R'])}"
+    if k in ("hemisphere", "cone"): return f"Ø{f(2*p['R'])}{u}"
     if k == "paraboloid":
-        return f"{length(2*p['a'])} × {length(2*p['b'])} oval" + (" (plan)" if p.get("cyl") else "")
+        return (f"{f(2*p['a'])} × {f(2*p['b'])}{u}" + (" oval" if words else "")
+                + (" (plan)" if p.get("cyl") and words else ""))
     if k == "lobed":
         lo, hi = lobed_radii(p)
-        return f"Lobed, R {lo:.3f}–{hi:.3f}"
+        return f"R {f(lo)}–{f(hi)}{u}" + (", lobed" if words else "")
     if k == "stadium":
-        return f"{length(p['seg'] + 2*p['R'])} × {length(2*p['R'])} slot"
+        return f"{f(p['seg'] + 2*p['R'])} × {f(2*p['R'])}{u}" + (" slot" if words else "")
     if k == "cylwell":
-        return "Ø24.000 (the lid's hole)"
+        return f"Ø{f(2*M.LIDS[0]['hole_r'])}{u}" + (" lid hole" if words else "")
     return "—"
 
 def recognise(p):
@@ -169,7 +193,7 @@ def recognise(p):
     return f"{h}; flat top, no cavity"
 
 # ------------------------------------------------------------------- tables ---
-def grid(rows, widths, head_rows=1, extra=()):
+def grid(rows, widths, head_rows=1, extra=(), pad=3.2):
     t = Table(rows, colWidths=widths, repeatRows=head_rows)
     t.setStyle(TableStyle([
         ("FONT", (0, 0), (-1, -1), "DV", 7.9),
@@ -177,7 +201,7 @@ def grid(rows, widths, head_rows=1, extra=()):
         ("BACKGROUND", (0, 0), (-1, head_rows - 1), HEAD),
         ("LINEBELOW", (0, head_rows - 1), (-1, head_rows - 1), 0.8, INK),
         ("LINEBELOW", (0, head_rows), (-1, -1), 0.3, RULE),
-        ("TOPPADDING", (0, 0), (-1, -1), 3.2), ("BOTTOMPADDING", (0, 0), (-1, -1), 3.2),
+        ("TOPPADDING", (0, 0), (-1, -1), pad), ("BOTTOMPADDING", (0, 0), (-1, -1), pad),
         ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         *extra]))
     return t
@@ -209,11 +233,14 @@ def pictures(ids):
            min(w, max(b[2] for b in boxes) + pad), min(h, max(b[3] for b in boxes) + pad))
     return {i: im.crop(box) for i, im in ims.items()}
 
-def picture_cards(rows, lids, width=1.62*inch):
-    """Twelve cards, three across: the picture, and beside it the sizes."""
+def picture_cards(rows, lids, width=2.3*inch):
+    """Twelve cards, two across and three down on each of two pages: the
+    picture, and beside it the part's sizes in mm and cm."""
     ids = [p["id"] for p in M.PHANTOMS] + [l["id"] for l in lids]
     pics = pictures(ids)
     p10 = next(p for p in M.PHANTOMS if p["kind"] == "cylwell")
+    tw = 5.0*inch - width - 12                       # the text column
+    small, body, head = style(6.6, color=MUTED), style(7.7), style(10.5, lead=1.15)
     cards = []
     for p in M.PHANTOMS + lids:
         r = rows[p["id"]]
@@ -221,63 +248,93 @@ def picture_cards(rows, lids, width=1.62*inch):
         buf = io.BytesIO(); im.save(buf, "PNG"); buf.seek(0)
         if p in lids:
             e = M.extents(p10, p)
-            lines = [f"<b>{p['id']}</b>  Lid for P10",
-                     f"Hole Ø{length(2*p['hole_r'])}"]
-            lines += (["Centred"] if not p["hole_cx"] else
-                      [f"{length(p['hole_cx'])} off-centre,", "on the notch side"])
-            lines += [f"Disc Ø{r['outer_dia_mm']:g} × {r['thickness_mm']:g}", "Undermining:",
-                      f"{min(e):.3f} all round" if max(e) - min(e) < 1e-9 else
-                      f"{min(e):.3f}–{max(e):.3f} (page 3)",
-                      "Notch to P10’s groove"]
+            hole = length(2*p["hole_r"])
+            text = [P(f"<b>{p['id']}</b>  Lid for P10", head), P(r["file"], small), Spacer(1, 3),
+                    P(f"Hole Ø{hole} mm · Ø{cm(hole)} cm, " + ("centred" if not p["hole_cx"] else
+                      f"its centre {both(length(p['hole_cx']))} off-centre, on the notch side"), body),
+                    P(f"Disc Ø{g(2*p['R_out'])} × {g(p['thick'])} mm · Ø{cm(g(2*p['R_out']))} × "
+                      f"{cm(g(p['thick']))} cm", body)]
+            if max(e) - min(e) < 1e-9:
+                vals = [("Undermining, all round", length(min(e)), 1)]
+            else:
+                vals = [("Least undermining, at 3 o’clock", length(min(e)), 1),
+                        ("Most undermining, at 9 o’clock", length(max(e)), 1)]
+            foot = "Notch to P10’s groove. Every clock position: page 4."
         else:
             d = sizes(p, r, lids[0])
-            lines = [f"<b>{p['id']}</b>  {M.SHAPE[p['kind']].capitalize()}"]
+            text = [P(f"<b>{p['id']}</b>  {M.SHAPE[p['kind']].capitalize()}", head),
+                    P(r["file"], small), Spacer(1, 3)]
             if p["kind"] == "cylwell":
-                lines += ["With a lid seated:", "Opening Ø24.000"]
-            elif p["kind"] == "flat":
-                lines += ["No cavity"]
+                text += [P("<b>With a lid seated:</b>", body)]
+            if p["kind"] == "flat":
+                text += [P("No cavity", body)]
             else:
-                lines += [opening(p).replace(" (plan)", "")]
+                text += [P(f"Opening {opening(p, units=True).replace(' (plan)', '')}", body),
+                         P(grey(f"Opening {opening(p, 'cm', units=True, words=False)}"), body)]
             if p.get("cyl"):
-                lines += [f"On a curved top, R {p['cyl']:g}"]
-            lines += [f"Block 80 × 80 × {p['height']:g}", f"Depth {d['depth']} mm"]
-            lines += ([f"Plan area {d['area']} mm²", f"Skin area {d['skin']} mm²"] if "skin" in d
-                      else [f"Area {d['area']} mm²"])
-            lines += [f"Volume {d['volume']} mm³"]
+                text += [P(f"On a curved top, R {g(p['cyl'])} mm · {cm(g(p['cyl']))} cm", body)]
+            text += [P(f"Block {g(M.L)} × {g(M.L)} × {g(p['height'])} mm · {cm(g(M.L))} × "
+                       f"{cm(g(M.L))} × {cm(g(p['height']))} cm", body)]
+            vals = [("Depth", d["depth"], 1)]
+            vals += ([("Plan area", d["area"], 2), ("Skin area", d["skin"], 2)] if "skin" in d
+                     else [("Area", d["area"], 2)])
+            vals += [("Volume", d["volume"], 3)]
+            if p["kind"] == "cylwell":
+                a = M.assembled(p, lids[0])
+                vals += [("Hidden volume", volume(a["hidden"]), 3),
+                         ("Undermined area", area(a["undermined_area"]), 2)]
             if d["per"] != "—":
-                lines += [f"{'Plan perimeter' if p.get('cyl') else 'Perimeter'} {d['per']} mm"]
-        text = [P(lines[0], style(8.8))] + [P(x, style(7.6)) for x in lines[1:]]
-        text += [Spacer(1, 2), P(r["file"], style(6.3, color=MUTED))]
+                vals += [("Plan perimeter" if p.get("cyl") else "Perimeter", d["per"], 1)]
+            foot = "P10’s lids and undermining: page 4." if p["kind"] == "cylwell" else ""
+        mini = Table([[P(lab, body), P(f"{v} mm{POW[k]}", body), P(f"{cm(v, k)} cm{POW[k]}", body)]
+                      for lab, v, k in vals], colWidths=[tw - 2*0.84*inch, 0.84*inch, 0.84*inch])
+        mini.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                  ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                  ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                                  ("TOPPADDING", (0, 0), (-1, -1), 1.2),
+                                  ("BOTTOMPADDING", (0, 0), (-1, -1), 1.2),
+                                  ("LINEABOVE", (0, 0), (-1, 0), 0.4, RULE),
+                                  ("LINEBELOW", (0, 0), (-1, -1), 0.25, RULE)]))
+        text += [Spacer(1, 3), mini]
+        if foot:
+            text += [Spacer(1, 2), P(foot, small)]
         card = Table([[Image(buf, width=width, height=width*im.height/im.width), text]],
-                     colWidths=[width + 4, 3.33*inch - width - 10])
+                     colWidths=[width + 8, tw + 4])
         card.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
                                   ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                                  ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                                  ("RIGHTPADDING", (0, 0), (-1, -1), 0),
                                   ("TOPPADDING", (0, 0), (-1, -1), 0),
                                   ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
         cards.append(card)
-    t = Table([cards[i:i + 3] for i in range(0, len(cards), 3)], colWidths=[3.33*inch]*3)
-    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
-                           ("LEFTPADDING", (0, 0), (-1, -1), 2), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
-                           ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                           ("LINEBELOW", (0, 0), (-1, -2), 0.3, RULE)]))
-    return t
+    pages = []
+    for half in (cards[:6], cards[6:]):
+        t = Table([half[i:i + 2] for i in range(0, len(half), 2)], colWidths=[5.0*inch]*2)
+        t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
+                               ("LEFTPADDING", (0, 0), (-1, -1), 2), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                               ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                               ("LINEBELOW", (0, 0), (-1, -2), 0.3, RULE)]))
+        pages.append(t)
+    return pages
 
 def parts_table(rows, lids):
     head = [P(h, HDR) for h in ("Part", "STEP file", "How to recognise it", "Wound shape (mm)",
-                                "Opening (mm)", "Max depth<br/>(mm)", "Opening area<br/>(mm²)",
-                                "Perimeter<br/>(mm)", "Volume<br/>(mm³)")]
+                                "Opening<br/>mm<br/>" + grey("cm"), "Max depth<br/>mm<br/>" + grey("cm"),
+                                "Opening area<br/>mm²<br/>" + grey("cm²"),
+                                "Perimeter<br/>mm<br/>" + grey("cm"),
+                                "Volume<br/>mm³<br/>" + grey("cm³ = mL"))]
     body, spans = [head], []
     for p in M.PHANTOMS:
         r = rows[p["id"]]
         d = sizes(p, r, lids[0])
-        num = [d["depth"], d["area"], d["per"], d["volume"]]
+        num = [f"{v}<br/>{grey(cm(v, k))}" if v != "—" else v
+               for v, k in ((d["depth"], 1), (d["area"], 2), (d["per"], 1), (d["volume"], 3))]
         if "skin" in d:
-            num[1] += f"<br/><font color='#555555'>skin {d['skin']}</font>"
+            num[1] += f"<br/>skin {d['skin']}<br/>{grey(cm(d['skin'], 2))}"
         if p["kind"] == "cylwell":
-            num[0] += "<br/><font color='#555555'>with a lid</font>"
+            num[0] += "<br/>with a lid"
+        op = opening(p) if p["kind"] == "flat" else f"{opening(p)}<br/>{grey(opening(p, 'cm', words=False))}"
         body.append([P(p["id"], CELLB), P(r["file"]), P(recognise(p)), P(wound(p)),
-                     P(opening(p))] + [P(x) for x in num])
+                     P(op)] + [P(x) for x in num])
     for l in lids:
         r = rows[l["id"]]
         i = len(body)
@@ -286,11 +343,11 @@ def parts_table(rows, lids):
         body.append([P(l["id"], CELLB), P(r["file"]),
                      P(f"Disc Ø{r['outer_dia_mm']:g} × {r['thickness_mm']:g}, hole {look}"),
                      P(f"Lid for P10: hole Ø{length(r['hole_dia_mm'])}, {off}"),
-                     P("Sets P10's opening and undermining; values on page 3", NOTE),
+                     P("Sets P10's opening and undermining; values on page 4", NOTE),
                      "", "", "", ""])
         spans.append(("SPAN", (4, i), (8, i)))
-    w = [0.42, 1.95, 1.62, 1.92, 1.10, 0.62, 0.84, 0.74, 0.79]
-    return grid(body, [x*inch for x in w], extra=spans)
+    w = [0.42, 1.86, 1.55, 1.80, 1.31, 0.62, 0.84, 0.74, 0.86]
+    return grid(body, [x*inch for x in w], extra=spans, pad=2.3)
 
 def lid_table(p10, lids, rows):
     a = {l["id"]: M.assembled(p10, l) for l in lids}
@@ -305,20 +362,22 @@ def lid_table(p10, lids, rows):
         return [P(name, CELLB)] + [P(f(l)) for l in lids]
     def rng(l):
         e = ext[l["id"]]
-        return (f"{min(e):.3f} all round" if max(e) - min(e) < 1e-9 else
-                f"{min(e):.3f} at 3 o'clock to {max(e):.3f} at 9 o'clock")
-    body = [[P("", HDR)] + [P(f"P10 with {l['id']} seated", HDR) for l in lids],
-            row("Lid file", lambda l: rows[l["id"]]["file"]),
-            row("Lid hole", lambda l: f"Ø{length(2*l['hole_r'])}, "
-                + ("centred" if not l["hole_cx"] else f"centre {length(l['hole_cx'])} toward 3 o'clock")),
-            row("Max depth (mm)", lambda l: depth(a[l["id"]]["depth"]) + "  (top skin to chamber floor)"),
-            row("Opening area (mm²)", lambda l: area(a[l["id"]]["area"])),
-            row("Opening perimeter (mm)", lambda l: f"{2*math.pi*l['hole_r']:.2f}"),
-            row("Total volume (mm³)", lambda l: volume(a[l["id"]]["volume"])),
-            row("Visible from above (mm³)", lambda l: volume(a[l["id"]]["visible"])),
-            row("Hidden under the lid (mm³)", lambda l: volume(a[l["id"]]["hidden"])),
-            row("Undermined area (mm²)", lambda l: area(a[l["id"]]["undermined_area"])),
-            row("Undermining extent (mm)", rng)]
+        return (f"{both(length(min(e)))}, all round" if max(e) - min(e) < 1e-9 else
+                f"{both(length(min(e)))} at 3 o'clock, to {both(length(max(e)))} at 9 o'clock")
+    body = [[P("", HDR)] + [P(f"P10 with {l['id']} seated  "
+                              f"<font name='DV' size='7'>({rows[l['id']]['file']})</font>", HDR)
+                            for l in lids],
+            row("Lid hole", lambda l: f"{both(length(2*l['hole_r']), pre='Ø')}, "
+                + ("centred" if not l["hole_cx"] else
+                   f"centre {both(length(l['hole_cx']))} toward 3 o'clock")),
+            row("Max depth", lambda l: both(depth(a[l["id"]]["depth"])) + "  (top skin to chamber floor)"),
+            row("Opening area", lambda l: both(area(a[l["id"]]["area"]), 2)),
+            row("Opening perimeter", lambda l: both(f"{2*math.pi*l['hole_r']:.2f}")),
+            row("Total volume", lambda l: both(volume(a[l["id"]]["volume"]), 3)),
+            row("Visible from above", lambda l: both(volume(a[l["id"]]["visible"]), 3)),
+            row("Hidden under the lid", lambda l: both(volume(a[l["id"]]["hidden"]), 3)),
+            row("Undermined area", lambda l: both(area(a[l["id"]]["undermined_area"]), 2)),
+            row("Undermining extent", rng)]
     for l in lids:                  # P10's walls carry the lid-seated values
         x = a[l["id"]]
         engraved(rows["P10"], f"DEPTH {depth(x['depth'])} MM", f"AREA {area(x['area'])} MM2",
@@ -327,11 +386,12 @@ def lid_table(p10, lids, rows):
     for l in lids:                  # and each lid its hole and offset
         engraved(rows[l["id"]], f"{l['id']} HOLE D{length(2*l['hole_r'])}",
                  f"OFFSET {length(l['hole_cx'])} MM")
-    t = grid(body, [1.9*inch, 3.0*inch, 3.0*inch])
+    t = grid(body, [1.7*inch, 4.1*inch, 4.1*inch], pad=1.9)
     clock = [[P("Clock", HDR)] + [P(f"{12 if k == 0 else k}", HDR) for k in range(12)]]
     for l in lids:
         clock.append([P(f"{l['id']} (mm)", CELLB)] + [P(f"{x:.3f}") for x in ext[l["id"]]])
-    c = grid(clock, [0.8*inch] + [0.6*inch]*12)
+        clock.append([P(grey(f"{l['id']} (cm)"), CELLB)] + [P(grey(cm(f"{x:.3f}"))) for x in ext[l["id"]]])
+    c = grid(clock, [0.8*inch] + [0.6*inch]*12, pad=1.9)
     return t, c
 
 # --------------------------------------------------------------------- page ---
@@ -391,11 +451,17 @@ def main():
     s = []
     s.append(P("Wound phantoms: match the part to its picture", TITLE))
     s.append(Spacer(1, 4))
-    s.append(P("Drawn from the STEP files at one scale, cavity up, key line nearest. Sizes in mm; "
-               "depth, area and volume as engraved on the parts.", SUB))
+    s.append(P("Drawn from the STEP files at one scale, cavity up, key line nearest. Sizes in mm "
+               "and cm (1 cm³ = 1 mL); the mm depth, area and volume are as engraved on the parts. "
+               "Pages 3 and 4 have the full detail.", SUB))
     s.append(Spacer(1, 6))
-    s.append(picture_cards(rows, lids))
-    s.append(Spacer(1, 4))
+    first, second = picture_cards(rows, lids)
+    s.append(first)
+    s.append(PageBreak())
+    s.append(P("Match the part to its picture, continued", TITLE))
+    s.append(Spacer(1, 6))
+    s.append(second)
+    s.append(Spacer(1, 6))
     s.append(P("<b>Revision B prints</b> have the same shapes and sizes but look different: most of "
                "their lettering is missing; the hollow blocks (all but P5 and P6) have round powder "
                "holes through their left and right walls, except P9, where the holes come out "
@@ -404,10 +470,8 @@ def main():
     s.append(PageBreak())
     s.append(P("Every part: file, shape and sizes", TITLE))
     s.append(Spacer(1, 4))
-    s.append(P("Revision C. All dimensions in millimetres. Depth, area and volume are the values "
-               "engraved on each part, rounded the same way. Revision B prints have the same file "
-               "names, block sizes and cavities, so they read from this table too; revision B "
-               "P9 has no fiducial dots (page 3).", SUB))
+    s.append(P("Revision C. Each size in mm, with cm beneath it in grey; depth, area and volume in mm "
+               "as engraved on the parts. Revision B prints read from this table too.", SUB))
     s.append(Spacer(1, 8))
     s.append(parts_table(rows, lids))
     s.append(Spacer(1, 7))
@@ -417,7 +481,9 @@ def main():
                "<b>Opening area</b> and <b>perimeter</b> are measured in plan, looking straight "
                "down; on P9, whose top is curved, the area measured on the curved surface itself "
                "is given as “skin”. <b>Perimeter</b> is not engraved on the parts. P10’s depth, "
-               "area, perimeter and volume are with either lid seated (page 3).", NOTE))
+               "area, perimeter and volume are with either lid seated (page 4). Each cm figure is the mm "
+               "figure with its decimal point moved (1 cm = 10 mm, 1 cm² = 100 mm², 1 cm³ = 1000 mm³ "
+               "= 1 mL), so it is exactly as precise.", NOTE))
     s.append(Spacer(1, 3))
     s.append(P("Measure the printed parts with calipers on arrival and use the measured values as "
                "truth: every print process shrinks a little, and the measured number is the one "
@@ -426,20 +492,26 @@ def main():
     s.append(PageBreak())
     s.append(P("P10 undermining set", TITLE))
     s.append(Spacer(1, 4))
-    s.append(P("P10 is a Ø40.000 × 12.000 chamber under a Ø56.400 × 3.000 pocket. A lid drops into "
-               "the pocket, flush with the top, and its Ø24.000 hole becomes the visible wound; the "
-               "chamber beyond the hole’s edge is undermined. The two lids give the same depth, "
-               "area and volume and differ only in where the undermining runs.", BODY))
-    s.append(Spacer(1, 7))
+    ch = f"{length(2*p10['R'])} × {length(p10['h'])}"
+    pk = f"{length(2*p10['pocket_r'])} × {length(p10['pocket_d'])}"
+    ho = length(2*lids[0]["hole_r"])
+    s.append(P(f"P10 is a Ø{ch} mm (Ø{cm(length(2*p10['R']))} × {cm(length(p10['h']))} cm) chamber "
+               f"under a Ø{pk} mm (Ø{cm(length(2*p10['pocket_r']))} × {cm(length(p10['pocket_d']))} cm) "
+               f"pocket. A lid drops into the pocket, flush with the top, and its Ø{ho} mm "
+               f"(Ø{cm(ho)} cm) hole becomes the visible wound; the chamber beyond the hole’s edge is "
+               "undermined. The two lids give the same depth, area and volume and differ only in "
+               "where the undermining runs.", BODY))
+    s.append(Spacer(1, 5))
     t, c = lid_table(p10, lids, rows)
     s.append(t)
     s.append(Spacer(1, 6))
     r10 = rows["P10"]
     cv, ca, cd = M.analytic(p10)
     s.append(P(f"Without a lid, the chamber alone, measured from the pocket floor "
-               f"{length(p10['pocket_d'])} mm below the top: opening Ø{length(2*p10['R'])}, area "
-               f"{area(ca)} mm², depth {depth(cd)} mm, volume {volume(cv)} mm³.", BODY))
-    s.append(Spacer(1, 10))
+               f"{both(length(p10['pocket_d']))} below the top: opening {both(length(2*p10['R']), pre='Ø')}, "
+               f"area {both(area(ca), 2)}, depth {both(depth(cd))}, volume {both(volume(cv), 3)}.",
+               BODY))
+    s.append(Spacer(1, 5))
     s.append(KeepTogether([
         P("Undermining extent at each clock position", H2), Spacer(1, 3),
         P("From the edge of the lid’s hole outward to the chamber wall, along a line from the "
@@ -450,16 +522,16 @@ def main():
           "Revision B parts have no groove, no notch and no legible “P10”: take 6 o’clock as the side "
           "with the key line, and seat L2 with its hole nearest 3 o’clock. L1 reads the "
           "same at every position.", BODY)]))
-    s.append(Spacer(1, 10))
+    s.append(Spacer(1, 5))
     s.append(KeepTogether([
         P("Scale references on every block’s top", H2), Spacer(1, 3),
-        P(f"<b>Key line:</b> {M.KEY_LEN:.3f} mm between the centres of its two end ticks. "
-          f"<b>Fiducial dots:</b> four Ø{2*M.DOT_R:.3f} dots at the corners of a "
-          f"{2*M.DOT_XY:.3f} mm square, centre to centre. "
+        P(f"<b>Key line:</b> {both(length(M.KEY_LEN))} between the centres of its two end ticks. "
+          f"<b>Fiducial dots:</b> four {both(length(2*M.DOT_R), pre='Ø')} dots at the corners of a "
+          f"{both(length(2*M.DOT_XY))} square, centre to centre. "
           "Revision B P9 has no dots: its powder vents cut them away and left four open slots in "
           "its top near the corners, so use it for depth, area and volume only, not as a scale "
           "reference.", BODY)]))
-    s.append(Spacer(1, 10))
+    s.append(Spacer(1, 4))
     s.append(KeepTogether([
         P("Where the numbers come from", H2), Spacer(1, 3),
         P("Hemisphere: V = ⅔πR³, A = πR². Cone: V = ⅓πR²h, A = πR². Elliptic paraboloid: "
@@ -468,7 +540,7 @@ def main():
           "V = ¼πhR0²(2 + Σa²), A = ½πR0²(2 + Σa²). Trough, channel length L: "
           "V = (4/3)hRL + ½πhR², A = 2RL + πR². P10 with a lid of hole radius r and "
           "thickness t: V = πr²t + πR²h, depth = t + h. Perimeters are integrated numerically "
-          "from the same outlines.", BODY)]))
+          "from the same outlines.", style(7.9))]))
     doc.build(s, canvasmaker=Numbered)
     print("wrote", OUT)
 
