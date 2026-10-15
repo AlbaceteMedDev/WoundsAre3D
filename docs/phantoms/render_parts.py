@@ -4,7 +4,8 @@ Renders each STEP file in step/ - the geometry that is sent to print, engraving
 and all - to renders/<id>.png, every part from the same angle and at the same
 scale, so the pictures compare as the parts do on the bench: cavity up, the key
 line along the near edge, the side wall with the part number facing front-left.
-The lids are seen from higher up, so the offset of L2's hole shows.
+P9, whose key line runs along y, is turned a quarter so that it too has its key
+line nearest. The lids are seen from higher up, so the offset of L2's hole shows.
 
 Needs cadquery (OpenCASCADE and VTK) and, on a machine without a display, the
 OSMesa library for off-screen rendering (Debian/Ubuntu: apt install libosmesa6).
@@ -40,7 +41,7 @@ GREY = (0.80, 0.80, 0.78)          # natural PA12
 
 def files():
     for p in M.PHANTOMS + M.LIDS:
-        yield p["id"], os.path.join(HERE, "step", f"{p['id']}_{p['name']}.step")
+        yield p, os.path.join(HERE, "step", f"{p['id']}_{p['name']}.step")
 
 def mesh(shape):
     """Triangles of every face, with the surface's own normals at the nodes, so
@@ -118,11 +119,17 @@ def render(pd, centre, out, elev=ELEV):
 
 def main(ids):
     os.makedirs(OUT, exist_ok=True)
-    for pid, path in files():
+    for p, path in files():
+        pid = p["id"]
         if ids and pid not in ids:
             continue
         shape = cq.importers.importStep(path).val().wrapped
         pts, nrm, tris = mesh(shape)
+        if p.get("key_axis") == "y":
+            # P9's key line runs along y, at the left edge; turn it a quarter so
+            # it lies along the near edge, as every other block's does
+            turn = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+            pts, nrm = pts @ turn.T, nrm @ turn.T
         lo, hi = pts.min(0), pts.max(0)
         centre = tuple((lo + hi)/2)        # each part centred; the scale is shared
         out = os.path.join(OUT, f"{pid}.png")

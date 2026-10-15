@@ -245,7 +245,7 @@ def picture_cards(rows, lids, width=1.62*inch):
                       else [f"Area {d['area']} mm²"])
             lines += [f"Volume {d['volume']} mm³"]
             if d["per"] != "—":
-                lines += [f"Perimeter {d['per']} mm"]
+                lines += [f"{'Plan perimeter' if p.get('cyl') else 'Perimeter'} {d['per']} mm"]
         text = [P(lines[0], style(8.8))] + [P(x, style(7.6)) for x in lines[1:]]
         text += [Spacer(1, 2), P(r["file"], style(6.3, color=MUTED))]
         card = Table([[Image(buf, width=width, height=width*im.height/im.width), text]],
@@ -391,15 +391,16 @@ def main():
     s = []
     s.append(P("Wound phantoms: match the part to its picture", TITLE))
     s.append(Spacer(1, 4))
-    s.append(P("Drawn from the STEP files at one scale, cavity up, key line nearest. Sizes in mm, "
-               "as engraved on the parts.", SUB))
+    s.append(P("Drawn from the STEP files at one scale, cavity up, key line nearest. Sizes in mm; "
+               "depth, area and volume as engraved on the parts.", SUB))
     s.append(Spacer(1, 6))
     s.append(picture_cards(rows, lids))
     s.append(Spacer(1, 4))
-    s.append(P("<b>Revision B prints</b> have the same shapes and sizes, but look different in four "
-               "ways: the hollow blocks (all but P5 and P6) have round powder holes through their "
-               "left and right walls; most of the lettering is missing; P9 has four open slots in its "
-               "top instead of the dots; and the lids have no notch.", NOTE))
+    s.append(P("<b>Revision B prints</b> have the same shapes and sizes but look different: most of "
+               "their lettering is missing; the hollow blocks (all but P5 and P6) have round powder "
+               "holes through their left and right walls, except P9, where the holes come out "
+               "through its curved top as four open slots in place of the dots; P10 has no index "
+               "groove beside its pocket; and the lids have no notch.", NOTE))
     s.append(PageBreak())
     s.append(P("Every part: file, shape and sizes", TITLE))
     s.append(Spacer(1, 4))
