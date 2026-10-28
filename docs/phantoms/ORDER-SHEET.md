@@ -102,3 +102,46 @@ on adhesive paper and stick each block's label on its underside.
 Keep the lid labels with the lids, not on them — anything stuck to a lid changes how it seats.
 Revision B's lids are not keyed, and its P10 has no legible part number to orient by: seat L2
 with its hole nearest 3 o'clock, taking 6 o'clock as the side of P10 with the 50 mm key line.
+
+## Lifelike colour set W1–W8 (a separate order)
+
+Eight full-colour wounds on six skin tones (`INDEX.md`, "Lifelike colour set"). Order them
+separately from the P-series: a different process, different files.
+
+| Setting | Value |
+|---|---|
+| Process | **Full colour, matte.** Best: Stratasys PolyJet (J750, J850, J55) with the **Matte** finish. Also usable: HP Multi Jet Fusion colour (Shapeways "Nylon PA12 Full Color"), which prints duller, darker colours; Mimaki full colour (Shapeways "High Definition Full Color", matte only) |
+| Files | `lifelike/*.wrl.zip` (VRML, colour per vertex) for PolyJet through GrabCAD Print and for Shapeways. `lifelike/*.3mf` for Xometry, which quotes PolyJet from 3MF, and JLC3DP full colour |
+| Units | Millimetres — do not scale |
+| Colour | sRGB targets. On PolyJet ask for the skin-tone colour profile (GrabCAD "Vivid 1.1 D50 Relative"). Colours will not match a screen exactly |
+| Finish | Matte only: no gloss, clear coat or wax. The parts are scanned by an optical depth sensor |
+| Interior | Solid; no vents or drain holes needed |
+| Quantity | 1 of each |
+
+**Note to the shop**
+
+> Full-colour wound models used to test a wound-measurement device. Millimetres — do not scale.
+> Matte finish all over; no gloss or clear coat. Colours are carried per vertex in the VRML
+> (per triangle corner in the 3MF); please print with your skin-tone profile. The labels on the
+> sides and underside are engraved 1.0 mm deep and coloured: keep support material out of them,
+> and keep it off the wound surfaces as far as the process allows. W4 has an undermined pocket
+> under the wound's upper edge, 2 mm below the surface; please clear any support from it.
+
+| File (.3mf and .wrl.zip) | Wound | Skin type | Block (mm) | Material | Triangles |
+|---|---|---|---|---|---|
+| `W1_venous_leg_ulcer` | Venous Leg Ulcer | II | 80 × 80 × 14 | 86.3 cm³ | 810,484 |
+| `W2_diabetic_foot_ulcer` | Diabetic Foot Ulcer | IV | 80 × 80 × 14 | 87.4 cm³ | 746,472 |
+| `W3_pressure_injury_stage3` | Pressure Injury S3 | V | 80 × 80 × 14 | 84.4 cm³ | 901,020 |
+| `W4_pressure_injury_stage4` | Pressure Injury S4 | III | 80 × 80 × 26 | 157.1 cm³ | 942,962 |
+| `W5_unstageable_eschar` | Unstageable Eschar | I | 80 × 80 × 14 | 87.0 cm³ | 671,304 |
+| `W6_arterial_ulcer` | Arterial Ulcer | VI | 80 × 80 × 14 | 87.3 cm³ | 562,630 |
+| `W7_surgical_dehiscence` | Surgical Dehiscence | IV | 80 × 80 × 14 | 85.8 cm³ | 553,442 |
+| `W8_healing_wound` | Healing Wound | II | 80 × 80 × 14 | 87.7 cm³ | 542,074 |
+| **Set** | | | | **763 cm³** | |
+
+Every file is under one million triangles (Shapeways' colour upload limit) and under 12 MB.
+
+**Check on arrival.** Compare each part with its picture on `parts_sheet.pdf` pages 5–6 and read
+its engraved labels. Expect printed colours to sit a little away from the screen; the tissue
+types should still be plain. Measure with calipers and use the measured values as truth, as for
+the P-series.

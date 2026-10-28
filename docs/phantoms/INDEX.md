@@ -1,8 +1,10 @@
 # Test phantoms — index
 
 Printable ground-truth phantoms for bench-testing wound measurement. Each block carries one
-cavity whose volume, opening area and maximum depth are known in closed form, so a scan can
-be scored against an exact number rather than against another measurement.
+cavity whose volume, opening area and maximum depth are known exactly, so a scan can be scored
+against an exact number rather than against another measurement. There are two sets: the
+P-series (revision C, below), exact closed-form shapes in natural grey for measuring geometry,
+and the lifelike W-series (further down), real-looking wounds in full colour on six skin tones.
 
 ## Current: revision C, exact STEP with legible labels
 
@@ -115,6 +117,110 @@ through them.
 | L2 | lid | | | solid | solid | 2 arcs | 26 | 0.602 mm | 5.8 cm³ |
 
 Twelve files, 594 cm³ of material. P10's volume is the chamber the build checks; its labels and `truth_step.json` give the lid-seated truths. Every label passes `verify_labels.py` glyph for glyph at full depth with no unexpected opening on any face; every STEP file re-imports cold as one valid closed AP214 solid whose volume matches the build to within 0.0008 % (`verify_step.py` allows 0.01 %). The 2.500 mm figure is the 3.5 mm wall less the 1.0 mm engraving directly over the void. Glyphs counts the openings the side-wall and underside labels cut (the lids: both arcs); min land is the narrowest strip of material between two letters on any face.
+
+## Lifelike colour set: W1–W8
+
+The P-series are exact shapes in natural grey, for measuring geometry. The W-series look like
+real wounds: irregular margins and uneven beds; velvety granulation, slough, cracked eschar and
+new epithelium at the margins (and in islands where a wound is partial-thickness); erythema,
+haemosiderin staining, maceration, callus with bleeding under it, rolled edges and suture marks
+around them — in full colour on six skin tones. They test what the P-series cannot: finding the
+wound edge and classifying tissue on something that looks like a patient. Every size is still
+known exactly, because it is measured on the mesh that is printed.
+
+| File | What it is |
+|---|---|
+| `make_lifelike.py` | Generator. Designs each wound as functions of position — outline, depth, tissue map, periwound — samples them on a mesh that follows the wound margin exactly, colours every vertex, adds W4's undermining and cuts the labels with mesh booleans that carry the colour. Writes `lifelike/`, `truth_lifelike.json`. |
+| `lifelike/*.3mf` | Colour 3MF, millimetres: colour per triangle corner (3MF materials extension). For Xometry, JLC3DP and HP. |
+| `lifelike/*.wrl.zip` | VRML 2.0 with colour per vertex, millimetres. For Stratasys PolyJet (GrabCAD Print) and Shapeways. |
+| `truth_lifelike.json` | Per part: wound type, skin type, periwound, length, width, maximum depth, area, perimeter, volume, tissue shares and whole percentages, W4's undermining by clock position, and every engraved label with its position. |
+| `verify_lifelike.py` | Re-opens each 3MF and checks it from the file alone (below). |
+| `render_lifelike.py`, `renders/lifelike/*.png` | Colour pictures from the 3MF files: the part at the P-series' scale and angle, and the wound from above. |
+
+`parts_sheet.pdf` pages 5–7 show every W part with its picture, sizes in mm and cm, and tissue
+shares beside a swatch of each tissue's colour. `ORDER-SHEET.md` says how to print them.
+
+### The eight wounds
+
+| Part | Wound | Skin type | Periwound | L × W × D (mm) | Area (mm²) | Perimeter (mm) | Volume (mm³) | Tissue % G / S / N / E |
+|---|---|---|---|---|---|---|---|---|
+| W1 | Venous Leg Ulcer | II | Haemosiderin | 46.6 × 30.8 × 2.41 | 950.3 | 121.7 | 1054.2 | 55 / 25 / 0 / 20 |
+| W2 | Diabetic Foot Ulcer | IV | Callus | 15.8 × 14.3 × 4.66 | 175.7 | 47.3 | 569.5 | 70 / 20 / 10 / 0 |
+| W3 | Pressure Injury S3 | V | Rolled Edge | 32.5 × 27.9 × 7.56 | 688.7 | 95.8 | 3164.1 | 65 / 30 / 0 / 5 |
+| W4 | Pressure Injury S4; undermined 10–2 o'clock, max 10.0 mm, hidden 497.0 mm³ | III | Erythema | 30.8 × 23.7 × 15.38 | 568.2 | 86.4 | 6544.6 | 40 / 40 / 20 / 0 |
+| W5 | Unstageable Eschar | I | Erythema | 32.0 × 26.3 × 1.96 | 628.2 | 91.0 | 573.9 | 0 / 15 / 85 / 0 |
+| W6 | Arterial Ulcer | VI | Pale Shiny | 14.2 × 12.0 × 4.19 | 132.2 | 41.0 | 394.9 | 20 / 50 / 30 / 0 |
+| W7 | Surgical Dehiscence | IV | Erythema | 44.0 × 12.4 × 6.79 | 415.0 | 95.3 | 1879.3 | 75 / 15 / 0 / 10 |
+| W8 | Healing Wound | II | Intact | 25.8 × 20.2 × 1.39 | 408.1 | 74.7 | 192.3 | 40 / 0 / 0 / 60 |
+
+G / S / N / E: granulation, slough, necrotic, epithelial, as whole percentages of the wound area.
+
+Each part is labelled like the P-series, 1.0 mm deep in capitals, and the grooves are coloured —
+dark on the light grey sides and underside, dark or light on the skin by contrast. The side walls
+carry the part and wound type, `L W D`, area, volume, tissue percentages, periwound and skin type
+(the skin type, then the periwound, give way on the lowest walls); the underside carries all of it
+plus the perimeter and W4's undermining. The top carries the part number, the four fiducial dots
+and the 50.000 mm key line, as on the P-series.
+
+### How the numbers are defined
+
+- **Length** runs 12 to 6 o'clock (12 is the edge with the part number) and **width** 3 to 9.
+  Every wound's long axis runs 12–6, so the length is also the longer side.
+- **Area** and **perimeter** are of the wound margin, in plan. The mesh follows the margin
+  exactly, so these are the margin polygon's.
+- **Maximum depth** and **volume** are from the plane of the surrounding skin (the block's top),
+  not from a callus or rolled edge standing above it. Volume is the space between that plane and
+  the wound bed inside the margin, measured on the mesh.
+- **Undermining** (W4) is measured from the margin outward, along a line from the wound centre,
+  as a probe would; its **hidden volume** is the pocket beyond the margin, under a 2.0 mm roof.
+- **Tissue shares** are fractions of the wound area from the tissue map, on a 0.05 mm grid.
+
+### Where the look comes from
+
+- **Shapes and textures** follow clinical descriptions: BWAT and NPIAP for tissue and edge types;
+  venous ulcers shallow with sloping edges and haemosiderin; neuropathic diabetic foot ulcers
+  crater-like inside a callus ring with maceration and bleeding beneath it; arterial ulcers punched
+  out with a pale base; stage 3–4 pressure injuries with rolled edges, slough and undermining;
+  dehiscence with suture marks (BMJ ABC of Wound Healing 2006, AAFP 2020, WUWHS 2018). Granule
+  size and height (about 1 mm, 0.1–0.2 mm high) and the eschar's fissures are design choices: no
+  clinical source gives them in millimetres.
+- **Skin tones** are medians of measured skin reflectance (the Oulu spectra) binned by individual
+  typology angle, which maps onto Fitzpatrick type. Measured skin is darker and redder than
+  swatch scales such as Monk's, whose prints read too bright.
+- **Tissue colours** are from tissue-labelled wound photographs (LUTSeg, CC BY 4.0) and clinical
+  descriptions: beefy but not saturated red granulation, tan-to-cream slough, dark brown-black
+  eschar (never pure black), pink new skin — which stays pink on dark skin. Redness on the darker
+  skin types is a deepening or violaceous tone. The photographs were not colour-calibrated, so
+  these are targets to roughly 10–20 ΔE, not measurements of tissue.
+
+### Regenerating
+
+    .venv/bin/pip install manifold3d triangle scipy lib3mf reportlab
+    .venv/bin/python make_lifelike.py       # about 9 minutes; name parts (W4) to build only those
+    .venv/bin/python verify_lifelike.py
+    .venv/bin/python render_lifelike.py     # headless Linux also needs: apt install libosmesa6
+    .venv/bin/python make_parts_sheet.py
+
+`verify_lifelike.py` re-opens each 3MF and checks, from the file alone: it is one valid closed
+solid under 950,000 triangles; every engraved line, sliced 0.5 mm into its face, opens exactly as
+many glyphs as its text has (counted from the font), with at least 0.55 mm of material between
+them; every engraved number is the truth; the opening (sliced just under the skin plane), the
+volume, the maximum depth and W4's hidden volume, re-measured on the file, match the truth; and
+the wound bed's triangles, classed by nearest tissue colour, give the labelled tissue shares
+within 8 points.
+
+### Verified results
+
+| Part | Triangles | Colours | Labels | Narrowest land (mm) | Opening area, slice / truth (mm²) | Volume, file / truth (mm³) | Max depth (mm) | Tissue by colour G / S / N / E (%) | Labelled (%) |
+|---|---|---|---|---|---|---|---|---|---|
+| W1 | 810,484 | 20,454 | 21 | 0.600 | 949.14 / 950.28 | 1054.23 / 1054.23 | 2.41 | 56 / 25 / 0 / 19 | 55 / 25 / 0 / 20 |
+| W2 | 746,472 | 5,242 | 22 | 0.600 | 175.65 / 175.68 | 569.47 / 569.47 | 4.66 | 71 / 21 / 8 / 0 | 70 / 20 / 10 / 0 |
+| W3 | 901,020 | 14,660 | 21 | 0.600 | 688.59 / 688.71 | 3164.06 / 3164.06 | 7.56 | 65 / 30 / 0 / 5 | 65 / 30 / 0 / 5 |
+| W4 | 942,962 | 15,104 | 24 | 0.600 | 568.21 / 568.23 | 6544.55 / 6544.55 | 15.38 | 42 / 40 / 18 / 0 | 40 / 40 / 20 / 0 |
+| W5 | 671,304 | 5,972 | 21 | 0.600 | 627.61 / 628.17 | 573.85 / 573.85 | 1.96 | 0 / 15 / 85 / 0 | 0 / 15 / 85 / 0 |
+| W6 | 562,630 | 5,362 | 20 | 0.600 | 132.17 / 132.19 | 394.89 / 394.89 | 4.19 | 27 / 45 / 28 / 0 | 20 / 50 / 30 / 0 |
+| W7 | 553,442 | 7,519 | 21 | 0.600 | 414.91 / 414.98 | 1879.34 / 1879.34 | 6.79 | 77 / 15 / 0 / 8 | 75 / 15 / 0 / 10 |
+| W8 | 542,074 | 2,752 | 18 | 0.600 | 406.60 / 408.10 | 192.26 / 192.26 | 1.39 | 42 / 0 / 0 / 58 | 40 / 0 / 0 / 60 |
 
 ## Superseded: revision B
 

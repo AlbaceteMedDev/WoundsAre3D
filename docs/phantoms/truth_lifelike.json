@@ -1,0 +1,3707 @@
+[
+ {
+  "id": "W1",
+  "name": "venous_leg_ulcer",
+  "wound": "Venous Leg Ulcer",
+  "skin_type": "II",
+  "periwound": "Haemosiderin",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W1_venous_leg_ulcer.3mf",
+   "W1_venous_leg_ulcer.wrl.zip"
+  ],
+  "vertices": 405244,
+  "triangles": 810484,
+  "area_mm2": 950.275778305137,
+  "perimeter_mm": 121.68240170411735,
+  "length_mm": 46.629123597413376,
+  "width_mm": 30.773541130448756,
+  "volume_mm3": 1054.2264107637222,
+  "max_depth_mm": 2.4111461639404297,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.19996948075182588,
+   "necrotic": 0.0,
+   "slough": 0.24960009261013238,
+   "granulation": 0.5504304266380418
+  },
+  "tissue_pct": {
+   "granulation": 55,
+   "slough": 25,
+   "necrotic": 0,
+   "epithelial": 20
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W1 VENOUS ULCER",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     10.185
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L46.6 W30.8 D2.41",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     3.815
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 950.3 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 1054.2 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT GRAN 55",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 25 EPI 20",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI HAEMOSIDERIN",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE II",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -35.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W1 VENOUS ULCER",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -28.28,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VENOUS LEG ULCER",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -21.21,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L46.6 W30.8 D2.41",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -14.14,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 950.3 MM2",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -7.07,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 121.7 MM",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 1054.2 MM3",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     7.07,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT GRAN 55",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     14.14,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 25 EPI 20",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     21.21,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI HAEMOSIDERIN",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     28.28,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE II",
+    "cap_mm": 5.05,
+    "at": [
+     0.0,
+     35.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W1",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 86272.94680092271
+ },
+ {
+  "id": "W2",
+  "name": "diabetic_foot_ulcer",
+  "wound": "Diabetic Foot Ulcer",
+  "skin_type": "IV",
+  "periwound": "Callus",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W2_diabetic_foot_ulcer.3mf",
+   "W2_diabetic_foot_ulcer.wrl.zip"
+  ],
+  "vertices": 373238,
+  "triangles": 746472,
+  "area_mm2": 175.6753091937384,
+  "perimeter_mm": 47.28314655749507,
+  "length_mm": 15.833893464424058,
+  "width_mm": 14.323887909087475,
+  "volume_mm3": 569.4700807110358,
+  "max_depth_mm": 4.664328575134277,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.0,
+   "necrotic": 0.10006261027946951,
+   "slough": 0.19989754681541352,
+   "granulation": 0.700039842905117
+  },
+  "tissue_pct": {
+   "granulation": 70,
+   "slough": 20,
+   "necrotic": 10,
+   "epithelial": 0
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W2 DIABETIC FOOT",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     10.185
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L15.8 W14.3 D4.66",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     3.815
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 175.7 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 569.5 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT GRAN 70",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 20",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "NECROTIC 10",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI CALLUS",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -34.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W2 DIABETIC FOOT",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -28.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "DIABETIC FOOT ULCER",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -22.05,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L15.8 W14.3 D4.66",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -15.75,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 175.7 MM2",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -9.45,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 47.3 MM",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -3.15,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 569.5 MM3",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     3.15,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT GRAN 70",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     9.45,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 20",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     15.75,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "NECROTIC 10",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     22.05,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI CALLUS",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     28.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE IV",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     34.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W2",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 87429.66872567926
+ },
+ {
+  "id": "W3",
+  "name": "pressure_injury_stage3",
+  "wound": "Pressure Injury S3",
+  "skin_type": "V",
+  "periwound": "Rolled Edge",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W3_pressure_injury_stage3.3mf",
+   "W3_pressure_injury_stage3.wrl.zip"
+  ],
+  "vertices": 450512,
+  "triangles": 901020,
+  "area_mm2": 688.7100334418594,
+  "perimeter_mm": 95.81132995797458,
+  "length_mm": 32.479681442423896,
+  "width_mm": 27.899031479735584,
+  "volume_mm3": 3164.0609921054843,
+  "max_depth_mm": 7.561849117279053,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.05018675746213125,
+   "necrotic": 0.0,
+   "slough": 0.29982467666820334,
+   "granulation": 0.6499885658696655
+  },
+  "tissue_pct": {
+   "granulation": 65,
+   "slough": 30,
+   "necrotic": 0,
+   "epithelial": 5
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W3 PRESSURE ST3",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     10.185
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L32.5 W27.9 D7.56",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     3.815
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 688.7 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 3164.1 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT GRAN 65",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 30 EPI 5",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI ROLLED EDGE",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE V",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -33.25,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W3 PRESSURE ST3",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PRESSURE INJURY S3",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L32.5 W27.9 D7.56",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 688.7 MM2",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 95.8 MM",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 3164.1 MM3",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT GRAN 65",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 30 EPI 5",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI ROLLED EDGE",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE V",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     33.25,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W3",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 84408.61818729363
+ },
+ {
+  "id": "W4",
+  "name": "pressure_injury_stage4",
+  "wound": "Pressure Injury S4",
+  "skin_type": "III",
+  "periwound": "Erythema",
+  "block_mm": [
+   80.0,
+   80.0,
+   26.0
+  ],
+  "files": [
+   "W4_pressure_injury_stage4.3mf",
+   "W4_pressure_injury_stage4.wrl.zip"
+  ],
+  "vertices": 471483,
+  "triangles": 942962,
+  "area_mm2": 568.2260819305009,
+  "perimeter_mm": 86.41378885294577,
+  "length_mm": 30.799867772726536,
+  "width_mm": 23.71841803509581,
+  "volume_mm3": 6544.550794512783,
+  "max_depth_mm": 15.375256538391113,
+  "skin_plane_z_mm": 26.0,
+  "tissue_share": {
+   "epithelial": 0.0,
+   "necrotic": 0.1997809101467638,
+   "slough": 0.4000149579417872,
+   "granulation": 0.400204131911449
+  },
+  "tissue_pct": {
+   "granulation": 40,
+   "slough": 40,
+   "necrotic": 20,
+   "epithelial": 0
+  },
+  "undermining": {
+   "max_extent_mm": 10.0,
+   "max_at_clock": 12,
+   "from_clock": 10,
+   "to_clock": 2,
+   "extent_by_clock_mm": {
+    "1": 6.598,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0,
+    "5": 0.0,
+    "6": 0.0,
+    "7": 0.0,
+    "8": 0.0,
+    "9": 0.0,
+    "10": 0.0,
+    "11": 6.598,
+    "12": 10.0
+   },
+   "undermined_area_mm2": 230.43402255000194,
+   "hidden_volume_mm3": 496.9793628243934,
+   "roof_mm": 2.0,
+   "note": "extent from the margin outward along a line from the wound centre"
+  },
+  "total_volume_mm3": 7041.530157337176,
+  "labels": [
+   {
+    "face": "front",
+    "text": "W4 PRESSURE ST4",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -40.0,
+     13.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "L30.8 W23.7 D15.38",
+    "cap_mm": 4.5,
+    "at": [
+     40.0,
+     0.0,
+     19.3
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 568.2 MM2",
+    "cap_mm": 4.5,
+    "at": [
+     40.0,
+     0.0,
+     13.0
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 6544.6 MM3",
+    "cap_mm": 4.5,
+    "at": [
+     40.0,
+     0.0,
+     6.7
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "UNDERMINED MAX 10.0",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     40.0,
+     19.3
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT GRAN 40",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     40.0,
+     13.0
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 40",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     40.0,
+     6.7
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "NECROTIC 20",
+    "cap_mm": 4.5,
+    "at": [
+     -40.0,
+     0.0,
+     19.3
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.5,
+    "at": [
+     -40.0,
+     0.0,
+     13.0
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE III",
+    "cap_mm": 4.5,
+    "at": [
+     -40.0,
+     0.0,
+     6.7
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W4 PRESSURE ST4",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -35.805,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L30.8 W23.7 D15.38",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -29.295,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 568.2 MM2",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -22.785,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 86.4 MM",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -16.275,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 6544.6 MM3",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -9.765,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "UNDERMINED 10-2",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     -3.255,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "MAX 10.0 MM AT 12",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     3.255,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "HIDDEN 497.0 MM3",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     9.765,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT GRAN 40",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     16.275,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 40",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     22.785,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "NECROTIC 20",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     29.295,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.65,
+    "at": [
+     0.0,
+     35.805,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W4",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     26.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     26.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 157091.49551970235
+ },
+ {
+  "id": "W5",
+  "name": "unstageable_eschar",
+  "wound": "Unstageable Eschar",
+  "skin_type": "I",
+  "periwound": "Erythema",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W5_unstageable_eschar.3mf",
+   "W5_unstageable_eschar.wrl.zip"
+  ],
+  "vertices": 335654,
+  "triangles": 671304,
+  "area_mm2": 628.1713639820728,
+  "perimeter_mm": 91.04249049386794,
+  "length_mm": 31.97885622353594,
+  "width_mm": 26.274198374933277,
+  "volume_mm3": 573.8526328837798,
+  "max_depth_mm": 1.9595184326171875,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.0,
+   "necrotic": 0.8498981281039093,
+   "slough": 0.15008197504138546,
+   "granulation": 1.98968547052082e-05
+  },
+  "tissue_pct": {
+   "granulation": 0,
+   "slough": 15,
+   "necrotic": 85,
+   "epithelial": 0
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W5 UNSTAGEABLE",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     10.185
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L32.0 W26.3 D1.96",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     3.815
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 628.2 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 573.9 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT NECROTIC 85",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 15",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE I",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -33.25,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W5 UNSTAGEABLE",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "UNSTAGEABLE ESCHAR",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L32.0 W26.3 D1.96",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 628.2 MM2",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 91.0 MM",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 573.9 MM3",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT NECROTIC 85",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 15",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE I",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     33.25,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W5",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 87014.67594814663
+ },
+ {
+  "id": "W6",
+  "name": "arterial_ulcer",
+  "wound": "Arterial Ulcer",
+  "skin_type": "VI",
+  "periwound": "Pale Shiny",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W6_arterial_ulcer.3mf",
+   "W6_arterial_ulcer.wrl.zip"
+  ],
+  "vertices": 281317,
+  "triangles": 562630,
+  "area_mm2": 132.19133446986234,
+  "perimeter_mm": 41.04313670944093,
+  "length_mm": 14.23435801540531,
+  "width_mm": 11.97333600257322,
+  "volume_mm3": 394.8864003330988,
+  "max_depth_mm": 4.19367790222168,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.0,
+   "necrotic": 0.3000737700266707,
+   "slough": 0.5002553577846294,
+   "granulation": 0.19967087218869994
+  },
+  "tissue_pct": {
+   "granulation": 20,
+   "slough": 50,
+   "necrotic": 30,
+   "epithelial": 0
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W6 ARTERIAL ULCER",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -40.0,
+     10.15
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L14.2 W12.0 D4.19",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -40.0,
+     3.85
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 132.2 MM2",
+    "cap_mm": 4.5,
+    "at": [
+     40.0,
+     0.0,
+     10.15
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 394.9 MM3",
+    "cap_mm": 4.5,
+    "at": [
+     40.0,
+     0.0,
+     3.85
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT SLOUGH 50",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     40.0,
+     10.15
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "NECROTIC 30 GRAN 20",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     40.0,
+     3.85
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI PALE SHINY",
+    "cap_mm": 4.5,
+    "at": [
+     -40.0,
+     0.0,
+     10.15
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE VI",
+    "cap_mm": 4.5,
+    "at": [
+     -40.0,
+     0.0,
+     3.85
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -28.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W6 ARTERIAL ULCER",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -22.05,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L14.2 W12.0 D4.19",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -15.75,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 132.2 MM2",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -9.45,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 41.0 MM",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -3.15,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 394.9 MM3",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     3.15,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT SLOUGH 50",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     9.45,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "NECROTIC 30 GRAN 20",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     15.75,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI PALE SHINY",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     22.05,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE VI",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     28.35,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W6",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 87320.88350084255
+ },
+ {
+  "id": "W7",
+  "name": "surgical_dehiscence",
+  "wound": "Surgical Dehiscence",
+  "skin_type": "IV",
+  "periwound": "Erythema",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W7_surgical_dehiscence.3mf",
+   "W7_surgical_dehiscence.wrl.zip"
+  ],
+  "vertices": 276723,
+  "triangles": 553442,
+  "area_mm2": 414.9766734336803,
+  "perimeter_mm": 95.29469435303051,
+  "length_mm": 43.97937011979441,
+  "width_mm": 12.415008533484063,
+  "volume_mm3": 1879.3368236328452,
+  "max_depth_mm": 6.787752628326416,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.10059282108129601,
+   "necrotic": 0.0,
+   "slough": 0.14968732302724327,
+   "granulation": 0.7497198558914607
+  },
+  "tissue_pct": {
+   "granulation": 75,
+   "slough": 15,
+   "necrotic": 0,
+   "epithelial": 10
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W7 DEHISCENCE",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     10.185
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "front",
+    "text": "L44.0 W12.4 D6.79",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     3.815
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 415.0 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "VOL 1879.3 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT GRAN 75",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "SLOUGH 15 EPI 10",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE IV",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -31.5,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W7 DEHISCENCE",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -25.2,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SURGICAL DEHISCENCE",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -18.9,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L44.0 W12.4 D6.79",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -12.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 415.0 MM2",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -6.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 95.3 MM",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 1879.3 MM3",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     6.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT GRAN 75",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     12.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SLOUGH 15 EPI 10",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     18.9,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI ERYTHEMA",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     25.2,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE IV",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     31.5,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W7",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 85805.00425799849
+ },
+ {
+  "id": "W8",
+  "name": "healing_wound",
+  "wound": "Healing Wound",
+  "skin_type": "II",
+  "periwound": "Intact",
+  "block_mm": [
+   80.0,
+   80.0,
+   14.0
+  ],
+  "files": [
+   "W8_healing_wound.3mf",
+   "W8_healing_wound.wrl.zip"
+  ],
+  "vertices": 271039,
+  "triangles": 542074,
+  "area_mm2": 408.09629973679216,
+  "perimeter_mm": 74.74857885327143,
+  "length_mm": 25.76355153443383,
+  "width_mm": 20.189797789286956,
+  "volume_mm3": 192.25539966694618,
+  "max_depth_mm": 1.3948698043823242,
+  "skin_plane_z_mm": 14.0,
+  "tissue_share": {
+   "epithelial": 0.5998002891519028,
+   "necrotic": 0.0,
+   "slough": 0.0,
+   "granulation": 0.40019971084809725
+  },
+  "tissue_pct": {
+   "granulation": 40,
+   "slough": 0,
+   "necrotic": 0,
+   "epithelial": 60
+  },
+  "labels": [
+   {
+    "face": "front",
+    "text": "W8 HEALING WOUND",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     -40.0,
+     7.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     -1,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "L25.8 W20.2 D1.39",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "right",
+    "text": "AREA 408.1 MM2",
+    "cap_mm": 4.55,
+    "at": [
+     40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     1,
+     0
+    ],
+    "normal": [
+     1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "VOL 192.3 MM3",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     10.185
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "back",
+    "text": "PCT EPI 60 GRAN 40",
+    "cap_mm": 4.55,
+    "at": [
+     0.0,
+     40.0,
+     3.815
+    ],
+    "xdir": [
+     -1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     1,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "PERI INTACT",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     10.185
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "left",
+    "text": "SKIN TYPE II",
+    "cap_mm": 4.55,
+    "at": [
+     -40.0,
+     0.0,
+     3.815
+    ],
+    "xdir": [
+     0,
+     -1,
+     0
+    ],
+    "normal": [
+     -1,
+     0,
+     0
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "STRATAMETRIC",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "W8 HEALING WOUND",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "L25.8 W20.2 D1.39",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "AREA 408.1 MM2",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERIM 74.7 MM",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     -0.0,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "VOL 192.3 MM3",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     6.65,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PCT EPI 60 GRAN 40",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     13.3,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "PERI INTACT",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     19.95,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "bottom",
+    "text": "SKIN TYPE II",
+    "cap_mm": 4.75,
+    "at": [
+     0.0,
+     26.6,
+     0.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     -1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "W8",
+    "cap_mm": 6.0,
+    "at": [
+     0.0,
+     33.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   },
+   {
+    "face": "top",
+    "text": "50.000",
+    "cap_mm": 4.5,
+    "at": [
+     0.0,
+     -36.0,
+     14.0
+    ],
+    "xdir": [
+     1,
+     0,
+     0
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ]
+   }
+  ],
+  "material_mm3": 87665.76254181434
+ }
+]
