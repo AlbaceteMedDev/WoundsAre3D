@@ -17,6 +17,8 @@ coverage.xml
 .venv/
 venv/
 env/
+# docs/phantoms/preview_design.py's pictures
+docs/phantoms/preview/
 
 # Node
 node_modules/
