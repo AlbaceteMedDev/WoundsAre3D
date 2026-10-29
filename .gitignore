@@ -17,6 +17,8 @@ coverage.xml
 .venv/
 venv/
 env/
+# docs/phantoms/preview_design.py's pictures
+docs/phantoms/preview/
 
 # Node
 node_modules/
@@ -76,6 +78,3 @@ WoundScan 20*-*-* *-*-*/
 
 # asc upload-screenshots output
 bin/screenshots-out/
-
-# Phantom design previews (docs/phantoms/preview_design.py output)
-docs/phantoms/preview/
