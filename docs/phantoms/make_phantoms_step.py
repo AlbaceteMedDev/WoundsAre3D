@@ -45,6 +45,8 @@ def _font_path():
     substitutes another, and the layout and letter spacing assume this face's
     metrics - so find the file or stop."""
     cands = [os.environ.get("PHANTOM_FONT"),
+             # a copy beside this file, as the reproduction kit bundles: installed copies differ
+             os.path.join(HERE, "fonts", "DejaVuSansMono-Bold.ttf"),
              "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
              "/usr/share/fonts/dejavu/DejaVuSansMono-Bold.ttf",
              "/Library/Fonts/DejaVuSansMono-Bold.ttf"]

@@ -32,14 +32,19 @@ import os
 import sys
 import zipfile
 import numpy as np
-import triangle
-from manifold3d import Manifold, Mesh, CrossSection
-import make_phantoms_step as M
+try:                # meshing and lettering; the design itself - outline, depth, tissue
+    import triangle  # map, colours - needs only numpy and scipy (see preview_design.py)
+    from manifold3d import Manifold, Mesh, CrossSection
+    import make_phantoms_step as M
+except (ImportError, OSError) as e:
+    triangle = Manifold = Mesh = CrossSection = M = None
+    MISSING = e
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "lifelike")
-L = M.L                                   # 80 mm block, as the P-series
-ENG = M.ENG                               # 1.0 mm engravings
+L = 80.0                                  # 80 mm block, as the P-series
+ENG = 1.0                                 # 1.0 mm engravings
+assert M is None or (M.L, M.ENG) == (L, ENG)
 PATCH = (-29.0, 29.0, -26.0, 29.0)        # x0, x1, y0, y1: wound and periwound live here,
                                           # clear of the dots, key line and part number
 CENTRE = (0.0, 1.5)
@@ -357,7 +362,6 @@ class Design:
     def surface(self, x, y, on_margin, thresholds):
         """Depth inside the wound, height outside it, tissue and colour, for each
         point. Depth and height are >= 0 except suture pits."""
-        w = self.w
         rho, th, R = self.frame(x, y)
         rho = np.where(on_margin, 1.0, rho)
         ins = rho < 1
@@ -651,7 +655,6 @@ def text_tool(rows, col):
     """Engraving tools for label rows, as one coloured mesh solid. Glyph curves
     are kept within 0.01 mm: finer than any printer resolves, and a quarter of
     the triangles a 0.004 mm tolerance costs."""
-    import cadquery as cq
     parts = []
     for r in rows:
         comp = M.text_on(r["text"], r["cap"], r["at"], r["xdir"], r["normal"])
@@ -857,6 +860,8 @@ def feret(o):
 
 # ------------------------------------------------------------------- build ---
 def build(w):
+    if M is None:
+        raise RuntimeError(f"building a part needs cadquery, manifold3d and triangle: {MISSING}")
     d = Design(w)
     thr = d.fit_thresholds()
     V, T, o, oth, mk, n0 = patch_mesh(w)

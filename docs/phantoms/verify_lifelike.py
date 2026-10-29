@@ -305,6 +305,9 @@ def main(ids):
     for w in LL.WOUNDS:
         if ids and w["id"] not in ids:
             continue
+        if w["id"] not in rows:
+            print(f"{w['id']:4} not built here: skipped")
+            continue
         errs, m = check(w, rows[w["id"]])
         sh = m["colour_share"]
         shares = "/".join(f"{sh[n]:.2f}" for n in ("granulation", "slough", "necrotic", "epithelial", "bone")

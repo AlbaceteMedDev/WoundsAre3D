@@ -137,6 +137,9 @@ that is printed.
 | `truth_lifelike.json` | Per part: wound type, skin type, each periwound change and where it shows, length, width, longest diameter, maximum depth, area, perimeter, volume, tissue shares (of the area seen from above and of the bed's surface) and whole percentages, each tissue's mean printed colour, W4's undermining by clock position, and every engraved label with its position. |
 | `verify_lifelike.py` | Re-opens each 3MF and VRML and checks them from the files alone (below). |
 | `render_lifelike.py`, `renders/lifelike/*.png` | Colour pictures from the 3MF files: the part at the P-series' scale and angle, and the wound from above. |
+| `LIFELIKE-SPEC.md` | The full specification: coordinates, every formula, colours and their sources, labels, files, truth and verification. |
+| `preview_design.py` | The design without meshing, with numpy, scipy and matplotlib only: recomputes and checks everything that does not need the mesh and draws each wound as designed. Runs where the meshing libraries cannot be installed, such as an AI assistant's sandbox. |
+| `make_repro_kit.py`, `check_reproduction.py`, `requirements-lifelike.txt` | The reproduction kit (below); a check that a rebuild matches the printed parts byte for byte; and the exact versions they were built with. |
 
 `parts_sheet.pdf` pages 5–7 show every W part with its picture, sizes in mm and cm, and tissue
 shares beside a swatch of each tissue's mean colour on that part. `ORDER-SHEET.md` says how to
@@ -216,12 +219,12 @@ Abbreviations on the parts: `L W D` length, width and maximum depth, mm; `PERIM`
 
 | Part | Longest diameter (mm), angle from 12–6 | Width across it (mm) | Bed surface (mm²) | Tissue by surface % G / S / N / E |
 |---|---|---|---|---|
-| W1 | 46.8 at +6° | 29.5 | 991.8 | 56 / 25 / 0 / 20 |
+| W1 | 46.8 at +6° | 29.5 | 991.8 | 55 / 25 / 0 / 20 |
 | W2 | 16.1 at +13° | 14.3 | 294.4 | 75 / 16 / 9 / 0 |
 | W3 | 33.0 at -17° | 27.9 | 972.8 | 64 / 27 / 0 / 9 |
 | W4 | 30.8 at +1° | 23.8 | 1538.0 | 36 / 48 / 14 / 0 + bone 2 |
 | W5 | 32.3 at +23° | 25.2 | 667.9 | 0 / 15 / 85 / 0 |
-| W6 | 14.2 at +3° | 12.0 | 235.7 | 20 / 53 / 28 / 0 |
+| W6 | 14.2 at +3° | 12.0 | 235.7 | 19 / 53 / 28 / 0 |
 | W7 | 44.0 at +0° | 12.5 | 744.7 | 66 / 14 / 0 / 20 |
 | W8 | 26.4 at -14° | 20.4 | 417.3 | 41 / 0 / 0 / 59 |
 
@@ -254,11 +257,12 @@ Abbreviations on the parts: `L W D` length, width and maximum depth, mm; `PERIM`
 In the virtual environment above — the W-series uses `make_phantoms_step.py` for its lettering,
 which needs cadquery:
 
-    .venv/bin/pip install manifold3d triangle scipy lib3mf
+    .venv/bin/pip install -r requirements-lifelike.txt   # the versions the files were built with
     .venv/bin/python make_lifelike.py       # about 5 minutes; name parts (W4) to build only those
     .venv/bin/python verify_lifelike.py     # lib3mf is optional: without it that one check is skipped
     .venv/bin/python render_lifelike.py     # headless Linux also needs: apt install libosmesa6
     .venv/bin/python make_parts_sheet.py
+    .venv/bin/python make_repro_kit.py      # build/lifelike_wound_phantoms_kit.zip
 
 `verify_lifelike.py` re-opens each part's files and checks, from them alone: the 3MF is one valid
 closed solid under 950,000 triangles with no zero-area triangle, and lib3mf (the 3MF Consortium's
@@ -270,6 +274,18 @@ every engraved number is the truth; the opening (sliced just under the skin plan
 maximum depth, W4's hidden volume and its pocket's height under the roof, re-measured on the file,
 match the truth; and the wound bed's triangles, classed by nearest tissue colour, give the
 labelled tissue shares within 8 points.
+
+### Reproduction kit
+
+`make_repro_kit.py` packs everything needed to reproduce the set into one zip of about 9 MB,
+`build/lifelike_wound_phantoms_kit.zip` (not committed): `LIFELIKE-SPEC.md`, a data card per wound,
+every design input as JSON with colours in CIELAB, the truth, content hashes of the print files,
+the code with the exact font and pinned versions, the pictures, the parts-sheet pages and the
+order notes — and a guide, with prompts, for an AI assistant that runs Python, such as ChatGPT.
+In such a sandbox, which cannot install the meshing libraries, `preview_design.py` recomputes and
+checks the outline sizes, tissue shares, periwound and undermining extents and draws each wound as
+designed. On a computer the kit rebuilds the print files, and `check_reproduction.py` confirms
+they are byte for byte those of the printed parts: W4 and W6, rebuilt from an unpacked kit, were.
 
 ### Verified results
 
