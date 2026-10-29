@@ -2,15 +2,21 @@
 rather than from the generator's in-memory geometry.
 
 For each part:
-  - the mesh is one valid closed solid, under the triangle limit, in colour;
+  - the mesh is one valid closed solid, under the triangle limit, in colour,
+    with no zero-area triangle; where lib3mf is installed, the 3MF Consortium's
+    own reader opens it in strict mode without a warning;
+  - the VRML holds the same points and triangles, one colour per point, and
+    each point's colour is one its corners carry in the 3MF;
   - every engraved line, sliced 0.5 mm into its face, opens exactly as many
     glyphs as its text has (counted from the font, not from the generator), with
-    at least 0.55 mm of material between neighbouring glyphs;
+    at least 0.55 mm of material between neighbouring glyphs, and every line of
+    the specification is on one face or another;
   - the numbers engraved are the numbers in truth_lifelike.json;
   - the truth itself, re-measured on the loaded mesh: the opening sliced just
     below the skin plane (area, perimeter, length, width), the volume under the
     skin plane inside the margin, the maximum depth, and on W4 the hidden
-    undermining volume;
+    undermining volume and the pocket's height under its roof at 11, 12 and
+    1 o'clock, which a probe needs to reach the stated extent;
   - the printed colours: the wound bed's triangles, classed by nearest tissue
     colour, give tissue shares close to the labelled percentages.
 
@@ -127,7 +133,7 @@ def tissue_from_colour(v, t, rgb, w, H):
     area = 0.5*nrm[sel, 2]
     col = rgb[sel].mean(axis=1)/255.0
     use = {"granulation": "granulation_pale" if w.get("pale") else "granulation",
-           "slough": "slough", "necrotic": "necrotic",
+           "slough": "slough", "necrotic": "necrotic", "bone": "bone",
            "epithelial": "epithelial_dark" if LL.luminance(LL.SKIN[w["skin"]]) < 0.47 else "epithelial"}
     # only the tissues this part has: on dark skin, new epithelium and the pale
     # granulation of an arterial ulcer are close in colour, as they are in life
@@ -146,6 +152,78 @@ def tissue_from_colour(v, t, rgb, w, H):
     tot = sum(out.values())
     return {n: out[n]/tot for n in out}
 
+def check_wrl(path, v, t, rgb):
+    """The VRML against the 3MF: same points and triangles, one colour per
+    point and no colorIndex, each point's colour one its corners carry."""
+    import zipfile
+    with zipfile.ZipFile(path) as z:
+        s = z.read(z.namelist()[0]).decode()
+    errs = []
+    if not s.startswith("#VRML V2.0 utf8") or "colorPerVertex TRUE" not in s or "colorIndex" in s:
+        errs.append("VRML header, colorPerVertex or colorIndex wrong")
+    block = lambda key: s[s.index(key):].split("[", 1)[1].split("]", 1)[0]
+    pts = np.array(block("coord Coordinate").replace(",", " ").split(), float).reshape(-1, 3)
+    idx = np.array(block("coordIndex").replace(",", " ").split(), np.int64).reshape(-1, 4)
+    col = np.array(block("color Color").replace(",", " ").split(), float).reshape(-1, 3)
+    if len(col) != len(pts) or (idx[:, 3] != -1).any():
+        return errs + [f"VRML: {len(pts)} points, {len(col)} colours"]
+    if len(pts) != len(v) or np.abs(pts - v).max() > 1e-5 or not np.array_equal(idx[:, :3], t):
+        return errs + ["VRML geometry differs from the 3MF"]
+    c8 = np.round(col*255).astype(np.int64)
+    pkey = c8[:, 0]*65536 + c8[:, 1]*256 + c8[:, 2]
+    ckey = (rgb[..., 0].astype(np.int64)*65536 + rgb[..., 1].astype(np.int64)*256 + rgb[..., 2]).ravel()
+    have = np.unique(t.ravel()*(1 << 24) + ckey)
+    if not np.isin(np.arange(len(pts))*(1 << 24) + pkey, have).all():
+        errs.append("a VRML point has a colour none of its corners carries")
+    return errs
+
+def vertical_gaps(v, t, x, y):
+    """Air gaps (top, bottom) under the top surface along the vertical line at
+    (x, y), from where the line crosses the mesh."""
+    p = v[t]
+    lo, hi = p[:, :, :2].min(1), p[:, :, :2].max(1)
+    sel = (lo[:, 0] <= x) & (hi[:, 0] >= x) & (lo[:, 1] <= y) & (hi[:, 1] >= y)
+    zs = []
+    for a, b, c in p[sel]:
+        d = (b[1] - c[1])*(a[0] - c[0]) + (c[0] - b[0])*(a[1] - c[1])
+        if abs(d) < 1e-15:
+            continue
+        l1 = ((b[1] - c[1])*(x - c[0]) + (c[0] - b[0])*(y - c[1]))/d
+        l2 = ((c[1] - a[1])*(x - c[0]) + (a[0] - c[0])*(y - c[1]))/d
+        if min(l1, l2, 1 - l1 - l2) >= -1e-12:
+            zs.append(l1*a[2] + l2*b[2] + (1 - l1 - l2)*c[2])
+    zs = sorted(set(np.round(zs, 6)), reverse=True)
+    return [(zs[i], zs[i + 1]) for i in range(1, len(zs) - 1, 2)]
+
+def check_pocket(w, row, v, t):
+    """W4: at 11, 12 and 1 o'clock, half the pocket's height inside its
+    rounded end, the gap under the roof is the stated height, with its ceiling
+    the stated roof below the skin; just past the stated extent there is none."""
+    errs, u, H = [], row["undermining"], row["skin_plane_z_mm"]
+    for hr, hgt in u["pocket_height_by_clock_mm"].items():
+        th = math.radians(90 - 30*int(hr))
+        E = u["extent_by_clock_mm"][hr]
+        R = float(LL.r_of(w, np.array([th]))[0])
+        for s_, want in ((E - hgt/2, hgt), (E + 0.1, 0.0)):
+            x, y = LL.CENTRE[0] + (R + s_)*math.cos(th), LL.CENTRE[1] + (R + s_)*math.sin(th)
+            g = vertical_gaps(v, t, x, y)
+            got = g[0][0] - g[0][1] if g else 0.0
+            if abs(got - want) > 0.05 or (want and abs(g[0][0] - (H - u["roof_mm"])) > 0.05):
+                errs.append(f"pocket at {hr} o'clock, {s_:.2f} mm out: gap {got:.3f} mm, expected {want:.3f}")
+    return errs
+
+def check_lib3mf(path):
+    try:
+        import lib3mf
+    except ImportError:
+        return None
+    w = lib3mf.get_wrapper()
+    model = w.CreateModel()
+    reader = model.QueryReader("3mf")
+    reader.SetStrictModeActive(True)
+    reader.ReadFromFile(path)
+    return reader.GetWarningCount()
+
 def check(w, row):
     errs = []
     path = os.path.join(LL.OUT, row["files"][0])
@@ -155,6 +233,13 @@ def check(w, row):
         errs.append("not one valid solid")
     if len(t) > LL.MAX_TRIANGLES:
         errs.append(f"{len(t):,} triangles")
+    p = v[t]
+    if (np.linalg.norm(np.cross(p[:, 1] - p[:, 0], p[:, 2] - p[:, 0]), axis=1) < 2e-12).any():
+        errs.append("zero-area triangles")
+    warn = check_lib3mf(path)
+    if warn:
+        errs.append(f"lib3mf: {warn} warnings")
+    errs += check_wrl(os.path.join(LL.OUT, row["files"][1]), v, t, rgb)
     ncol = len(np.unique(rgb.reshape(-1, 3), axis=0))
     # labels
     worst_land, bad = math.inf, []
@@ -170,6 +255,8 @@ def check(w, row):
     errs += bad
     if worst_land < LAND:
         errs.append(f"glyphs only {worst_land:.3f} mm apart")
+    on = {lab["text"] for lab in row["labels"]}
+    errs += [f"no face carries {s!r}" for s in LL.spec_lines(w, row) if s not in on]
     # truth, re-measured on the file
     ps = polys(part.slice(H - 0.003))
     holes = [(p, -a) for p, a in ps if a < 0]
@@ -200,6 +287,7 @@ def check(w, row):
         u = row["undermining"]
         if abs(hidden - u["hidden_volume_mm3"]) > TOL_VOL*u["hidden_volume_mm3"] + 0.05:
             errs.append(f"hidden volume: file {hidden:.2f} vs truth {u['hidden_volume_mm3']:.2f}")
+        errs += check_pocket(w, row, v, t)
     # colour
     sh = tissue_from_colour(v, t, rgb, w, H)
     for n in LL.ORDER:
@@ -213,15 +301,16 @@ def main(ids):
     rows = {r["id"]: r for r in json.load(open(os.path.join(HERE, "truth_lifelike.json")))}
     ok = True
     print(f"{'part':4} {'tris':>9} {'cols':>6} {'labels':>6} {'land':>6} {'area':>9} {'vol':>9} "
-          f"{'depth':>6}  colour shares (gran/slough/nec/epi)  result")
+          f"{'depth':>6}  colour shares (gran/slough/nec/epi[/bone])  result")
     for w in LL.WOUNDS:
         if ids and w["id"] not in ids:
             continue
         errs, m = check(w, rows[w["id"]])
         sh = m["colour_share"]
+        shares = "/".join(f"{sh[n]:.2f}" for n in ("granulation", "slough", "necrotic", "epithelial", "bone")
+                          if n != "bone" or w["tissue"].get("bone"))
         print(f"{w['id']:4} {m['triangles']:>9,} {m['colours']:>6} {m['labels']:>6} {m['land']:>6.3f} "
-              f"{m['area']:>9.2f} {m['volume']:>9.2f} {m['depth']:>6.2f}  "
-              f"{sh['granulation']:.2f}/{sh['slough']:.2f}/{sh['necrotic']:.2f}/{sh['epithelial']:.2f}"
+              f"{m['area']:>9.2f} {m['volume']:>9.2f} {m['depth']:>6.2f}  {shares:<24}"
               f"  {'OK' if not errs else 'FAIL'}")
         for e in errs:
             print("     ", e)

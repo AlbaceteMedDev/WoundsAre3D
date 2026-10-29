@@ -445,6 +445,10 @@ def life_pictures(ids):
     return {i: im.crop(box) for i, im in iso.items()}, top
 
 def swatch(name, r, LL):
+    """The tissue's mean colour on this part as printed, or its reference
+    colour where the part has none of it."""
+    if name in r.get("tissue_colour", {}):
+        return colors.HexColor(r["tissue_colour"][name])
     key = name
     if name == "granulation" and LL.WOUNDS[int(r["id"][1:]) - 1].get("pale"):
         key = "granulation_pale"
@@ -454,13 +458,14 @@ def swatch(name, r, LL):
     return colors.HexColor(ref[len(ref)//2])
 
 def life_vals(r):
-    vals = [("Length, 12–6 o’clock", f"{r['length_mm']:.1f}", 1),
-            ("Width, 3–9 o’clock", f"{r['width_mm']:.1f}", 1),
+    vals = [("Length, 12–6", f"{r['length_mm']:.1f}", 1),
+            ("Width, 3–9", f"{r['width_mm']:.1f}", 1),
             ("Max depth", f"{r['max_depth_mm']:.2f}", 1), ("Area", f"{r['area_mm2']:.1f}", 2),
             ("Perimeter", f"{r['perimeter_mm']:.1f}", 1), ("Volume", f"{r['volume_mm3']:.1f}", 3)]
     if "undermining" in r:
         u = r["undermining"]
-        vals += [(f"Undermining, max at {u['max_at_clock']}", f"{u['max_extent_mm']:.1f}", 1),
+        vals += [(f"Undermining at {u['max_at_clock']}", f"{u['max_extent_mm']:.1f}", 1),
+                 ("Pocket height", f"{max(u['pocket_height_by_clock_mm'].values()):.1f}", 1),
                  ("Undermined area", f"{u['undermined_area_mm2']:.1f}", 2),
                  ("Hidden volume", f"{u['hidden_volume_mm3']:.1f}", 3)]
     return vals
@@ -472,23 +477,26 @@ def life_card(r, iso, top, LL, iw=2.1*inch):
     on = {l["text"] for l in r["labels"]}
     assert any(f"AREA {r['area_mm2']:.1f} MM2" == t for t in on), r["id"]
     assert any(f"VOL {r['volume_mm3']:.1f} MM3" == t for t in on), r["id"]
-    text = [P(f"<b>{r['id']}</b>  {r['wound']}", head), P(" · ".join(r["files"]), small), Spacer(1, 3),
+    text = [P(f"<b>{r['id']}</b>  {r['wound']}", head),
+            P(f"{r['files'][0][:-4]} .3mf · .wrl.zip", small), Spacer(1, 3),
             P(f"Skin type {r['skin_type']}  ·  periwound: {r['periwound'].lower()}  ·  "
               f"block 80\u00a0×\u00a080\u00a0×\u00a0{r['block_mm'][2]:g}\u00a0mm", body), Spacer(1, 3)]
     mini = Table([[P(lab, body), P(f"{v} mm{POW[k]}", body), P(grey(f"{cm(v, k)} cm{POW[k]}"), body)]
-                  for lab, v, k in life_vals(r)], colWidths=[tw - 2*0.8*inch, 0.8*inch, 0.8*inch])
+                  for lab, v, k in life_vals(r)], colWidths=[tw - 2*0.74*inch, 0.74*inch, 0.74*inch])
     mini.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                              ("RIGHTPADDING", (0, 0), (-1, -1), 3), ("TOPPADDING", (0, 0), (-1, -1), 1),
-                              ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+                              ("RIGHTPADDING", (0, 0), (-1, -1), 3), ("TOPPADDING", (0, 0), (-1, -1), 0.6),
+                              ("BOTTOMPADDING", (0, 0), (-1, -1), 0.6),
                               ("LINEABOVE", (0, 0), (-1, 0), 0.4, RULE),
                               ("LINEBELOW", (0, 0), (-1, -1), 0.25, RULE)]))
     trows, tsty = [], [("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LEFTPADDING", (0, 0), (-1, -1), 0),
                        ("TOPPADDING", (0, 0), (-1, -1), 1), ("BOTTOMPADDING", (0, 0), (-1, -1), 1)]
-    for i, n in enumerate(TISSUES):
+    names = TISSUES + (("bone",) if r["tissue_pct"].get("bone") else ())
+    for i, n in enumerate(names):
         pct = r["tissue_pct"][n]
-        trows.append(["", P(n.capitalize(), body), P(f"<b>{pct} %</b>" if pct else grey("0 %"), body)])
+        label = "Exposed bone" if n == "bone" else n.capitalize()
+        trows.append(["", P(label, body), P(f"<b>{pct} %</b>" if pct else grey("0 %"), body)])
         tsty.append(("BACKGROUND", (0, i), (0, i), swatch(n, r, LL)))
-    tt = Table(trows, colWidths=[0.22*inch, 1.0*inch, 0.6*inch], rowHeights=[0.17*inch]*4)
+    tt = Table(trows, colWidths=[0.22*inch, 1.0*inch, 0.6*inch], rowHeights=[0.155*inch]*len(names))
     tt.setStyle(TableStyle(tsty + [("LEFTPADDING", (1, 0), (-1, -1), 5)]))
     text += [mini, Spacer(1, 4), P("Tissue, share of the wound area", small), Spacer(1, 1), tt]
     pics = [jpeg(iso, iw), Spacer(1, 2), jpeg(top.resize((600, 600)), 1.25*inch)]
@@ -502,7 +510,7 @@ def life_table(rows, LL):
     head = [P(h, HDR) for h in ("Part", "Files (.3mf, .wrl.zip)", "Wound", "Skin", "Periwound",
                                 "L × W × D<br/>mm<br/>" + grey("cm"), "Area<br/>mm²<br/>" + grey("cm²"),
                                 "Perimeter<br/>mm<br/>" + grey("cm"), "Volume<br/>mm³<br/>" + grey("cm³ = mL"),
-                                "Gran<br/>%", "Slough<br/>%", "Necr<br/>%", "Epi<br/>%")]
+                                "Tissue %<br/>G / S / N / E")]
     body = [head]
     for r in rows:
         ln, wd, dp = f"{r['length_mm']:.1f}", f"{r['width_mm']:.1f}", f"{r['max_depth_mm']:.2f}"
@@ -512,15 +520,17 @@ def life_table(rows, LL):
         und = ""
         if "undermining" in r:
             u = r["undermining"]
-            note = (f"undermined {u['from_clock']}–{u['to_clock']} o’clock, max {u['max_extent_mm']:.1f} mm; "
+            note = (f"undermined {u['from_clock']}–{u['to_clock']} o’clock, max {u['max_extent_mm']:.1f} mm "
+                    f"in a {max(u['pocket_height_by_clock_mm'].values()):.1f} mm pocket; "
                     f"hidden {u['hidden_volume_mm3']:.1f} mm³")
             und = f"<br/>{grey(note)}"
         body.append([P(r["id"], CELLB), P(r["files"][0].replace(".3mf", "")), P(r["wound"] + und),
                      P(r["skin_type"]), P(r["periwound"].capitalize()),
                      P(f"{lwd}<br/>{grey(lwd_cm)}"), P(f"{a}<br/>{grey(cm(a, 2))}"),
-                     P(f"{p_}<br/>{grey(cm(p_, 1))}"), P(f"{v}<br/>{grey(cm(v, 3))}")]
-                    + [P(str(r["tissue_pct"][n])) for n in TISSUES])
-    w = [0.44, 1.62, 1.26, 0.42, 1.04, 1.32, 0.64, 0.76, 0.80, 0.40, 0.58, 0.42, 0.36]
+                     P(f"{p_}<br/>{grey(cm(p_, 1))}"), P(f"{v}<br/>{grey(cm(v, 3))}"),
+                     P(" / ".join(str(r["tissue_pct"][n]) for n in TISSUES)
+                       + (f"<br/>+ bone {r['tissue_pct']['bone']}" if r["tissue_pct"].get("bone") else ""))])
+    w = [0.44, 1.62, 1.26, 0.42, 1.34, 1.32, 0.64, 0.76, 0.80, 1.36]
     return grid(body, [x*inch for x in w], pad=2.2)
 
 def lifelike_pages(s):
@@ -536,9 +546,10 @@ def lifelike_pages(s):
         s.append(P("Lifelike colour wounds: match the part to its picture" + (", continued" if k else ""), TITLE))
         s.append(Spacer(1, 3))
         if not k:
-            s.append(P("Full-colour prints of real-looking wounds on six skin tones. Every size is measured "
-                       "on the print file and is the one engraved on the part; tissue shares are percent of "
-                       "the wound area. Depth is from the surrounding skin.", SUB))
+            s.append(P("Every size is measured on the print file and engraved on the part. Length runs 12 to 6 "
+                       "o’clock (12 is the part-number edge), width 3 to 9, depth from the skin. Tissue shares "
+                       "are of the area seen from above; each swatch is that tissue's mean colour on the part.",
+                       SUB))
         s.append(Spacer(1, 5))
         t = Table([half[i:i + 2] for i in range(0, len(half), 2)], colWidths=[5.0*inch]*2)
         t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -551,26 +562,36 @@ def lifelike_pages(s):
     s.append(Spacer(1, 6))
     s.append(life_table(rows, LL))
     s.append(Spacer(1, 7))
-    s.append(P("<b>How the sizes are defined.</b> Length runs 12 to 6 o’clock (12 is the edge with the part "
-               "number) and width 3 to 9; every wound's long axis runs 12–6. Area and perimeter are of the "
-               "wound margin, in plan. Depth and volume are measured from the plane of the surrounding skin - "
-               "the block's top - not from a callus or rolled edge above it; volume is the space between that "
-               "plane and the wound bed inside the margin. W4's undermining is measured from the margin outward "
-               "along a line from the wound centre; its hidden volume is the pocket beyond the margin, under "
-               "a 2.0 mm roof. All of it is measured on the mesh in the print file, and verify_lifelike.py "
-               "re-measures it from that file.", NOTE))
+    um = next(r for r in rows if "undermining" in r)
+    u = um["undermining"]
+    ph = max(u["pocket_height_by_clock_mm"].values())
+    s.append(P("<b>How the sizes are defined.</b> Length is the wound's extent from 12 to 6 o’clock (12 is "
+               "the edge with the part number) and width its extent from 3 to 9, the clock method; each wound "
+               "lies roughly along 12–6, and truth_lifelike.json also gives its longest diameter and the width "
+               "across it. Area and perimeter are of the wound margin, in plan. Depth and volume are measured "
+               "from the plane of the surrounding skin - the block's top - not from a callus or rolled edge "
+               "above it; volume is the space between that plane and the wound bed inside the margin. Tissue "
+               "shares are of the area seen from straight above; shares of the bed's surface, where steep walls "
+               f"count for more, are in truth_lifelike.json. {um['id']}'s undermining is measured from the margin "
+               f"outward along a line from the wound centre; its pocket is {ph:.1f} mm high under a "
+               f"{u['roof_mm']:.1f} mm roof with a rounded end, so a probe with a ball tip up to {ph:g} mm "
+               f"across reaches the full extent, and its hidden volume is the pocket beyond the margin. All "
+               f"of it is measured on the mesh in the print file, and verify_lifelike.py re-measures it from "
+               f"that file.", NOTE))
     s.append(Spacer(1, 3))
     s.append(P("<b>Colours</b> are sRGB targets. Skin tones are medians of measured skin reflectance by "
-               "skin type; tissue colours come from tissue-labelled wound photographs and clinical "
-               "descriptions, and are mottled across each tissue's range as real tissue is. Redness on the "
-               "darker skin types is a deepening or violaceous tone, not red. Printers reproduce these only "
-               "approximately: check a print against this sheet in daylight.", NOTE))
+               "skin type. Granulation and new epithelium follow tissue-labelled ulcer photographs; slough and "
+               "eschar follow the clinical descriptions. Each tissue is mottled across its range as real "
+               "tissue is. Redness on the darker skin types is a deepening or violaceous tone, not red, and "
+               "pallor is ashen. Printers reproduce these only approximately: check a print against this sheet "
+               "in daylight.", NOTE))
     s.append(Spacer(1, 3))
     s.append(P("<b>Printing.</b> Full colour, matte, solid (no vents). Best: Stratasys PolyJet full colour "
-               "(J750, J850, J55) with the Matte finish, from the .wrl.zip, which carries the colours per "
-               "vertex; Xometry quotes PolyJet from the .3mf. HP Multi Jet Fusion colour (Shapeways) also "
-               "takes the .wrl.zip, but prints duller, darker colours. Every file is under one million "
-               "triangles. Dimensions are millimetres.", NOTE))
+               "(J750, J850, J55) with the Matte finish, from the .wrl.zip, which gives every vertex its own "
+               "colour; Xometry quotes PolyJet from the .3mf. HP Multi Jet Fusion colour (Shapeways) also "
+               "takes the .wrl.zip, but prints duller, darker colours. Dimensions are millimetres: a VRML "
+               "carries no units, so choose millimetres when the software asks. Every file is under one "
+               "million triangles.", NOTE))
 
 def main():
     rows = {r["id"]: r for r in json.load(open(os.path.join(HERE, "truth_step.json")))}

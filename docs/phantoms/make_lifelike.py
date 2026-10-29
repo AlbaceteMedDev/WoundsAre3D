@@ -18,9 +18,10 @@ part is measured on the finished mesh - the geometry that is printed - except
 the outline's area, perimeter and extents, which the mesh follows exactly, and
 the tissue percentages, which come from the tissue map on a 0.05 mm grid.
 
-Writes lifelike/<id>_<name>.3mf (colour, for HP Multi Jet Fusion colour and
-Stratasys PolyJet full colour) and .wrl.zip (VRML with vertex colour, for
-Mimaki and older pipelines), truth_lifelike.json and renders/lifelike/<id>.png.
+Writes lifelike/<id>_<name>.3mf (colour per triangle corner, for Xometry and
+HP Multi Jet Fusion colour), lifelike/<id>_<name>.wrl.zip (VRML with one colour
+per vertex, for Stratasys PolyJet through GrabCAD Print and for Shapeways) and
+truth_lifelike.json. render_lifelike.py draws the pictures.
 
     python make_lifelike.py            # all eight
     python make_lifelike.py W4         # just these
@@ -42,7 +43,9 @@ ENG = M.ENG                               # 1.0 mm engravings
 PATCH = (-29.0, 29.0, -26.0, 29.0)        # x0, x1, y0, y1: wound and periwound live here,
                                           # clear of the dots, key line and part number
 CENTRE = (0.0, 1.5)
+FRAME = L/2 + 1.0                         # the top's surface mesh runs 1 mm past the block's edges
 AREA_WOUND, AREA_PERI = 0.011, 0.030      # mm^2 per triangle: edges about 0.16 / 0.26 mm
+AREA_FRAME = 2.0                          # the plain top outside the patch
 MAX_TRIANGLES = 950_000                   # Shapeways' colour upload limit is 1 million
 ROOF = 2.0                                # undermining roof, skin to pocket ceiling
 
@@ -51,42 +54,54 @@ def rgb(h):
     h = h.lstrip("#")
     return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], float)/255.0
 
-# Skin: medians of measured reflectance spectra (Oulu/Lippman 2000) binned by
-# individual typology angle, which maps onto Fitzpatrick type (Lipnick 2026):
-# very light, light, intermediate, tan, brown, dark. Measured skin is darker
-# and redder than swatch scales such as Monk's, whose prints read too bright.
+# Skin: medians of 697 reflectance spectra measured on faces (the University of
+# Oulu Physics-Based Face Database, Marszalec et al., J Electron Imaging 2000,
+# and RIT's Lippmann2000 database) binned by individual typology angle, matched
+# to Fitzpatrick type by the median ITA of each perceived type in 789 adults
+# (Lipnick et al., Br J Dermatol 2026;194:135, doi:10.1093/bjd/ljaf397): very
+# light, light, intermediate, tan, brown, dark. Measured skin is darker and
+# redder than swatch scales such as Monk's, whose prints read too bright.
 SKIN = {
     "I": rgb("#C6A494"), "II": rgb("#BF9785"), "III": rgb("#B88E79"),
     "IV": rgb("#A97D67"), "V": rgb("#8D6750"), "VI": rgb("#6E4F40"),
 }
-# per skin type: erythema, haemosiderin, maceration, callus - redness deepens
-# and turns violaceous on darker skin rather than reading red
+# per skin type: erythema, haemosiderin, maceration, callus, pallor - redness
+# deepens and turns violaceous on darker skin rather than reading red; pallor
+# is ashen, the skin lighter by 13.5 L* with its a* and b* about halved
 PERI_COL = {
-    "I":   dict(ery="#B07168", hae="#96674F", mac="#D3C4B6", cal="#D5B693"),
-    "II":  dict(ery="#B07168", hae="#96674F", mac="#D3C4B6", cal="#D5B693"),
-    "III": dict(ery="#996453", hae="#845945", mac="#C9B9AB", cal="#C9AA88"),
-    "IV":  dict(ery="#996453", hae="#845945", mac="#BFAFA2", cal="#BDA07F"),
-    "V":   dict(ery="#7D544B", hae="#5B4136", mac="#A0948A", cal="#9A826D"),
-    "VI":  dict(ery="#5E3F3B", hae="#5B4136", mac="#A0948A", cal="#9A826D"),
+    "I":   dict(ery="#B07168", hae="#96674F", mac="#D3C4B6", cal="#D5B693", pal="#DECDC4"),
+    "II":  dict(ery="#B07168", hae="#96674F", mac="#D3C4B6", cal="#D5B693", pal="#D4C0B6"),
+    "III": dict(ery="#996453", hae="#845945", mac="#C9B9AB", cal="#C9AA88", pal="#CCB7AB"),
+    "IV":  dict(ery="#996453", hae="#845945", mac="#BFAFA2", cal="#BDA07F", pal="#BCA699"),
+    "V":   dict(ery="#7D544B", hae="#5B4136", mac="#A0948A", cal="#9A826D", pal="#A28E81"),
+    "VI":  dict(ery="#5E3F3B", hae="#5B4136", mac="#A0948A", cal="#9A826D", pal="#84746B"),
 }
 BODY = rgb("#E3E1DD")                     # sides and underside: light neutral
 INK_DARK, INK_LIGHT = rgb("#1C1C1C"), rgb("#F4F4F2")
 
-# Wound bed: medians and spread from tissue-labelled wound photographs (LUTSeg,
-# CC BY 4.0) and clinical descriptions (BWAT, NPUAP, Wounds UK). Each tissue has
-# a range it is mottled across; verify_lifelike.py classes the printed colours
-# against these same references.
+# Wound bed. Granulation is within about 7 dE2000 of the median granulation in
+# LUTSeg's tissue-labelled ulcer photographs (CC BY 4.0), and epithelium has
+# LUTSeg's pink hue (a* 20-24) but lighter, more so on light skin. LUTSeg's
+# photographs are of leprosy-related ulcers on uncalibrated smartphones, so
+# slough and eschar follow the clinical descriptions instead (BWAT, NPIAP, BMJ
+# ABC of Wound Healing): tan-yellow-cream slough, with LUTSeg's pinkish tan only
+# where thin fibrin lies over red granulation, and dark brown-black eschar.
+# Exposed bone (W4) is ivory to white. Each tissue has a range it is mottled
+# across; verify_lifelike.py classes the printed colours against these same
+# references.
 TISSUE_REF = {
     "granulation": ["#933E41", "#B8484A", "#CB6563"],          # beefy red
     "granulation_pale": ["#A86E68", "#C6857E", "#D29A92"],     # poorly perfused
     "slough": ["#B68E68", "#D1AB6B", "#DCCAAE", "#97926D"],    # tan, yellow, cream, grey
     "necrotic": ["#2E2420", "#4A3A31", "#664333"],             # dark brown-black to brown
-    "epithelial": ["#C9958C", "#DDB5AC"],                      # pink, pearly
-    "epithelial_dark": ["#9E6C64", "#B98A82"],                 # new skin on dark skin
+    "epithelial": ["#D0908E", "#DEA9A6"],                      # pink, pearly
+    "epithelial_dark": ["#B88380", "#C49D9A"],                 # new skin on dark skin
+    "bone": ["#E9E2D2", "#F2EDE3"],                            # exposed bone: ivory, white
 }
 TISSUE = {k: (rgb(v[0]), rgb(v[-1])) for k, v in TISSUE_REF.items()}
-ORDER = ["epithelial", "necrotic", "slough", "granulation"]     # assignment priority
-SHORT = {"granulation": "GRAN", "slough": "SLOUGH", "necrotic": "NECROTIC", "epithelial": "EPI"}
+ORDER = ["bone", "epithelial", "necrotic", "slough", "granulation"]     # assignment priority
+SHORT = {"granulation": "GRAN", "slough": "SLOUGH", "necrotic": "NECROTIC", "epithelial": "EPI",
+         "bone": "BONE"}
 
 def luminance(c):
     return float(0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2])
@@ -166,50 +181,59 @@ def harmonics(seed, amp, mmax=14, rough=0.0):
     return hs
 
 # a and b are the semi-axes across (3-9 o'clock) and along (12-6 o'clock); every
-# wound's long axis runs 12-6, so its labelled length is also its longer side.
+# wound lies roughly along 12-6, so its labelled length is also its longer side.
 # Angles in peri and undermine are degrees anticlockwise from 3 o'clock.
 WOUNDS = [
     dict(id="W1", name="venous_leg_ulcer", title="VENOUS ULCER", long="VENOUS LEG ULCER",
          a=14.5, b=20.5, rot=-6, harm=harmonics(11, 0.16, 14, 0.010), D=2.4, k=2.2,
          tissue=dict(granulation=0.55, slough=0.25, epithelial=0.20, necrotic=0.0), islands=True,
          peri=dict(erythema=4.0, haemosiderin=6.5, maceration=(230, 300)),
-         peri_label="HAEMOSIDERIN", skin="II", seed=101),
+         peri_names=["HAEMOSIDERIN", "ERYTHEMA", "MACERATION"],
+         skin="II", seed=101),
     dict(id="W2", name="diabetic_foot_ulcer", title="DIABETIC FOOT", long="DIABETIC FOOT ULCER",
          a=7.0, b=8.0, rot=0, harm=harmonics(12, 0.05, 8, 0.004), D=4.5, k=10,
          tissue=dict(granulation=0.70, slough=0.20, necrotic=0.10, epithelial=0.0),
          peri=dict(callus=(5.0, 1.2), maceration_ring=1.2),
-         peri_label="CALLUS", skin="IV", seed=202),
+         peri_names=["CALLUS", "MACERATION", "BLOOD IN CALLUS"],
+         skin="IV", seed=202),
     dict(id="W3", name="pressure_injury_stage3", title="PRESSURE ST3", long="PRESSURE INJURY S3",
          a=13.0, b=17.0, rot=10, harm=harmonics(13, 0.09, 12, 0.006), D=7.0, k=5,
          tissue=dict(granulation=0.65, slough=0.30, epithelial=0.05, necrotic=0.0),
          peri=dict(erythema=6.0, epibole=(200, 330, 0.8)),
-         peri_label="ROLLED EDGE", skin="V", seed=303),
+         peri_names=["ROLLED EDGE", "ERYTHEMA"],
+         skin="V", seed=303),
     dict(id="W4", name="pressure_injury_stage4", title="PRESSURE ST4", long="PRESSURE INJURY S4",
          a=12.0, b=15.0, rot=-5, harm=harmonics(14, 0.07, 10, 0.004), D=12.0, k=30,
-         tissue=dict(granulation=0.40, slough=0.40, necrotic=0.20, epithelial=0.0),
+         tissue=dict(granulation=0.38, slough=0.40, necrotic=0.19, bone=0.03, epithelial=0.0),
+         bone=dict(at=(-2.0, -3.0), axes=(3.4, 2.6), rot=20.0),       # exposed bone in the base
          peri=dict(erythema=5.0, maceration=(200, 300)),
-         undermine=dict(start=30.0, end=150.0, extent=10.0, thick=4.0),
-         peri_label="ERYTHEMA", skin="III", seed=404),
+         undermine=dict(start=30.0, end=150.0, extent=10.0, height=5.0),
+         peri_names=["ERYTHEMA", "MACERATION"],
+         skin="III", seed=404),
     dict(id="W5", name="unstageable_eschar", title="UNSTAGEABLE", long="UNSTAGEABLE ESCHAR",
          a=12.5, b=16.0, rot=-5, harm=harmonics(15, 0.08, 10, 0.006), D=1.8, k=4,
          tissue=dict(necrotic=0.85, slough=0.15, granulation=0.0, epithelial=0.0),
          peri=dict(erythema=4.0),
-         peri_label="ERYTHEMA", skin="I", seed=505),
+         peri_names=["ERYTHEMA"],
+         skin="I", seed=505),
     dict(id="W6", name="arterial_ulcer", title="ARTERIAL ULCER", long="ARTERIAL ULCER",
          a=6.0, b=7.0, rot=0, harm=harmonics(16, 0.03, 6, 0.002), D=4.0, k=14,
          tissue=dict(slough=0.50, necrotic=0.30, granulation=0.20, epithelial=0.0),
          pale=True, peri=dict(pallor=6.0),
-         peri_label="PALE SHINY", skin="VI", seed=606),
+         peri_names=["PALE SHINY"],
+         skin="VI", seed=606),
     dict(id="W7", name="surgical_dehiscence", title="DEHISCENCE", long="SURGICAL DEHISCENCE",
          a=6.0, b=22.5, rot=0, harm=harmonics(17, 0.05, 12, 0.004), D=6.0, k=6,
          tissue=dict(granulation=0.75, slough=0.15, epithelial=0.10, necrotic=0.0),
          peri=dict(erythema=3.0, sutures=True),
-         peri_label="ERYTHEMA", skin="IV", seed=707),
+         peri_names=["ERYTHEMA", "SUTURE MARKS"],
+         skin="IV", seed=707),
     dict(id="W8", name="healing_wound", title="HEALING WOUND", long="HEALING WOUND",
          a=10.0, b=13.0, rot=15, harm=harmonics(18, 0.10, 12, 0.008), D=1.0, k=1.6,
          tissue=dict(epithelial=0.60, granulation=0.40, slough=0.0, necrotic=0.0), islands=True,
          peri=dict(),
-         peri_label="INTACT", skin="II", seed=808),
+         peri_names=["INTACT"],
+         skin="II", seed=808),
 ]
 
 # ------------------------------------------------------------------ outline ---
@@ -283,7 +307,18 @@ class Design:
         nec = 0.8*self.f(3, x, y, 9.0) + 0.4*self.f(5, x, y, 4.0) + 0.6*(1 - rho)
         slo = (self.f(4, x, y, 8.0, stretch=1.4, angle=self.s % 180) + 0.35*self.f(6, x, y, 3.0)
                + 0.5*side + 0.25*self.f(3, x, y, 9.0))
-        return dict(epithelial=epi, necrotic=nec, slough=slo)
+        return dict(bone=self.bone(x, y), epithelial=epi, necrotic=nec, slough=slo)
+
+    def bone(self, x, y):
+        """Exposed bone in the base of a stage 4 injury: highest inside a ragged
+        ellipse, so the share fitted to it takes a compact patch."""
+        b = self.w.get("bone")
+        if not b:
+            return np.zeros_like(x)
+        c, s_ = math.cos(math.radians(b["rot"])), math.sin(math.radians(b["rot"]))
+        dx, dy = x - CENTRE[0] - b["at"][0], y - CENTRE[1] - b["at"][1]
+        u, v = (dx*c + dy*s_)/b["axes"][0], (-dx*s_ + dy*c)/b["axes"][1]
+        return 1 - np.hypot(u, v) + 0.12*self.f(53, x, y, 2.0)
 
     def tissue(self, x, y, rho, th, R, thresholds):
         sc = self.scores(x, y, rho, th, R)
@@ -350,7 +385,8 @@ class Design:
         relief = (soft["granulation"]*(gh*g + 0.08*self.f(17, x, y, 3.0))
                   + soft["slough"]*(0.12 + 0.03*self.f(14, x, y, 1.0, stretch=2.0, angle=self.s % 180))
                   + soft["necrotic"]*(0.40 + 0.06*self.f(15, x, y, 2.0) - 0.25*crack)
-                  + soft["epithelial"]*0.03)
+                  + soft["epithelial"]*0.03
+                  + soft["bone"]*(0.9 + 0.05*self.f(54, x, y, 1.5)))      # a bony prominence stands proud
         ramp = smoothstep(0.0, 1.2, (1 - rho)*R)                     # relief fades out at the margin
         d = base - relief*ramp*np.minimum(1.0, base/0.6 + 0.2)
         return np.maximum(d, 0.08*smoothstep(0.0, 0.6, (1 - rho)*R))
@@ -358,27 +394,30 @@ class Design:
     def bed_colour(self, x, y, rho, R, soft, g, crack):
         w = self.w
         f = lambda k, sc, **kw: self.f(k, x, y, sc, **kw)
+        T = {k: [rgb(h) for h in v] for k, v in TISSUE_REF.items()}
         if w.get("pale"):                                          # poorly perfused: pale, blanched
-            gran = mix(rgb("#A86E68"), rgb("#D29A92"), 0.25 + 1.1*g + 0.1*f(44, 3.0))
+            gran = mix(T["granulation_pale"][0], T["granulation_pale"][-1], 0.25 + 1.1*g + 0.1*f(44, 3.0))
         else:                                                      # beefy red, velvety
-            gran = mix(rgb("#933E41"), rgb("#CB6563"), 0.30 + 0.9*g + 0.15*f(44, 2.0) + 0.10*f(49, 0.6))
+            gran = mix(T["granulation"][0], T["granulation"][-1],
+                       0.30 + 0.9*g + 0.15*f(44, 2.0) + 0.10*f(49, 0.6))
         # slough: tan to yellow to cream, greyish in places, and the pinkish tan of
         # thin fibrin over a red bed where it meets granulation
-        slo = mix(rgb("#B68E68"), rgb("#D1AB6B"), 0.5 + 0.35*f(45, 3.0))
-        slo = mix(slo, rgb("#DCCAAE"), 0.45*np.clip(f(50, 2.0) + 0.3, 0, 1))
-        slo = mix(slo, rgb("#97926D"), 0.25*np.clip(f(46, 5.0) - 0.4, 0, 1))
+        tan, yellow, cream, grey = T["slough"]
+        slo = mix(tan, yellow, 0.5 + 0.35*f(45, 3.0))
+        slo = mix(slo, cream, 0.45*np.clip(f(50, 2.0) + 0.3, 0, 1))
+        slo = mix(slo, grey, 0.25*np.clip(f(46, 5.0) - 0.4, 0, 1))
         slo = mix(slo, rgb("#B3746B"), 0.3*np.clip((0.7 - soft["slough"])*2.5, 0, 1))
         slo = slo*(1 + 0.05*f(51, 0.8, stretch=2.0, angle=self.s % 180))[:, None]
         # eschar: hard dark brown-black, never pure black; browner where it lifts
-        nec = mix(rgb("#2E2420"), rgb("#4A3A31"), 0.5 + 0.35*f(47, 2.0))
-        nec = mix(nec, rgb("#664333"), 0.85*np.clip((0.9 - soft["necrotic"])*3, 0, 1))
+        nec = mix(T["necrotic"][0], T["necrotic"][1], 0.5 + 0.35*f(47, 2.0))
+        nec = mix(nec, T["necrotic"][2], 0.85*np.clip((0.9 - soft["necrotic"])*3, 0, 1))
         nec = nec*(1 - 0.30*crack)[:, None]
-        if luminance(SKIN[w["skin"]]) < 0.47:                       # new skin stays pink on dark skin
-            epi = mix(rgb("#9E6C64"), rgb("#B98A82"), 0.5 + 0.3*f(48, 2.0))
-        else:
-            epi = mix(rgb("#C9958C"), rgb("#DDB5AC"), 0.5 + 0.3*f(48, 2.0))
+        e = T["epithelial_dark"] if luminance(SKIN[w["skin"]]) < 0.47 else T["epithelial"]
+        epi = mix(e[0], e[1], 0.5 + 0.3*f(48, 2.0))                 # new skin stays pink on dark skin
+        bone = mix(T["bone"][0], T["bone"][1], 0.5 + 0.35*f(52, 1.5))
         c = (soft["granulation"][:, None]*gran + soft["slough"][:, None]*slo
-             + soft["necrotic"][:, None]*nec + soft["epithelial"][:, None]*epi)
+             + soft["necrotic"][:, None]*nec + soft["epithelial"][:, None]*epi
+             + soft["bone"][:, None]*bone)
         return np.clip(c, 0, 1)
 
     # periwound -----------------------------------------------------------------
@@ -431,58 +470,72 @@ class Design:
             z -= 0.25*pits
         return z
 
-    def periwound_colour(self, x, y, rho, th, R):
+    def periwound_layers(self, x, y, rho, th, R):
+        """Each periwound change as (name, weight 0-1 at each point, colour), in
+        the order they are laid over the skin. periwound_colour mixes them, and
+        the truth measures where each shows from the same weights."""
         w, p = self.w, self.w["peri"]
         skin = SKIN[w["skin"]]
-        lum = luminance(skin)
         pc = PERI_COL[w["skin"]]
         tap = edge_taper(x, y)
         o = self.out(rho, R)
-        c = np.tile(skin, (len(x), 1))
+        layers = []
         if "haemosiderin" in p:
             hw = p["haemosiderin"]
             fade = 1 - smoothstep(2.0, hw + 3.0, o*(1 + 0.3*self.f(30, x, y, 10.0)))
             spk = np.clip((self.f(31, x, y, 1.2) - 1.2)*3, 0, 1)
             hz = fade*np.clip(0.45 + 0.5*self.f(32, x, y, 5.0), 0, 1) + 0.5*spk*fade
-            c = mix(c, rgb(pc["hae"]), 0.75*np.clip(hz, 0, 1)*tap)
+            layers.append(("haemosiderin", 0.75*np.clip(hz, 0, 1)*tap, rgb(pc["hae"])))
         if "erythema" in p:
             we = p["erythema"]*(1 + 0.25*self.f(33, x, y, 12.0))
             ez = np.exp(-o/we)*(1 - smoothstep(1.5*we, 3.0*we, o))
-            c = mix(c, rgb(pc["ery"]), 0.85*ez*tap)
-        if "pallor" in p:
-            pale = np.clip(skin*1.22 + 0.05, 0, 1)
-            c = mix(c, pale, 0.55*np.exp(-o/p["pallor"])*tap)
+            layers.append(("erythema", 0.85*ez*tap, rgb(pc["ery"])))
+        if "pallor" in p:                                           # ashen, shiny, hairless; uneven
+            wp = p["pallor"]*np.maximum(1 + 0.35*self.f(36, x, y, 9.0), 0.3)
+            pz = np.exp(-o/wp)*(0.8 + 0.2*self.f(37, x, y, 3.0))
+            layers.append(("pale shiny skin", 0.75*pz*(rho >= 1)*tap, rgb(pc["pal"])))
         if "callus" in p:
             cz = self.callus(x, y, rho, R)*(0.88 + 0.12*self.f(34, x, y, 3.5))*tap
-            c = mix(c, rgb(pc["cal"]), 0.85*cz)
+            layers.append(("callus", 0.85*cz, rgb(pc["cal"])))
             bleed = np.clip((self.f(35, x, y, 4.0) - 1.7)*2.0, 0, 1)*self.callus(x, y, rho, R)
-            c = mix(c, rgb("#74433B"), 0.75*bleed*tap)                  # haemorrhage under callus
+            layers.append(("blood in callus", 0.75*bleed*tap, rgb("#74433B")))
         if "epibole" in p:
             a0, a1, _ = p["epibole"]
             ridge = window(th, a0, a1)**0.7*np.exp(-((o - 0.9)/0.9)**2)*(rho >= 1)
-            c = mix(c, np.clip(skin*0.5 + rgb("#EAC9BE")*0.5, 0, 1), 0.6*ridge*tap)
-        c = mix(c, rgb(pc["mac"]), 0.85*self.maceration(rho, th, R)*tap)
+            layers.append(("rolled edge", 0.6*ridge*tap, np.clip(skin*0.5 + rgb("#EAC9BE")*0.5, 0, 1)))
+        if "maceration" in p or "maceration_ring" in p:
+            layers.append(("maceration", 0.85*self.maceration(rho, th, R)*tap, rgb(pc["mac"])))
         if p.get("sutures"):
             pits, line = self.sutures(x, y)
-            c = mix(c, rgb("#C08A80") if lum > 0.47 else rgb("#9A6A62"), 0.55*line*(rho >= 1)*tap)
-            c = mix(c, rgb("#6A3530"), 0.85*pits*tap)
+            scar = rgb("#B8746C") if luminance(skin) > 0.55 else rgb("#8A5248")
+            layers.append(("incision line", 0.85*line*(rho >= 1)*tap, scar))
+            layers.append(("suture marks", 0.85*pits*tap, rgb("#6A3530")))
+        return layers
+
+    def periwound_colour(self, x, y, rho, th, R):
+        c = np.tile(SKIN[self.w["skin"]], (len(x), 1))
+        for _, wt, col in self.periwound_layers(x, y, rho, th, R):
+            c = mix(c, col, wt)
         return np.clip(c, 0, 1)
 
 # ---------------------------------------------------------------- meshing ---
 def patch_mesh(w):
-    """Triangulation of the patch with the margin (and, on W4, the undermining
-    limit) as fixed edges, finer inside the wound."""
+    """Triangulation of the whole top, running past the block's edges, with the
+    patch rectangle and the wound margin as fixed edges: finest inside the
+    wound, fine over the periwound patch, coarse beyond it. Returns the index of
+    the margin's first vertex too."""
     x0, x1, y0, y1 = PATCH
     o, th = outline(w)
+    outer = np.array([[-FRAME, -FRAME], [FRAME, -FRAME], [FRAME, FRAME], [-FRAME, FRAME]])
     rect = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]])
-    verts = [rect, o]
-    segs = [np.array([[0, 1], [1, 2], [2, 3], [3, 0]])]
-    n0 = 4
-    segs.append(np.c_[np.arange(len(o)), (np.arange(len(o)) + 1) % len(o)] + n0)
-    regions = [[CENTRE[0], CENTRE[1], 1, AREA_WOUND], [x0 + 0.5, y0 + 0.5, 2, AREA_PERI]]
-    T = triangle.triangulate(dict(vertices=np.vstack(verts), segments=np.vstack(segs),
+    sq = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])
+    n0 = 8
+    segs = [sq, sq + 4, np.c_[np.arange(len(o)), (np.arange(len(o)) + 1) % len(o)] + n0]
+    regions = [[CENTRE[0], CENTRE[1], 1, AREA_WOUND], [x0 + 0.5, y0 + 0.5, 2, AREA_PERI],
+               [-FRAME + 0.5, -FRAME + 0.5, 3, AREA_FRAME]]
+    T = triangle.triangulate(dict(vertices=np.vstack([outer, rect, o]), segments=np.vstack(segs),
                                   regions=regions), "pq28Aa")
-    return T["vertices"], T["triangles"], o, th, T["vertex_markers"].ravel()
+    return T["vertices"], T["triangles"], o, th, T["vertex_markers"].ravel(), n0
 
 def mesh_from(vp, tris):
     m = Mesh(vert_properties=np.ascontiguousarray(vp, np.float32),
@@ -507,18 +560,16 @@ def box(x0, x1, y0, y1, z0, z1, top, side, bottom):
     return mesh_from(np.array(vp), np.array(tr))
 
 def cut_tool(V, T, h, cols, Htop):
-    """The region above the designed surface over the patch: bottom = the surface
-    (facing down), top = a flat lid at Htop, vertical sides on the patch edge."""
+    """The region above the designed top surface: bottom = the surface (facing
+    down), top = a flat lid at Htop, vertical sides on the mesh's outer edge.
+    The surface runs past the block's edges, so the cut meets each side wall
+    along a clean line at the skin plane and leaves no seam on the top."""
     n = len(V)
     bottom = np.c_[V, h, cols]
-    # patch boundary loop, anticlockwise, from edges used by one triangle
+    # boundary loop, anticlockwise, from edges used by one triangle
     e = np.sort(np.vstack([T[:, [0, 1]], T[:, [1, 2]], T[:, [2, 0]]]), axis=1)
     u, cnt = np.unique(e, axis=0, return_counts=True)
     bnd = u[cnt == 1]
-    x0, x1, y0, y1 = PATCH
-    onrect = lambda i: (abs(V[i, 0] - x0) < 1e-9 or abs(V[i, 0] - x1) < 1e-9 or
-                        abs(V[i, 1] - y0) < 1e-9 or abs(V[i, 1] - y1) < 1e-9)
-    bnd = np.array([b for b in bnd if onrect(b[0]) and onrect(b[1])])
     nxt = {}
     for a, b in bnd:
         nxt.setdefault(a, []).append(b); nxt.setdefault(b, []).append(a)
@@ -538,7 +589,7 @@ def cut_tool(V, T, h, cols, Htop):
     top_i = n + np.arange(len(loop))
     top = np.c_[V[loop], np.full(len(loop), Htop), np.tile(cols[0], (len(loop), 1))]
     ctr = n + len(loop)
-    cxy = np.array([[(x0 + x1)/2, (y0 + y1)/2, Htop, *cols[0]]])
+    cxy = np.array([[lx.mean(), ly.mean(), Htop, *cols[0]]])
     vp = np.vstack([bottom, top, cxy])
     tris = [T[:, [0, 2, 1]]]                                     # surface faces down
     k = len(loop)
@@ -548,67 +599,64 @@ def cut_tool(V, T, h, cols, Htop):
     tris.append(np.c_[loop[j], top_i[jn], top_i[j]])
     return mesh_from(vp, np.vstack(tris))
 
-def pocket_tool(w, design, H, col):
-    """Undermining: a lens-shaped pocket under the margin, its roof ROOF mm below
-    the skin, opening into the wound wall."""
+def pocket_height(w, th):
+    """Height of the undermining pocket along polar angle th: its design height,
+    or less where the pocket is too short for a full rounded end."""
+    return np.minimum(w["undermine"]["height"], 2*undermine_extent(w, th))
+
+def pocket_tool(w, H, col):
+    """Undermining: a pocket under the margin, its roof ROOF mm below the skin,
+    opening into the wound wall. In section it is a slot of constant height with
+    a half-round end, so a probe with a ball tip up to that height across slides
+    in to the full extent - as on a patient - and support material washes out.
+    Its two ends, where the extent falls below 0.2 mm, are closed flat."""
     u = w["undermine"]
     a0, a1 = math.radians(u["start"]), math.radians(u["end"])
-    nt, nu = 160, 40
-    th = a0 + (a1 - a0)*np.linspace(0, 1, nt)
-    R = r_of(w, th)
-    E = undermine_extent(w, th)
-    uu = np.linspace(-0.06, 1.0, nu)                              # from just inside the margin
-    TH, UU = np.meshgrid(th, uu, indexing="ij")
-    RR = R[:, None]*(1 + np.minimum(UU, 0)) + np.maximum(UU, 0)*E[:, None]
-    win = np.sin(math.pi*np.linspace(0, 1, nt))[:, None]**0.8
-    t = u["thick"]*win*(1 - np.clip(UU, 0, 1)**2)
-    X = CENTRE[0] + RR*np.cos(TH); Y = CENTRE[1] + RR*np.sin(TH)
+    th = np.linspace(a0, a1, 241)
+    th = th[undermine_extent(w, th) >= 0.2]
+    R, E, hgt = r_of(w, th), undermine_extent(w, th), pocket_height(w, th)
     zc = H - ROOF
-    top = np.c_[X.ravel(), Y.ravel(), np.full(X.size, zc + 0.02*win.repeat(nu, 1).ravel())]
-    bot = np.c_[X.ravel(), Y.ravel(), (zc - t).ravel()]
-    idx = lambda i, j: i*nu + j
-    vp = np.vstack([np.c_[top, np.tile(col, (len(top), 1))], np.c_[bot, np.tile(col, (len(bot), 1))]])
-    off = len(top)
-    tris = []
-    for i in range(nt - 1):
-        for j in range(nu - 1):
-            a, b, c, d = idx(i, j), idx(i + 1, j), idx(i + 1, j + 1), idx(i, j + 1)
-            tris += [[a, b, c], [a, c, d]]                         # roof, facing up
-            tris += [[a + off, c + off, b + off], [a + off, d + off, c + off]]   # floor, facing down
-    for i in range(nt - 1):                                         # inner wall (inside the wound)
-        a, b = idx(i, 0), idx(i + 1, 0)
-        tris += [[a, a + off, b + off], [a, b + off, b]]
-    for i in range(nt - 1):                                         # far edge, zero thickness: sew
-        a, b = idx(i, nu - 1), idx(i + 1, nu - 1)
-        tris += [[a, b, b + off], [a, b + off, a + off]]
-    for i, flip in ((0, False), (nt - 1, True)):                    # window ends, zero thickness
-        for j in range(nu - 1):
-            a, d = idx(i, j), idx(i, j + 1)
-            q = [[a, a + off, d + off], [a, d + off, d]]
-            tris += [[t_[0], t_[2], t_[1]] for t_ in q] if flip else q
-    vp = np.asarray(vp, float)
-    tris = np.array(tris)
+    nr, nc = 20, 15                       # points along roof and floor; inside the rounded end
+    s = np.linspace(0, 1, nr)
+    phi = np.linspace(math.pi/2, -math.pi/2, nc + 2)[1:-1]
+    rin = 0.94*R                          # from just inside the margin, in the wound's air
+    rc = R + E - hgt/2                    # centre of the rounded end
+    rho = np.hstack([rin[:, None] + (rc - rin)[:, None]*s,                       # roof, outward
+                     rc[:, None] + (hgt/2)[:, None]*np.cos(phi),                   # round the end
+                     rc[:, None] + (rin - rc)[:, None]*s])                         # floor, inward
+    z = np.hstack([np.tile(zc, (len(th), nr)),
+                   (zc - hgt/2)[:, None] + (hgt/2)[:, None]*np.sin(phi),
+                   (zc - hgt)[:, None]*np.ones(nr)])
+    nt, k = rho.shape
+    X = CENTRE[0] + rho*np.cos(th)[:, None]; Y = CENTRE[1] + rho*np.sin(th)[:, None]
+    vp = np.c_[X.ravel(), Y.ravel(), z.ravel(), np.tile(col, (nt*k, 1))]
+    i, j = np.meshgrid(np.arange(nt - 1), np.arange(k), indexing="ij")
+    a, b = (i*k + j).ravel(), (i*k + (j + 1) % k).ravel()
+    c, d = a + k, b + k
+    # the section runs clockwise as seen from the start end, so these all face
+    # inward; the volume check below turns them out
+    tris = [np.c_[a, c, d], np.c_[a, d, b]]                         # the slot's surface
+    for row, flip in ((0, False), (nt - 1, True)):                  # flat ends: fans
+        f = np.c_[np.zeros(k - 2, int), np.arange(1, k - 1), np.arange(2, k)] + row*k
+        tris.append(f[:, ::-1] if flip else f)
+    tris = np.vstack(tris)
     for attempt in range(2):
-        # collapse the zero-thickness rims: identical positions become one vertex
-        m = Mesh(vert_properties=np.ascontiguousarray(vp, np.float32),
-                 tri_verts=np.ascontiguousarray(tris, np.uint32))
-        m.merge()
-        man = Manifold(m)
-        if man.status().name != "NoError":
-            raise RuntimeError(f"pocket is not a valid solid: {man.status()}")
+        man = mesh_from(vp, tris)
         if man.volume() > 0:
             return man
         tris = tris[:, ::-1]                       # built inside out: turn every face
     raise RuntimeError("pocket has no positive volume")
 
 def text_tool(rows, col):
-    """Engraving tools for label rows, as one coloured mesh solid."""
+    """Engraving tools for label rows, as one coloured mesh solid. Glyph curves
+    are kept within 0.01 mm: finer than any printer resolves, and a quarter of
+    the triangles a 0.004 mm tolerance costs."""
     import cadquery as cq
     parts = []
     for r in rows:
         comp = M.text_on(r["text"], r["cap"], r["at"], r["xdir"], r["normal"])
         for s in (comp.Solids() or [comp]):
-            v, t = s.tessellate(0.004, 0.05)
+            v, t = s.tessellate(0.01, 0.1)
             v = np.array([[p.x, p.y, p.z] for p in v]); t = np.array(t)
             parts.append(mesh_from(np.c_[v, np.tile(col, (len(v), 1))], t))
     return Manifold.batch_boolean(parts, _op("Add")) if len(parts) > 1 else parts[0]
@@ -657,23 +705,35 @@ def tissue_lines(pc, width=19):
             cur = f"{cur} {it}".strip()
     return lines + [cur]
 
+def peri_lines(w, width=19):
+    """The periwound changes the part shows, packed into lines after 'PERI';
+    a name never splits across lines."""
+    lines, cur = [], "PERI"
+    for n in w["peri_names"]:
+        if len(cur) + 1 + len(n) > width:
+            lines.append(cur); cur = n
+        else:
+            cur = f"{cur} {n}"
+    return lines + [cur]
+
 def side_lines(w, t):
     pc = t["tissue_pct"]
     und = ([f"UNDERMINED MAX {t['undermining']['max_extent_mm']:.1f}"] if "undermining" in t else [])
     lines = ([f"{w['id']} {w['title']}",
               f"L{t['length_mm']:.1f} W{t['width_mm']:.1f} D{t['max_depth_mm']:.2f}",
               f"AREA {t['area_mm2']:.1f} MM2", f"VOL {t['volume_mm3']:.1f} MM3"]
-             + und + tissue_lines(pc) + [f"PERI {w['peri_label']}", f"SKIN TYPE {w['skin']}"])
-    # a 14-20 mm wall takes two lines a side; the underside carries everything,
+             + und + tissue_lines(pc) + peri_lines(w) + [f"SKIN TYPE {w['skin']}"])
+    # a 14-20 mm wall takes two lines a side; the underside carries the rest,
     # so the skin type and then the periwound give way first
     room = 8 if w["H"] < 20.1 else 12
-    for drop in ("SKIN TYPE", "PERI "):
-        if len(lines) > room:
-            lines = [s_ for s_ in lines if not s_.startswith(drop)]
+    if len(lines) > room:
+        lines = [s_ for s_ in lines if not s_.startswith("SKIN TYPE")]
+    if len(lines) > room:
+        lines = [s_ for s_ in lines if s_ not in peri_lines(w)]
     return lines
 
-def bottom_lines(w, t):
-    pc = t["tissue_pct"]
+def spec_lines(w, t):
+    """Everything engraved about the part, in the underside's order."""
     lines = [f"{w['id']} {w['title']}",
              f"L{t['length_mm']:.1f} W{t['width_mm']:.1f} D{t['max_depth_mm']:.2f}",
              f"AREA {t['area_mm2']:.1f} MM2", f"PERIM {t['perimeter_mm']:.1f} MM",
@@ -683,9 +743,21 @@ def bottom_lines(w, t):
         lines += [f"UNDERMINED {u['from_clock']}-{u['to_clock']}",
                   f"MAX {u['max_extent_mm']:.1f} MM AT {u['max_at_clock']}",
                   f"HIDDEN {u['hidden_volume_mm3']:.1f} MM3"]
-    lines += tissue_lines(pc) + [f"PERI {w['peri_label']}", f"SKIN TYPE {w['skin']}"]
-    if len(lines) > 12:                                   # the sides carry these on tall walls
+    return lines + tissue_lines(t["tissue_pct"]) + peri_lines(w) + [f"SKIN TYPE {w['skin']}"]
+
+def bottom_lines(w, t):
+    """The underside: the whole specification in twelve lines at most. Where it
+    has no room, what the sides carry gives way - the skin type, then the
+    periwound's later lines; build() checks every line is on one face or the
+    other."""
+    lines = spec_lines(w, t)
+    if len(lines) > 12:
         lines = [s_ for s_ in lines if not s_.startswith("SKIN TYPE")]
+    for s_ in peri_lines(w)[:0:-1]:
+        if len(lines) > 12:
+            lines.remove(s_)
+    if len(lines) > 12:
+        raise RuntimeError(f"{w['id']}: {len(lines)} lines for the underside")
     if len(lines) < 12 and w["long"] != w["title"]:
         lines.insert(1, w["long"])
     if len(lines) < 12:
@@ -734,6 +806,7 @@ def design_truth(w, o):
                 length_mm=float(y.max() - y.min()), width_mm=float(x.max() - x.min()))
 
 def tissue_shares(design, thresholds, grid=0.05):
+    """Shares of the wound's plan area - as seen from straight above."""
     x, y = np.meshgrid(np.arange(PATCH[0], PATCH[1], grid), np.arange(PATCH[2], PATCH[3], grid))
     x, y = x.ravel(), y.ravel()
     rho, th, R = design.frame(x, y)
@@ -741,15 +814,56 @@ def tissue_shares(design, thresholds, grid=0.05):
     tis = design.tissue(x[m], y[m], rho[m], th[m], R[m], thresholds)
     return {n: float(np.mean(tis == i)) for i, n in enumerate(ORDER)}
 
+def surface_shares(design, thresholds, V, T, h):
+    """Shares of the wound bed's surface area rather than its plan area, on the
+    designed surface (W4: before its pocket is cut), and that area. Steep walls
+    weigh more here than seen from above."""
+    P = np.c_[V, h][T]
+    cen = P.mean(axis=1)
+    rho, th, R = design.frame(cen[:, 0], cen[:, 1])
+    m = rho < 1
+    a3 = 0.5*np.linalg.norm(np.cross(P[m, 1] - P[m, 0], P[m, 2] - P[m, 0]), axis=1)
+    tis = design.tissue(cen[m, 0], cen[m, 1], rho[m], th[m], R[m], thresholds)
+    return {n: float(a3[tis == i].sum()/a3.sum()) for i, n in enumerate(ORDER)}, float(a3.sum())
+
+def periwound_truth(design, grid=0.1):
+    """Where each periwound change shows, from the same weights the colours are
+    mixed with: the area over which its weight is at least 0.3, the clock hours
+    that area spans and how far from the margin it reaches."""
+    x, y = np.meshgrid(np.arange(PATCH[0], PATCH[1], grid), np.arange(PATCH[2], PATCH[3], grid))
+    x, y = x.ravel(), y.ravel()
+    rho, th, R = design.frame(x, y)
+    m = rho >= 1
+    x, y, rho, th, R = x[m], y[m], rho[m], th[m], R[m]
+    out = []
+    for name, wt, _ in design.periwound_layers(x, y, rho, th, R):
+        on = wt >= 0.3
+        hours = sorted({12 if h == 0 else int(h) for h in np.round((90 - np.degrees(th[on]))/30) % 12})
+        out.append(dict(name=name, area_mm2=round(float(on.sum())*grid*grid, 1),
+                        clock="all round" if len(hours) == 12 else hours,
+                        reaches_mm=round(float(((rho[on] - 1)*R[on]).max()), 1) if on.any() else 0.0))
+    return out
+
+def feret(o):
+    """Longest diameter of the margin, its angle from the 12-6 line (degrees,
+    positive toward 3 o'clock), and the width across it."""
+    from scipy.spatial import ConvexHull
+    hull = o[ConvexHull(o).vertices]
+    d = np.linalg.norm(hull[:, None] - hull[None], axis=2)
+    i, j = np.unravel_index(np.argmax(d), d.shape)
+    v = (hull[j] - hull[i])/d[i, j]
+    ang = (math.degrees(math.atan2(v[0], v[1])) + 90) % 180 - 90
+    return float(d[i, j]), float(ang), float(np.ptp(hull @ np.array([-v[1], v[0]])))
+
 # ------------------------------------------------------------------- build ---
 def build(w):
     d = Design(w)
     thr = d.fit_thresholds()
-    V, T, o, oth, mk = patch_mesh(w)
+    V, T, o, oth, mk, n0 = patch_mesh(w)
     x, y = V[:, 0], V[:, 1]
     rho, th, R = d.frame(x, y)
     on_margin = np.zeros(len(V), bool)
-    on_margin[4:4 + len(o)] = True                       # the outline's own vertices
+    on_margin[n0:n0 + len(o)] = True                     # the outline's own vertices
     on_margin |= (mk == 1) & (np.abs(rho - 1) < 0.01)    # points triangle added on it
     ox, oy = o[:, 0], o[:, 1]
     x0, x1, y0, y1 = PATCH
@@ -757,23 +871,22 @@ def build(w):
     if room < 3.0:
         raise RuntimeError(f"{w['id']}: the wound reaches within {room:.1f} mm of the patch edge")
     dep, up, cols, tis = d.surface(x, y, on_margin, thr)
-    D_need = float(dep.max()) + max(w.get("undermine", {}).get("thick", 0), 0)
-    w["H"] = float(max(14, math.ceil(D_need + 6)))
+    edge = np.max(np.abs(V), axis=1) > L/2 - 0.5
+    if np.any(dep[edge] != 0) or np.any(up[edge] != 0):
+        raise RuntimeError(f"{w['id']}: the top is not flat at the block's edges")
+    w["H"] = float(max(14, math.ceil(float(dep.max()) + 6)))    # at least 6 mm under the deepest point
     H = w["H"]
     h = H - dep + up
     skin = SKIN[w["skin"]]
     ink_top = ink_on(skin)
 
-    base = box(-L/2, L/2, -L/2, L/2, 0.0, H, skin, BODY, BODY)
-    x0, x1, y0, y1 = PATCH
-    parts = base
-    if up.max() > 0:
-        parts = parts + box(x0 + 0.5, x1 - 0.5, y0 + 0.5, y1 - 0.5, H - 1, H + up.max() + 0.5, skin, skin, skin)
-    parts = parts - cut_tool(V, T, h, cols, H + up.max() + 3)
+    # a block standing above everything the surface raises, cut down to the surface
+    base = box(-L/2, L/2, -L/2, L/2, 0.0, H + up.max() + 0.5, skin, BODY, BODY)
+    parts = base - cut_tool(V, T, h, cols, H + up.max() + 3)
     if "undermine" in w:
         lo = TISSUE["slough"][0]
         before = parts.volume()
-        parts = parts - pocket_tool(w, d, H, lo)
+        parts = parts - pocket_tool(w, H, lo)
         if not 0 < before - parts.volume() < 5000:
             raise RuntimeError(f"{w['id']}: undermining removed {before - parts.volume():.1f} mm3")
     if parts.status().name != "NoError" or len(parts.decompose()) != 1:
@@ -781,6 +894,7 @@ def build(w):
 
     # truth on the mesh, before labels (labels never touch the wound)
     t = design_truth(w, o)
+    t["longest_mm"], t["longest_angle_deg"], t["width_across_longest_mm"] = feret(o)
     cs = CrossSection([o.tolist()])
     prism = Manifold.extrude(cs, H)
     air = prism - parts
@@ -793,11 +907,15 @@ def build(w):
     sh = tissue_shares(d, thr)
     t["tissue_share"] = sh
     t["tissue_pct"] = pct(sh)
+    t["tissue_share_surface"], t["bed_surface_area_mm2"] = surface_shares(d, thr, V, T, h)
+    # the mean printed colour of each tissue, for the parts sheet's swatches
+    t["tissue_colour"] = {n: "#%06X" % hexval(cols[tis == i].mean(axis=0))
+                          for i, n in enumerate(ORDER) if (tis == i).any()}
+    t["periwound_conditions"] = periwound_truth(d)
     if "undermine" in w:
         u = w["undermine"]
         tt_ = np.linspace(math.radians(u["start"]), math.radians(u["end"]), 3601)
         E = undermine_extent(w, tt_)
-        ext_r = r_of(w, tt_) + E
         thf = np.linspace(0, 2*math.pi, 20000, endpoint=False)
         Ef = undermine_extent(w, thf)
         rf = r_of(w, thf) + Ef
@@ -809,23 +927,29 @@ def build(w):
         bx, by = big[:, 0], big[:, 1]
         a_big = 0.5*abs(np.sum(bx*np.roll(by, -1) - np.roll(bx, -1)*by))
         imax = int(np.argmax(E))
-        clocks = {}
-        for hr in range(1, 13):
-            a = math.radians(90 - 30*hr)
-            clocks[str(hr)] = round(float(undermine_extent(w, np.array([a]))[0]), 3)
-        nz = [int(k) for k, v in clocks.items() if v > 0.05]
+        hours = [np.array([math.radians(90 - 30*hr)]) for hr in range(1, 13)]
+        clocks = {str(hr): round(float(undermine_extent(w, a)[0]), 3) for hr, a in zip(range(1, 13), hours)}
+        heights = {str(hr): round(float(pocket_height(w, a)[0]), 3) for hr, a in zip(range(1, 13), hours)
+                   if undermine_extent(w, a)[0] >= 0.2}
         t["undermining"] = dict(
             max_extent_mm=float(E[imax]), max_at_clock=clock(tt_[imax]),
             from_clock=clock(math.radians(u["end"])), to_clock=clock(math.radians(u["start"])),
             extent_by_clock_mm=clocks, undermined_area_mm2=float(a_big - t["area_mm2"]),
-            hidden_volume_mm3=float(hidden), roof_mm=ROOF,
-            note="extent from the margin outward along a line from the wound centre")
+            hidden_volume_mm3=float(hidden), roof_mm=ROOF, pocket_height_by_clock_mm=heights,
+            note=(f"extent from the margin outward along a line from the wound centre; the pocket "
+                  f"is a slot {u['height']:.1f} mm high under a {ROOF:.1f} mm roof with a half-round "
+                  f"end, so a probe with a ball tip up to {u['height']:.1f} mm across reaches the "
+                  f"full extent where the slot is that high"))
         t["total_volume_mm3"] = t["volume_mm3"] + float(hidden)
 
-    # labels
+    # labels: every line on one face or another
     ink_body = INK_DARK
-    sides = layout_sides(w, side_lines(w, t))
-    bottom = layout_bottom(bottom_lines(w, t), H)
+    sl, bl = side_lines(w, t), bottom_lines(w, t)
+    missing = [s_ for s_ in spec_lines(w, t) if s_ not in sl + bl]
+    if missing:
+        raise RuntimeError(f"{w['id']}: no face carries {missing}")
+    sides = layout_sides(w, sl)
+    bottom = layout_bottom(bl, H)
     top = top_rows(w)
     tools = [text_tool(sides + bottom, ink_body), text_tool(top, ink_top), top_marks(H, ink_top)]
     part = parts - Manifold.batch_boolean(tools, _op("Add"))
@@ -858,8 +982,35 @@ def export(part, path_base, title):
     if len(tv) > MAX_TRIANGLES:
         raise RuntimeError(f"{title}: {len(tv):,} triangles, over the {MAX_TRIANGLES:,} limit")
     write_3mf(path_base + ".3mf", pos, tv, ucol, tc, title)
-    write_wrl(path_base + ".wrl.zip", pos, tv, ucol, tc, title)
+    write_wrl(path_base + ".wrl.zip", pos, tv, ucol[point_colours(pos, tv, tc, ucol)], title)
     return len(pos), len(tv)
+
+def hexval(c):
+    r, g, b = np.clip(np.round(np.asarray(c)*255), 0, 255).astype(int)
+    return int(r*65536 + g*256 + b)
+
+def point_colours(pos, tv, tc, ucol):
+    """One colour per vertex, for the VRML: some readers ignore colorIndex, so
+    it gives each point a single colour. Where a vertex's corners differ - along
+    label grooves, the top marks, the block's top edge and the pocket's mouth -
+    any colour but the ink wins, so an engraving's walls fade into its groove
+    rather than the ink spreading over the face; then the colour covering the
+    most area around the vertex."""
+    P = pos[tv]
+    area = 0.5*np.linalg.norm(np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0]), axis=1)
+    ink = np.isin(ucol, [hexval(INK_DARK), hexval(INK_LIGHT)])
+    v, c = tv.ravel(), tc.ravel()
+    n = len(ucol)
+    key, inv = np.unique(v*n + c, return_inverse=True)
+    score = np.bincount(inv, weights=np.repeat(area, 3) + np.where(ink[c], 0.0, 1e6))
+    kv, kc = key // n, key % n
+    order = np.lexsort((score, kv))                  # by vertex, best last
+    last = np.r_[kv[order][1:] != kv[order][:-1], True]
+    best = np.full(len(pos), -1)
+    best[kv[order][last]] = kc[order][last]
+    if (best < 0).any():
+        raise RuntimeError("a vertex is used by no triangle")
+    return best
 
 def write_3mf(path, pos, tv, ucol, tc, title):
     hexes = [f"#{c:06X}" for c in ucol]
@@ -891,16 +1042,16 @@ def write_3mf(path, pos, tv, ucol, tc, title):
         z.writestr("_rels/.rels", rels)
         z.writestr("3D/3dmodel.model", model)
 
-def write_wrl(path, pos, tv, ucol, tc, title):
-    cols = np.c_[(ucol >> 16) & 255, (ucol >> 8) & 255, ucol & 255]/255.0
+def write_wrl(path, pos, tv, pcol, title):
+    """VRML 2.0, one colour per point in point order (no colorIndex)."""
+    cols = np.c_[(pcol >> 16) & 255, (pcol >> 8) & 255, pcol & 255]/255.0
     p = ",\n".join(f"{a:.5f} {b:.5f} {c:.5f}" for a, b, c in pos)
     ci = ",\n".join(f"{a},{b},{c},-1" for a, b, c in tv)
     cc = ",\n".join(f"{r:.4f} {g:.4f} {b:.4f}" for r, g, b in cols)
-    cx = ",\n".join(f"{a},{b},{c},-1" for a, b, c in tc)
     wrl = (f"#VRML V2.0 utf8\n# {title}. Units: millimetres.\n"
            f"Shape {{ geometry IndexedFaceSet {{ solid TRUE colorPerVertex TRUE\n"
            f"coord Coordinate {{ point [\n{p}\n] }}\ncoordIndex [\n{ci}\n]\n"
-           f"color Color {{ color [\n{cc}\n] }}\ncolorIndex [\n{cx}\n]\n}} }}\n")
+           f"color Color {{ color [\n{cc}\n] }}\n}} }}\n")
     name = os.path.basename(path)[:-4]
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         z.writestr(name, wrl)
@@ -917,7 +1068,8 @@ def main(ids):
         base = os.path.join(OUT, f"{w['id']}_{w['name']}")
         nv, nt = export(part, base, f"StrataMetric {w['id']} {w['long'].title()}")
         rows[w["id"]] = dict(id=w["id"], name=w["name"], wound=w["long"].title(), skin_type=w["skin"],
-                             periwound=w["peri_label"].title(), block_mm=[L, L, w["H"]],
+                             periwound=", ".join(n.lower() for n in w["peri_names"]).capitalize(),
+                             block_mm=[L, L, w["H"]],
                              files=[os.path.basename(base) + ".3mf", os.path.basename(base) + ".wrl.zip"],
                              vertices=nv, triangles=nt, **t)
         print(f"{w['id']}: {nv:,} vertices, {nt:,} triangles; area {t['area_mm2']:.1f} mm2, "

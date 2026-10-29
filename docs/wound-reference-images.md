@@ -13,7 +13,8 @@ alongside it.
 - **No public dataset gives depth or volume ground truth for real wounds under terms a company
   can use.** Real-wound 3D data exists only behind a request or a partnership (WoundsDB, the
   Zivot DFU set, the FEMH burn set — section 3). Until one of those comes through, the phantoms
-  in `docs/phantoms/` are the only exact depth and volume truth we have.
+  in `docs/phantoms/` are the only exact depth and volume truth we have; their lifelike colour
+  set (W1–W8) also gives exact tissue-type and periwound truth on real-looking wounds.
 - **For area and perimeter with a physical scale in frame**, CO2Wounds v1 is usable now:
   164 photos with a calibration pattern and wound masks, CC BY 4.0.
 - **For visual references**, use Wikimedia Commons, the CDC image library and the CC BY
