@@ -1,0 +1,299 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B001 /* Sources/App/AlbaceteMedDevApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A001 /* Sources/App/AlbaceteMedDevApp.swift */; };
+		B002 /* Sources/Constants/AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A002 /* Sources/Constants/AppConstants.swift */; };
+		B003 /* Sources/Networking/ScanAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A003 /* Sources/Networking/ScanAPIClient.swift */; };
+		B004 /* Sources/Capture/ARLiDARCaptureSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A004 /* Sources/Capture/ARLiDARCaptureSession.swift */; };
+		B005 /* Sources/Capture/CaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A005 /* Sources/Capture/CaptureViewModel.swift */; };
+		B006 /* Sources/Capture/CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A006 /* Sources/Capture/CaptureView.swift */; };
+		B007 /* Sources/Views/ARViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A007 /* Sources/Views/ARViewContainer.swift */; };
+		B008 /* Sources/Results/ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A008 /* Sources/Results/ResultsView.swift */; };
+		B009 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A009 /* ARKit.framework */; };
+		B010 /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A010 /* SceneKit.framework */; };
+		B011 /* Sources/Results/ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A011 /* Sources/Results/ResultsViewModel.swift */; };
+		B012 /* Sources/Results/MeasurementCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A012 /* Sources/Results/MeasurementCard.swift */; };
+		B013 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A013 /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A000 /* AlbaceteMedDev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlbaceteMedDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A001 /* Sources/App/AlbaceteMedDevApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/App/AlbaceteMedDevApp.swift; sourceTree = "<group>"; };
+		A002 /* Sources/Constants/AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Constants/AppConstants.swift; sourceTree = "<group>"; };
+		A003 /* Sources/Networking/ScanAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Networking/ScanAPIClient.swift; sourceTree = "<group>"; };
+		A004 /* Sources/Capture/ARLiDARCaptureSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Capture/ARLiDARCaptureSession.swift; sourceTree = "<group>"; };
+		A005 /* Sources/Capture/CaptureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Capture/CaptureViewModel.swift; sourceTree = "<group>"; };
+		A006 /* Sources/Capture/CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Capture/CaptureView.swift; sourceTree = "<group>"; };
+		A007 /* Sources/Views/ARViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Views/ARViewContainer.swift; sourceTree = "<group>"; };
+		A008 /* Sources/Results/ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Results/ResultsView.swift; sourceTree = "<group>"; };
+		A009 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
+		A010 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
+		A011 /* Sources/Results/ResultsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Results/ResultsViewModel.swift; sourceTree = "<group>"; };
+		A012 /* Sources/Results/MeasurementCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Results/MeasurementCard.swift; sourceTree = "<group>"; };
+		A013 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		A014 /* Resources/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Resources/Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B009 /* ARKit.framework in Frameworks */,
+				B010 /* SceneKit.framework in Frameworks */,
+				B013 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G001 /* AlbaceteMedDev */ = {
+			isa = PBXGroup;
+			children = (
+				A001 /* Sources/App/AlbaceteMedDevApp.swift */,
+				A002 /* Sources/Constants/AppConstants.swift */,
+				A003 /* Sources/Networking/ScanAPIClient.swift */,
+				A004 /* Sources/Capture/ARLiDARCaptureSession.swift */,
+				A005 /* Sources/Capture/CaptureViewModel.swift */,
+				A006 /* Sources/Capture/CaptureView.swift */,
+				A007 /* Sources/Views/ARViewContainer.swift */,
+				A008 /* Sources/Results/ResultsView.swift */,
+				A011 /* Sources/Results/ResultsViewModel.swift */,
+				A012 /* Sources/Results/MeasurementCard.swift */,
+				A014 /* Resources/Info.plist */,
+			);
+			path = AlbaceteMedDev;
+			sourceTree = "<group>";
+		};
+		G002 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A009 /* ARKit.framework */,
+				A010 /* SceneKit.framework */,
+				A013 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		G003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A000 /* AlbaceteMedDev.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ROOT = {
+			isa = PBXGroup;
+			children = (
+				G001 /* AlbaceteMedDev */,
+				G002 /* Frameworks */,
+				G003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T001 /* AlbaceteMedDev */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C001 /* Build configuration list for PBXNativeTarget "AlbaceteMedDev" */;
+			buildPhases = (
+				S001 /* Sources */,
+				F001 /* Frameworks */,
+				R001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AlbaceteMedDev;
+			productName = AlbaceteMedDev;
+			productReference = A000 /* AlbaceteMedDev.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		P001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					T001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = C000 /* Build configuration list for PBXProject "AlbaceteMedDev" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ROOT;
+			productRefGroup = G003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T001 /* AlbaceteMedDev */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		R001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		S001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B001 /* Sources/App/AlbaceteMedDevApp.swift in Sources */,
+				B002 /* Sources/Constants/AppConstants.swift in Sources */,
+				B003 /* Sources/Networking/ScanAPIClient.swift in Sources */,
+				B004 /* Sources/Capture/ARLiDARCaptureSession.swift in Sources */,
+				B005 /* Sources/Capture/CaptureViewModel.swift in Sources */,
+				B006 /* Sources/Capture/CaptureView.swift in Sources */,
+				B007 /* Sources/Views/ARViewContainer.swift in Sources */,
+				B008 /* Sources/Results/ResultsView.swift in Sources */,
+				B011 /* Sources/Results/ResultsViewModel.swift in Sources */,
+				B012 /* Sources/Results/MeasurementCard.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		X001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		X002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		X003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN94R7R79M;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AlbaceteMedDev/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nclouds.albacete-meddev";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		X004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN94R7R79M;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AlbaceteMedDev/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nclouds.albacete-meddev";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C000 /* Build configuration list for PBXProject "AlbaceteMedDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X001 /* Debug */,
+				X002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C001 /* Build configuration list for PBXNativeTarget "AlbaceteMedDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X003 /* Debug */,
+				X004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = P001 /* Project object */;
+}
