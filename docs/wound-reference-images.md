@@ -2,11 +2,13 @@
 
 Where to find photographs and scans of actual patient wounds to use as references, and what
 each source lets a company do with them. Checked on 26 October 2026: 77 sources were found and
-each was re-opened independently to confirm its licence, contents and links.
+each was re-opened independently to confirm its licence, contents and links. On 4 November 2026
+the two usable segmentation sets were downloaded and checked image by image (section 5), which
+corrected what is said here about their scale and provenance.
 
 **This file links to images; it does not store any.** Keep patient images out of the
 repository. Download them to a controlled location and record each image's source and licence
-alongside it.
+alongside it — `woundscan-engine/scripts/fetch_wound_segmentation_data.py` does both (section 5).
 
 ## The short version
 
@@ -15,8 +17,11 @@ alongside it.
   Zivot DFU set, the FEMH burn set — section 3). Until one of those comes through, the phantoms
   in `docs/phantoms/` are the only exact depth and volume truth we have; their lifelike colour
   set (W1–W8) also gives exact tissue-type and periwound truth on real-looking wounds.
-- **For area and perimeter with a physical scale in frame**, CO2Wounds v1 is usable now:
-  164 photos with a calibration pattern and wound masks, CC BY 4.0.
+- **For segmentation testing**, CO2Wounds v1 and LUTSeg are usable now: 305 photos, 273 of
+  them distinct, with wound masks, CC BY 4.0; LUTSeg adds tissue masks and a subset outlined by
+  five clinicians. A script downloads and checks them, and another scores a model (section 5).
+  Neither gives a millimetre scale: CO2Wounds v1 has a calibration card in frame, but its size is
+  not published.
 - **For visual references**, use Wikimedia Commons, the CDC image library and the CC BY
   case reports listed below. Several of those give clinician length × width × depth in their
   captions, and a few show undermining.
@@ -40,8 +45,8 @@ appears in marketing, labelling or a regulatory submission.
 
 | Source | Contents | Ground truth | Licence and access |
 |---|---|---|---|
-| [CO2Wounds v1](https://data.mendeley.com/datasets/nkw5gx57hw/1) (Universidad Industrial de Santander; Monroy et al., *Comput Biol Med* 2023) | 164 smartphone photos of chronic leprosy ulcers, 69 consenting patients, Colombia | Binary wound masks for every image. A calibration pattern is in frame, so pixels convert to millimetres. YOLO boxes (wound and pattern; the classes are not documented). No depth. | **CC BY 4.0**. Direct download, no registration. |
-| [LUTSeg](https://huggingface.co/datasets/ksanchez84/LUTSeg) (2026) | 141 photos of leprosy ulcers, 39 patients, followed over 21 months | 6-class tissue masks and wound masks. A 46-image subset was outlined by 5 clinicians separately, so rater disagreement can be measured. No scale, no depth. | **CC BY 4.0**. Direct download. *Caveat:* the licence says the images come from CO2Wounds v1, but the 21-month span matches CO2Wounds-V2, whose current version is non-commercial. Confirm with the authors before relying on it commercially. |
+| [CO2Wounds v1](https://data.mendeley.com/datasets/nkw5gx57hw/1) (Universidad Industrial de Santander; Monroy et al., *Comput Biol Med* 2023;165:107335) | 164 smartphone photos of chronic leprosy ulcers, 69 consenting patients, Colombia, downscaled and padded to 640 × 640 with black bars | Binary wound masks for every image. YOLO boxes: class 0 is the wound and class 1 a calibration card (nothing documents this; it was read from the masks, and all 164 agree). The card's size is not published, so there is no millimetre scale until the authors give it. No depth. | **CC BY 4.0**. Direct download, no registration. |
+| [LUTSeg](https://huggingface.co/datasets/ksanchez84/LUTSeg) (2026) | 141 photos of leprosy ulcers, 39 patients, followed over 21 months | 6-class tissue masks and wound masks. A 46-image subset was outlined by 5 clinicians separately, so rater disagreement can be measured. No scale, no depth. | **CC BY 4.0**. Direct download. *Caveat:* its card says the images come from CO2Wounds v1 and keep that licence, but only 32 of the 141 are in v1 (matched pixel for pixel). The 21-month span matches CO2Wounds-V2's collection (November 2021 to August 2023), whose current licence is non-commercial; the card's provenance paragraph was added on 17 August 2026, after release, and its "original study" DOI points to an unrelated paper. The uploader is V2's first author, so the grant is plausibly the rights holder's own: fine for internal testing, but get the authors' written confirmation before any commercial use. |
 
 Do not mix CO2Wounds v1 with CO2Wounds-V2 (section 2): the second is non-commercial.
 
@@ -89,15 +94,19 @@ statement. None show a ruler. Treat them as visual references.
 
 | Source | Contents | Ground truth | Licence |
 |---|---|---|---|
-| [Foot Ulcer Segmentation Challenge (FUSeg)](https://github.com/uwm-bigdata/wound-segmentation/tree/master/data/Foot%20Ulcer%20Segmentation%20Challenge), MICCAI 2021 | 1,010 foot-ulcer photos (610 train, 200 validation, 200 test) | Specialist-checked wound masks for train and validation | CC BY-NC |
-| [CO2Wounds-V2](https://data.mendeley.com/datasets/s2w7rjwz49/2) | 764 photos of leprosy ulcers, 96 patients | Wound masks for 607 | CC BY-NC 3.0 on the current version (an earlier version of the record said CC BY 4.0; ask before relying on that) |
-| [WoundSeg (WSNet)](https://huggingface.co/datasets/subbareddyoota/wseg_dataset), WACV 2023 | 2,686 photos across 8 wound types, 224–331 px | Masks covering wound plus surrounding skin | CC BY-NC 4.0. A Mendeley re-release labels the same images CC BY; do not rely on it. |
+| [Foot Ulcer Segmentation Challenge (FUSeg)](https://github.com/uwm-bigdata/wound-segmentation/tree/master/data/Foot%20Ulcer%20Segmentation%20Challenge), MICCAI 2021 | 1,210 foot-ulcer photos: 810 train, 200 validation, 200 test | Specialist-checked wound masks for train and validation (1,010); 24 are empty (healed), and 7 photos appear in both train and validation | CC BY-NC (version not stated), in the challenge's data usage agreement; the repository has no licence file |
+| [CO2Wounds-V2](https://data.mendeley.com/datasets/s2w7rjwz49/2) | 764 photos of leprosy ulcers, 96 patients, November 2021 to August 2023 | Wound masks for 607 (485 train, 122 validation); 24 groups of byte-identical photos, 8 of them across train and validation | CC BY-NC 3.0 on Mendeley version 2; the paper and its GitHub say CC BY-NC-ND. Mendeley version 1 (published 1.7 hours earlier, still online, same files) and the IEEE DataPort copy say CC BY 4.0. Ask the authors or legal before relying on the CC BY copies. |
+| [WoundSeg (WSNet)](https://huggingface.co/datasets/subbareddyoota/wseg_dataset), WACV 2023 | 2,686 photos across 8 wound types, 224–331 px | Masks covering wound plus surrounding skin, so they cannot be scored against wound-bed masks | CC BY-NC 4.0. A Mendeley re-release labels the same images CC BY; do not rely on it. |
 | [PI-Net / MIPI](https://zenodo.org/records/22032032), 2026 | 406 full-resolution clinical pressure-injury photos from 6 institutions | Pixel masks by stage | CC BY-NC-SA 4.0. Files restricted: request access on Zenodo. |
 | [WoundAmbit](https://github.com/VanessaBorst/woundambit) (University Hospital Würzburg) | 20 wound photos with 4 ArUco markers and a colour chart in frame | Sizes estimated by 3 dermatologists | Non-commercial data licence. The only public set with a fiducial at skin level. |
 | [SALVE](https://data.csiro.au/collection/csiro%3A64747v1) (CSIRO, WACV 2025) | **Silicone wounds, not patients.** iPhone and webcam video with a 3D-scanner point cloud as truth. | Scanner geometry | CC BY-NC-SA 4.0. The closest public match to our 3D problem; read the paper's benchmark. |
 | [Syn3DWound](https://lebrat.github.io/Syn3DWound/) (CSIRO) | **Synthetic**, not patients | Exact 3D wound beds and masks | CC BY-NC-SA 4.0 |
 | [SfM-3DULC](https://pmc.ncbi.nlm.nih.gov/articles/PMC8684855/), *Int Wound J* 2021 | Photogrammetry of leg wounds: depth and volume against a fitted reference surface | Method only | CC BY-NC-ND 4.0 |
 | [Aarts et al. 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC9909710/), *Dermatology* | The same wound measured by eKare inSight (a 3D wound camera) and a marker-based phone app | Competitor output example | CC BY-NC 4.0 |
+
+After legal sign-off, `fetch_wound_segmentation_data.py --noncommercial fuseg woundseg co2wounds-v2`
+fetches the first three, each pinned to a version and checked against the publisher's hashes,
+into a folder of their own (section 5).
 
 ## 3. Ask the owners first
 
@@ -127,13 +136,37 @@ partnership enquiry.
 | Kaggle wound collections, EBIS burns, WoundcareVQA, SurgWound | Re-packaged or web-scraped images with no clear rights, whatever licence label they carry. |
 | RKT-DFU-800, PIID, PISeg | Not released, no licence, or unclear provenance. |
 
+## 5. Segmentation test set
+
+`woundscan-engine/scripts/fetch_wound_segmentation_data.py --out DIR` downloads CO2Wounds v1 and
+LUTSeg into DIR, which must lie outside the repository, and checks every file against the
+publisher's own hash. It writes each photo beside a 0/255 wound mask of the same size, plus
+LUTSeg's tissue masks. `manifest.csv` gives each photo's licence, split, patient, wound share of
+the frame, provenance note and any photo it repeats; `LICENSES.md` gives the credit to cite.
+`evaluate_segmentation.py --data DIR --pred PRED`, or `--engine` to run the engine's own model,
+scores masks per dataset and by wound size: Dice, IoU, precision, recall, boundary F1 and area
+error. A photo published in both sets is scored once.
+
+Measured on 4 November 2026:
+
+| What | Photos | Result |
+|---|---|---|
+| Both sets | 305, of which 273 distinct | Wounds cover a median 3.9 % of the frame (10–90 %: 0.3–18.7 %); no mask is empty |
+| The same photo outlined by two teams (CO2Wounds v1 and LUTSeg) | 32 | Dice median 0.80, lowest 0.21. CO2Wounds outlines are tighter: median area 0.74 × LUTSeg's |
+| LUTSeg's five clinicians against one another | 46 | Dice median 0.86 (quartiles 0.78–0.92): about the best a model can be expected to reach |
+| The engine's `BoundarySegmentationModel`, which falls back to its colour heuristic because no weights are in the repository | 273 | Dice median 0.067; 98 % of photos under 0.5. It marks reddish skin, the colour card and red objects |
+
+Both sets come from one leprosy programme in Colombia, mostly lower-leg and foot ulcers: they do
+not cover pressure injuries, surgical wounds or burns. The non-commercial sets do.
+
 ## For StrataMetric
 
 - **Depth and volume:** keep validating on the phantoms. For real wounds, pursue WoundsDB and
   the Zivot set, and plan our own consented clinical capture. The published approach uses a
   structured-light scanner as the reference (Artec Leo in the MolecuLight study, Artec Eva in
   the burn study).
-- **Area and perimeter:** test on CO2Wounds v1 now; its calibration pattern gives a
-  millimetre scale.
+- **Segmentation:** test on CO2Wounds v1 and LUTSeg now (section 5).
+- **Area and perimeter in millimetres:** no public set gives a usable scale yet. Ask CO2Wounds'
+  authors for their calibration card's dimensions, and keep using the phantoms.
 - **Undermining:** visual references in Broder 2016, Tanaka 2025 and Medetec (with
   permission); the JSPU DESIGN-R manual for how clinicians measure it.
