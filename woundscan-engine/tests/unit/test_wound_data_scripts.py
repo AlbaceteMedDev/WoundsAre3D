@@ -6,9 +6,12 @@ datasets (which cannot be downloaded in CI), and the duplicate check."""
 from __future__ import annotations
 
 import csv
+import hashlib
+import http.client
 import importlib.util
 import json
 import sys
+import urllib.error
 import zipfile
 from pathlib import Path
 from types import ModuleType
@@ -80,6 +83,22 @@ def test_binary_masks(tmp_path: Path) -> None:
         fetch.binary(save(scene(1, 50, 50), tmp_path / "photo.png"))
 
 
+def test_mask_modes(tmp_path: Path) -> None:
+    """Grey with alpha, a mask held only in alpha, and a palette whose index 0
+    is white all read as the same 100-pixel wound."""
+    wound = square(40, 40, (10, 10, 20, 20))
+    Image.fromarray(np.stack([wound, np.full_like(wound, 255)], axis=2)).save(tmp_path / "la.png")
+    only_alpha = np.zeros((40, 40, 4), np.uint8)
+    only_alpha[..., 3] = wound
+    Image.fromarray(only_alpha).save(tmp_path / "alpha.png")
+    palette = Image.fromarray((wound > 0).astype(np.uint8) * 2)
+    palette.putpalette([255, 255, 255, 0, 0, 0, 255, 0, 0])
+    palette.save(tmp_path / "palette.png")
+    for name in ("la", "alpha", "palette"):
+        assert evaluate.read_mask(tmp_path / f"{name}.png").sum() == 100, name
+        assert fetch.binary(tmp_path / f"{name}.png").sum() == 100, name
+
+
 def test_checksums_and_paths(tmp_path: Path) -> None:
     assert fetch.check(b"hello\n", {"git_sha1": "ce013625030ba8dba906f756967f9e9ca394464a"})
     assert fetch.check(
@@ -89,6 +108,48 @@ def test_checksums_and_paths(tmp_path: Path) -> None:
     assert not fetch.check(b"x", {"sha256": "0" * 64})
     with pytest.raises(RuntimeError, match="leaves"):
         fetch.inside(tmp_path, "../escape.png")
+    assert fetch.outside_git(tmp_path / "data") == (tmp_path / "data").resolve()
+    for refuse in (fetch.outside_git, evaluate.outside_git):  # this checkout is a git work tree
+        with pytest.raises(SystemExit, match="git work tree"):
+            refuse(SCRIPTS / "data")
+
+
+def test_get_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A body cut short and a rate limit are tried again; a refusal is not."""
+    calls = []
+
+    class Reply:
+        headers: dict[str, str] = {}
+
+        def __enter__(self) -> Reply:
+            return self
+
+        def __exit__(self, *exc: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b"ok"
+
+    def flaky(req, timeout):  # type: ignore[no-untyped-def]
+        calls.append(req.full_url)
+        if len(calls) == 1:
+            raise http.client.IncompleteRead(b"o", 1)
+        if len(calls) == 2:
+            raise urllib.error.HTTPError(req.full_url, 429, "Too Many", {"Retry-After": "3"}, None)
+        return Reply()
+
+    def refuse(req, timeout):  # type: ignore[no-untyped-def]
+        calls.append(req.full_url)
+        raise urllib.error.HTTPError(req.full_url, 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(fetch.time, "sleep", lambda s: None)
+    monkeypatch.setattr(fetch.urllib.request, "urlopen", flaky)
+    assert fetch.get("https://example.org/a")[0] == b"ok" and len(calls) == 3
+    calls.clear()
+    monkeypatch.setattr(fetch.urllib.request, "urlopen", refuse)
+    with pytest.raises(urllib.error.HTTPError):
+        fetch.get("https://example.org/b")
+    assert len(calls) == 1
 
 
 def test_gated_layouts(tmp_path: Path) -> None:
@@ -120,6 +181,12 @@ def test_gated_layouts(tmp_path: Path) -> None:
         0,
         255,
     ]
+    nested = raw / "woundseg-nested"  # the same file name in two folders: refused, not dropped
+    for kind in ("foot", "leg"):
+        save(scene(4, 32, 32), nested / "unpacked" / kind / "sample" / "1.png")
+        save(square(32, 32, (2, 2, 9, 9)), nested / "unpacked" / kind / "mask" / "1.png")
+    with pytest.raises(RuntimeError, match="one to one"):
+        fetch.woundseg(tmp_path / "out", nested)
 
     v2 = raw / "co2wounds-v2"
     for stem, ext, split in (("IMG435", ".jpg", "train"), ("IMG864", ".png", "val")):
@@ -166,6 +233,54 @@ def test_repeats(tmp_path: Path) -> None:
         "two/turned": ("one/padded", 2),
         "two/other": ("", None),
     }
+    # A later fetch's byte-for-byte copy of two/turned names the first copy,
+    # one/padded, with two/turned's turns: never a copy of a copy.
+    later = [{**rows[2], "key": "three/0", "dataset": "three", "duplicate_of": ""}]
+    del later[0]["duplicate_turns"]
+    earlier = [{**r, "duplicate_turns": str(r.get("duplicate_turns", ""))} for r in rows]
+    fetch.mark_repeats(later, earlier)
+    assert (later[0]["duplicate_of"], later[0]["duplicate_turns"]) == ("one/padded", 2)
+
+
+def fake_dataset(name: str, seed: int) -> dict[str, object]:
+    """A two-photograph stand-in for a DATASETS entry, made without a download."""
+
+    def layout(out: Path, raw: Path) -> list[dict[str, object]]:
+        rows = []
+        for i in range(2):
+            image = save(scene(seed + i, 32, 24), raw / f"{i}.png")
+            mask = save(square(32, 24, (4, 4, 12, 12)), raw / f"{i}_mask.png")
+            rows.append(fetch.pair(out, name, str(i), image, mask))
+        return rows
+
+    return {
+        "fetch": lambda raw: None,
+        "layout": layout,
+        "group": "confirm-first" if name == "two" else "usable",
+        "licence": "CC BY 4.0",
+        "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+        "source": "test",
+        "contents": "test",
+        "attribution": "test",
+    }
+
+
+def test_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Datasets are laid out in DATASETS order whatever the command line says;
+    a re-run that leaves out a dataset already in the folder is refused; and
+    LICENSES.md says what each group allows and that the masks were redrawn."""
+    sets = {"one": fake_dataset("one", 0), "two": fake_dataset("two", 0)}  # the same photographs
+    monkeypatch.setattr(fetch, "DATASETS", sets)
+    rows = fetch.build(["two", "one"], tmp_path, [])
+    assert [r["key"] for r in rows] == ["one/0", "one/1", "two/0", "two/1"]
+    assert [r["duplicate_of"] for r in rows] == ["", "", "one/0", "one/1"]
+    assert {r["mask_target"] for r in rows} == {"wound"}
+    licences = (tmp_path / "LICENSES.md").read_text()
+    assert "Use: company use allowed" in licences
+    assert "Use: internal testing allowed" in licences and "binarised" in licences
+    with pytest.raises(SystemExit, match="also holds two"):
+        fetch.build(["one"], tmp_path, [])
+    assert len(fetch.read_manifest(tmp_path)) == 4  # left as it was
 
 
 def test_evaluate_end_to_end(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -199,3 +314,78 @@ def test_evaluate_end_to_end(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert summary["photographs"] == 2
     assert summary["groups"]["all"]["dice"]["median"] == pytest.approx(0.75)
     assert summary["groups"]["all"]["dice_under_0.5"] == 0.0
+
+
+def test_selection_follows_repeats() -> None:
+    """Each photograph is scored once, from the first selected dataset that
+    lists it, even when the copy it repeats is not selected or not here."""
+    every = [
+        {"key": "a/1", "dataset": "a", "duplicate_of": ""},
+        {"key": "a/2", "dataset": "a", "duplicate_of": ""},
+        {"key": "b/1", "dataset": "b", "duplicate_of": "a/1"},
+        {"key": "b/2", "dataset": "b", "duplicate_of": ""},
+        {"key": "c/1", "dataset": "c", "duplicate_of": "b/1"},  # a chain
+        {"key": "c/2", "dataset": "c", "duplicate_of": "x/9"},  # first copy in another manifest
+        {"key": "c/3", "dataset": "c", "duplicate_of": "x/9"},
+    ]
+
+    def keys(datasets: list[str] | None, every_copy: bool = False) -> list[str]:
+        return [r["key"] for r in evaluate.select(every, datasets, every_copy)]
+
+    assert keys(None) == ["a/1", "a/2", "b/2", "c/2"]
+    assert keys(["b"]) == ["b/1", "b/2"]
+    assert keys(["b", "c"]) == ["b/1", "b/2", "c/2"]
+    assert keys(["c"]) == ["c/1", "c/2"]
+    assert len(keys(None, every_copy=True)) == 7
+
+
+def test_evaluate_report_and_groups(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The report lands under DATA by default and never in a git work tree; a
+    healed photograph alone in its band is reported, not a crash; peri-wound
+    masks are kept out of the pooled rows; and weights that do not load stop
+    the run before anything is written."""
+    data, pred = tmp_path / "data", tmp_path / "pred"
+    truths = {
+        "set/0": square(40, 40, (10, 10, 30, 30)),
+        "set/1": np.zeros((40, 40), np.uint8),  # healed: nothing to find
+        "peri/0": square(40, 40, (5, 5, 35, 35)),
+    }
+    rows = []
+    for key, truth in truths.items():
+        name, i = key.split("/")
+        save(scene(len(rows), 40, 40), data / "images" / name / f"{i}.png")
+        save(truth, data / "masks" / name / f"{i}.png")
+        save(truth, pred / name / f"{i}.png")
+        rows.append(
+            {
+                "key": key,
+                "dataset": name,
+                "id": i,
+                "image": f"images/{name}/{i}.png",
+                "mask": f"masks/{name}/{i}.png",
+                "mask_target": "wound and peri-wound skin" if name == "peri" else "wound",
+                "duplicate_of": "",
+            }
+        )
+    with open(data / "manifest.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+
+    def run(*args: str) -> int:
+        monkeypatch.setattr(sys, "argv", ["evaluate", "--data", str(data), *args])
+        return evaluate.main()
+
+    assert run("--pred", str(pred)) == 0
+    summary = json.loads((data / "reports" / "pred" / "summary.json").read_text())
+    assert summary["groups"]["all"]["n"] == 2 and summary["groups"]["dataset peri"]["n"] == 1
+    assert summary["groups"]["wound under 1 % of frame"]["recall"] == {"n": 0}
+    assert summary["scored_apart"] == ["peri (wound and peri-wound skin)"]
+    with pytest.raises(SystemExit, match="git work tree"):
+        run("--pred", str(pred), "--report", str(SCRIPTS / "report"))
+    assert not (SCRIPTS / "report").exists()
+    bad = tmp_path / "boundary_v9.pt"
+    bad.write_bytes(b"not a state dict")
+    with pytest.raises(SystemExit):
+        run("--engine", "--weights", str(bad), "--report", str(tmp_path / "engine"))
+    assert not (tmp_path / "engine").exists()

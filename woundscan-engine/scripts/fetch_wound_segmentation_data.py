@@ -1,12 +1,16 @@
 """Download real-wound photographs with segmentation ground truth, check every
 file against the publisher's own checksum, and lay them out for testing.
 
-By default this fetches only the datasets whose licence lets a company use
-them (docs/wound-reference-images.md, group 1). Non-commercial datasets need
---noncommercial and land apart, under OUT/noncommercial/: their licences allow
-research use only, so clear internal benchmarking with legal first, and never
-train the product on them or show them in marketing. Patient images do not
-belong in the repository, so --out must lie outside it.
+By default this fetches the two sets published under CC BY 4.0
+(docs/wound-reference-images.md, section 5): CO2Wounds v1, which a company may
+use with credit, and LUTSeg, for internal testing until its authors confirm
+that licence in writing - most of its photographs look to come from a later
+collection whose current release is non-commercial (LICENSES.md and each row's
+note say which). Non-commercial datasets need --noncommercial and land apart,
+under OUT/noncommercial/: their licences allow research use only, so clear
+internal benchmarking with legal first, and never train the product on them or
+show them in marketing. Patient images do not belong in any repository, so OUT
+may not lie inside a git work tree.
 
     python scripts/fetch_wound_segmentation_data.py --out ~/woundscan-data/real-wounds
     python scripts/fetch_wound_segmentation_data.py --out DIR --noncommercial fuseg woundseg
@@ -14,13 +18,15 @@ belong in the repository, so --out must lie outside it.
 For each dataset it writes
     raw/<dataset>/             the files as published, each one verified
     images/<dataset>/<id>.*    each photograph, byte for byte as published
-    masks/<dataset>/<id>.png   its wound mask, same size: 0 background, 255 wound
-    tissue/<dataset>/<id>.png  tissue classes, where the dataset has them
+    masks/<dataset>/<id>.png   its wound mask redrawn at the same size as 0
+                               background and 255 wound (LICENSES.md says how)
+    tissue/<dataset>/<id>.png  tissue classes as published, where the dataset has them
 and, over all of them, manifest.csv - one row per photograph: source, licence,
-size, split, patient, wound fraction, the photograph it repeats if any, and
-notes - and LICENSES.md, each dataset's licence and credit. Re-running skips
-files already downloaded and verified. evaluate_segmentation.py scores a
-model on the result.
+size, split, patient, wound fraction, what its mask covers, the photograph it
+repeats if any, and notes - and LICENSES.md, each dataset's licence and credit.
+Re-running skips files already downloaded and verified; it stops if OUT holds
+a dataset it was not asked for, rather than leave that one out of the manifest.
+evaluate_segmentation.py scores a model on the result.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import http.client
 import io
 import json
 import re
@@ -46,7 +53,6 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-REPO = Path(__file__).resolve().parents[2]
 AGENT = "woundscan-dataset-fetch/1.0"
 LUTSEG_CLASSES = {
     0: "background",
@@ -62,19 +68,35 @@ Row = dict[str, Any]
 
 # ---------------------------------------------------------------- download --
 def get(url: str, timeout: float = 120.0) -> tuple[bytes, Any]:
+    """The body and headers at url, trying again after what may pass: server
+    errors, rate limits, timeouts and connections cut mid-transfer."""
     req = urllib.request.Request(url, headers={"User-Agent": AGENT})
     for attempt in range(4):
+        wait = 2 ** (attempt + 1)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read(), r.headers
         except urllib.error.HTTPError as e:
-            if e.code < 500 or attempt == 3:  # a refusal will not change on retry
-                raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if (e.code < 500 and e.code not in (408, 429)) or attempt == 3:
+                raise  # a refusal will not change on retry
+            after = str((e.headers or {}).get("Retry-After") or "")
+            if after.isdigit():
+                wait = min(int(after), 120)
+        except (OSError, http.client.HTTPException):  # timeouts, resets, truncated bodies
             if attempt == 3:
                 raise
-        time.sleep(2 ** (attempt + 1))
+        time.sleep(wait)
     raise AssertionError("unreachable")
+
+
+def outside_git(path: Path) -> Path:
+    """path resolved, stopping the run if it lies inside a git work tree (this
+    repository's or any other), where patient images could be committed."""
+    p = path.expanduser().resolve()
+    for d in (p, *p.parents):
+        if (d / ".git").exists():
+            sys.exit(f"{p} is inside the git work tree at {d}: keep patient images out of it")
+    return p
 
 
 def check(data: bytes, want: dict[str, Any]) -> bool:
@@ -233,14 +255,29 @@ def github(repo: str, commit: str, prefix: str, raw: Path) -> None:
 
 
 # ------------------------------------------------------------------- masks --
+def plane(im: Image.Image) -> np.ndarray:
+    """A mask image as one 2-D array: a palette image's indices; otherwise its
+    brightest colour channel, transparent pixels counting as background - or
+    the alpha channel itself, where that is all the image holds."""
+    a = np.asarray(im)
+    if a.ndim == 2:
+        return a
+    if im.mode in ("LA", "La", "PA", "RGBA", "RGBa"):
+        colour, alpha = a[..., :-1].max(axis=2), a[..., -1]
+        return np.where(alpha > 0, colour, 0) if colour.any() else alpha
+    return a.max(axis=2)
+
+
 def binary(path: Path) -> np.ndarray:
-    """A published mask as a boolean array: wound where it is over half scale.
-    A mask that was resized carries grey levels along its edge (CO2Wounds v1:
-    under 0.25 % of pixels); a file with over 1 % of pixels in mid-grey is not
-    a mask, and is refused."""
-    a = np.asarray(Image.open(path))
-    if a.ndim == 3:
-        a = a[..., :3].max(axis=2)
+    """A published mask as a boolean array: wound where it is at or over half
+    scale, or, in a palette image, wherever the index is not 0. A mask that was
+    resized carries grey levels along its edge (CO2Wounds v1: under 0.25 % of
+    pixels); a file with over 1 % of pixels in mid-grey is not a mask, and is
+    refused."""
+    im = Image.open(path)
+    a = plane(im)
+    if im.mode in ("P", "PA"):  # indices are labels: 0 is background
+        return a != 0
     a = a.astype(np.float32) / (1.0 if a.max() <= 1 else 255.0)  # some masks store 0 and 1
     if ((a > 0.12) & (a < 0.88)).mean() > 0.01:
         raise RuntimeError(f"{path}: too many mid-grey pixels for a binary mask")
@@ -249,7 +286,7 @@ def binary(path: Path) -> np.ndarray:
 
 def save_mask(mask: np.ndarray, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(np.where(mask, 255, 0).astype(np.uint8), mode="L").save(dest, optimize=True)
+    Image.fromarray(np.where(mask, 255, 0).astype(np.uint8)).save(dest, optimize=True)
 
 
 def pair(out: Path, name: str, stem: str, image: Path, mask_file: Path, **extra: Any) -> Row:
@@ -375,7 +412,8 @@ def fuseg(out: Path, raw: Path) -> list[Row]:
 
 def woundseg(out: Path, raw: Path) -> list[Row]:
     """One zip holding sample/ (photographs) and mask/ folders, paired by file
-    name. Its layout is not documented: the run stops if the two do not pair."""
+    name. Its layout is not documented: the run stops if the two do not pair
+    one to one."""
     unpacked = raw / "unpacked"
     if not unpacked.exists():  # unpack beside it, then rename: a half-done unpack is never used
         part = raw / "unpacked.part"
@@ -388,12 +426,19 @@ def woundseg(out: Path, raw: Path) -> list[Row]:
                     dest.write_bytes(z.read(info))
         part.rename(unpacked)
     files = [p for p in unpacked.rglob("*") if p.is_file() and not p.name.startswith(".")]
-    samples = {p.stem: p for p in files if p.parent.name == "sample"}
-    masks = {p.stem: p for p in files if p.parent.name == "mask"}
-    if not samples or samples.keys() != masks.keys():
+    sample_files = [p for p in files if p.parent.name == "sample"]
+    mask_files = [p for p in files if p.parent.name == "mask"]
+    samples = {p.stem: p for p in sample_files}
+    masks = {p.stem: p for p in mask_files}
+    if (
+        not samples
+        or samples.keys() != masks.keys()
+        or len(samples) != len(sample_files)  # a name used twice, in different folders
+        or len(masks) != len(mask_files)
+    ):
         raise RuntimeError(
-            f"WoundSeg: {len(samples)} photographs and {len(masks)} masks do not "
-            "pair by file name; inspect raw/woundseg/unpacked/"
+            f"WoundSeg: {len(sample_files)} photographs and {len(mask_files)} masks do not "
+            "pair one to one by file name; inspect raw/woundseg/unpacked/"
         )
     return [pair(out, "woundseg", stem, samples[stem], masks[stem]) for stem in sorted(samples)]
 
@@ -415,7 +460,10 @@ def lutseg_note(r: Row, fetched: set[str]) -> str:
     if "co2wounds-v1" not in fetched:
         return "fetch co2wounds-v1 too, to see whether this photograph is in its CC BY 4.0 release"
     if r["duplicate_of"].startswith("co2wounds-v1/"):
-        return "also published in CO2Wounds v1 (CC BY 4.0)"
+        return (
+            f"photograph also in CO2Wounds v1 (CC BY 4.0) as {r['duplicate_of']}: use that row "
+            "for commercial work; this row's masks are LUTSeg's own"
+        )
     return (
         "not in CO2Wounds v1: probably from the later collection, whose current release is "
         "non-commercial; confirm the CC BY 4.0 grant with the authors before commercial use"
@@ -445,7 +493,7 @@ DATASETS: dict[str, dict[str, Any]] = {
         ),
         "layout": lutseg,
         "note": lutseg_note,
-        "group": "usable",
+        "group": "confirm-first",
         "licence": "CC BY 4.0",
         "licence_url": "https://creativecommons.org/licenses/by/4.0/",
         "source": "https://huggingface.co/datasets/ksanchez84/LUTSeg "
@@ -456,9 +504,10 @@ DATASETS: dict[str, dict[str, Any]] = {
         "outlined by five clinicians separately is in raw/lutseg/gold_standard/. Only 32 "
         "of the photographs are in CO2Wounds v1, whose licence LUTSeg says it inherits; "
         "the rest date from the later collection (see each row's note)",
-        "attribution": "LUTSeg: A Longitudinal Multi-Expert Dataset for Ulcer Tissue Segmentation. "
-        "Eleventh ISIC Skin Image Analysis Workshop @ MICCAI 2026. "
-        "https://huggingface.co/datasets/ksanchez84/LUTSeg",
+        "attribution": "Sanchez K, Hinojosa C, Ávila Álvarez AA, Riano-Rojas AC, Romero Pinzon DH, "
+        "Páez Figueroa JC, Llinás Tono M, Ghanem B. LUTSeg: A Longitudinal Multi-Expert Dataset "
+        "for Ulcer Tissue Segmentation. Eleventh ISIC Skin Image Analysis Workshop @ MICCAI 2026. "
+        "arXiv:2608.25866. https://huggingface.co/datasets/ksanchez84/LUTSeg",
     },
     "fuseg": {
         "fetch": lambda raw: github(
@@ -487,7 +536,7 @@ DATASETS: dict[str, dict[str, Any]] = {
             "subbareddyoota/wseg_dataset", "bdcc1e1cef607bfd7a4f98fc28f31a638a0e0ca9", raw
         ),
         "layout": woundseg,
-        "note": lambda r, fetched: "mask includes the peri-wound skin",
+        "mask_target": "wound and peri-wound skin",
         "group": "noncommercial",
         "licence": "CC BY-NC 4.0",
         "licence_url": "https://creativecommons.org/licenses/by-nc/4.0/",
@@ -537,14 +586,18 @@ def mark_repeats(rows: list[Row], earlier: list[Row]) -> None:
     """Flag a photograph published twice - byte for byte, or by another dataset
     resized, re-encoded, padded or turned by quarter turns - so it is not
     tested twice. The copy met first keeps it, counting `earlier` rows (an
-    earlier fetch) first; the other names it in duplicate_of, with the quarter
-    turns that bring it onto the first."""
-    first: dict[str, str] = {}
-    for r in earlier + rows:
+    earlier fetch) first; every other copy names that first one in
+    duplicate_of, with the quarter turns that bring it onto the first."""
+    first: dict[str, tuple[str, int]] = {}
+    for r in earlier:  # an earlier row may itself repeat another: point past it
+        turns = int(r.get("duplicate_turns") or 0) if r["duplicate_of"] else 0
+        first.setdefault(r["image_sha256"], (r["duplicate_of"] or r["key"], turns))
+    for r in rows:
         if r["image_sha256"] in first:
-            r.update(duplicate_of=first[r["image_sha256"]], duplicate_turns=0)
+            key, turns = first[r["image_sha256"]]
+            r.update(duplicate_of=key, duplicate_turns=turns)
         else:
-            first[r["image_sha256"]] = r["key"]
+            first[r["image_sha256"]] = (r["key"], 0)
     fresh = [r for r in earlier + rows if not r["duplicate_of"]]
     prints = {r["key"]: fingerprint(r["path"]) for r in fresh}
     names = list(dict.fromkeys(r["dataset"] for r in fresh))
@@ -576,6 +629,7 @@ COLUMNS = [
     "id",
     "image",
     "mask",
+    "mask_target",
     "tissue",
     "width",
     "height",
@@ -593,6 +647,16 @@ COLUMNS = [
 ]
 
 
+USE = {
+    "usable": "company use allowed, with credit",
+    "confirm-first": "internal testing allowed, with credit; before any commercial use (the "
+    "product, its training data or its marketing) get the authors' written confirmation of "
+    "the licence - see each row's note",
+    "noncommercial": "NON-COMMERCIAL: internal research only, after legal sign-off; never in the "
+    "product, its training data or its marketing",
+}
+
+
 def write_licences(root: Path, names: list[str]) -> None:
     lines = [
         "# Licences and credit",
@@ -602,20 +666,21 @@ def write_licences(root: Path, names: list[str]) -> None:
         "copyright, not patient consent: get legal and regulatory review before any of them "
         "appears in marketing, labelling or a submission.",
         "",
+        "Changes made: masks/ holds each published wound mask redrawn as 0 (background) and 255 "
+        "(wound), a pixel counting as wound where the published mask is at or over half its "
+        "scale (or, in a palette image, has any index but 0), so grey edge pixels are rounded "
+        "one way or the other. The published files are unchanged under raw/; photographs and "
+        "tissue masks are copied byte for byte. Say so when you share the masks, as the "
+        "licences require: for example, 'wound masks binarised from the published masks'.",
+        "",
     ]
     for n in names:
         d = DATASETS[n]
-        use = (
-            "company use allowed, with credit"
-            if d["group"] == "usable"
-            else "NON-COMMERCIAL: internal research only, after legal sign-off; never in the "
-            "product, its training data or its marketing"
-        )
         lines += [
             f"## {n}",
             "",
             f"- Licence: {d['licence']} ({d['licence_url']})",
-            f"- Use: {use}",
+            f"- Use: {USE[d['group']]}",
             f"- Source: {d['source']}",
             f"- Contents: {d['contents']}",
             f"- Credit: {d['attribution']}",
@@ -624,7 +689,27 @@ def write_licences(root: Path, names: list[str]) -> None:
     (root / "LICENSES.md").write_text("\n".join(lines))
 
 
+FOLDERS = ("raw", "images", "masks", "tissue")
+
+
 def build(names: list[str], root: Path, earlier: list[Row]) -> list[Row]:
+    # In DATASETS order whatever the command line said, so the copy of a
+    # repeated photograph that is kept does not depend on how it was typed.
+    names = [n for n in DATASETS if n in names]
+    others = [
+        n for n in DATASETS if n not in names and any((root / f / n).exists() for f in FOLDERS)
+    ]
+    if others:
+        one = len(others) == 1
+        sys.exit(
+            f"{root} also holds {', '.join(others)}: name {'it' if one else 'them'} too, or "
+            f"delete {'its' if one else 'their'} folders under {', '.join(FOLDERS)} first. "
+            "manifest.csv and LICENSES.md are rewritten for the datasets named, and would "
+            f"leave {'its' if one else 'their'} photographs unlisted."
+        )
+    for f in FOLDERS:  # a folder linked into a repository would take the files there
+        for n in names:
+            outside_git(root / f / n)
     rows: list[Row] = []
     for n in names:
         print(f"{n}:", flush=True)
@@ -635,6 +720,7 @@ def build(names: list[str], root: Path, earlier: list[Row]) -> list[Row]:
             r.update(
                 key=f"{n}/{r['id']}",
                 dataset=n,
+                mask_target=d.get("mask_target", "wound"),
                 licence=d["licence"],
                 group=d["group"],
                 width=mask.shape[1],
@@ -677,16 +763,16 @@ def read_manifest(root: Path) -> list[Row]:
 
 
 def main() -> int:
-    usable = [n for n, d in DATASETS.items() if d["group"] == "usable"]
-    gated = [n for n, d in DATASETS.items() if d["group"] != "usable"]
+    default = [n for n, d in DATASETS.items() if d["group"] != "noncommercial"]
+    gated = [n for n, d in DATASETS.items() if d["group"] == "noncommercial"]
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--out", required=True, type=Path, help="folder outside the repository")
+    ap.add_argument("--out", required=True, type=Path, help="folder outside any git work tree")
     ap.add_argument(
         "--datasets",
         nargs="*",
-        default=usable,
-        choices=usable,
-        help="datasets a company may use (default: all of them)",
+        default=default,
+        choices=default,
+        help="CC BY datasets (default: all of them); LICENSES.md says what each allows",
     )
     ap.add_argument(
         "--noncommercial",
@@ -696,16 +782,14 @@ def main() -> int:
         help="non-commercial datasets, after legal sign-off, into OUT/noncommercial/",
     )
     a = ap.parse_args()
-    out = a.out.expanduser().resolve()
-    if out == REPO or REPO in out.parents:
-        sys.exit(f"{out} is inside the repository: patient images must be kept out of it")
+    out = outside_git(a.out)
     rows = build(a.datasets, out, []) if a.datasets else read_manifest(out)
     if a.noncommercial:
         print(
             "NON-COMMERCIAL datasets: internal research only, after legal sign-off; never in "
             "the product, its training data or its marketing."
         )
-        build(a.noncommercial, out / "noncommercial", rows)
+        build(a.noncommercial, outside_git(out / "noncommercial"), rows)
     return 0
 
 

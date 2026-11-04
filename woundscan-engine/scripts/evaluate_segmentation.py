@@ -5,24 +5,31 @@ fetch_wound_segmentation_data.py lays out.
     python scripts/evaluate_segmentation.py --data DIR --engine [--weights boundary_v1.pt]
 
 PRED holds one mask per photograph, PRED/<dataset>/<id>.png, at the
-photograph's size and non-zero where the model sees wound. --engine runs the
-engine's BoundarySegmentationModel instead and keeps its masks in
-REPORT/pred/. A photograph that two datasets publish is scored once, from the
-dataset listed first in the manifest (--all scores both copies).
+photograph's size and non-zero where the model sees wound (a palette image is
+read by its indices). --engine runs the engine's BoundarySegmentationModel
+instead, keeping its masks in REPORT/pred/; given --weights, it stops unless
+the U-Net really loads, and segments photographs larger than --max-side at that
+size, scaling each mask back. The report goes to --report, by default
+DIR/reports/<run>; it holds masks made from patient photographs, so it is
+refused inside a git work tree. Each photograph is scored once, from the first
+selected dataset that lists it (--all scores every copy).
 
 Per photograph: Dice, IoU, precision, recall, boundary F1 (boundary pixels
 within 0.75 % of the image diagonal of the other boundary) and the signed
 error in wound area. Printed per dataset and by the wound's share of the
 frame, as medians and quartiles with the share of photographs under Dice 0.5,
-and written to REPORT/scores.csv and REPORT/summary.json. Where LUTSeg's
-five-clinician subset is present, the clinicians' agreement with one another
-is printed too: about as well as a model can be expected to do.
+and written to REPORT/scores.csv and REPORT/summary.json. A dataset whose masks
+take in more than the wound (WoundSeg's include the peri-wound skin) is scored
+in its own row only, not pooled with the rest. Where LUTSeg's five-clinician
+subset is present, the clinicians' agreement with one another is printed too:
+about as well as a model can be expected to do.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import itertools
 import json
 import sys
@@ -40,11 +47,35 @@ BANDS = [
     (0.05, 1.01, "over 5 % of frame"),
 ]
 METRICS = ["dice", "iou", "precision", "recall", "boundary_f1", "area_error"]
+NAN = float("nan")
+
+
+def outside_git(path: Path) -> Path:
+    """path resolved, stopping the run if it lies inside a git work tree (this
+    repository's or any other), where masks of patient photographs could be
+    committed."""
+    p = path.expanduser().resolve()
+    for d in (p, *p.parents):
+        if (d / ".git").exists():
+            sys.exit(f"{p} is inside the git work tree at {d}: keep the report out of it")
+    return p
+
+
+def plane(im: Image.Image) -> np.ndarray:
+    """A mask image as one 2-D array: a palette image's indices; otherwise its
+    brightest colour channel, transparent pixels counting as background - or
+    the alpha channel itself, where that is all the image holds."""
+    a = np.asarray(im)
+    if a.ndim == 2:
+        return a
+    if im.mode in ("LA", "La", "PA", "RGBA", "RGBa"):
+        colour, alpha = a[..., :-1].max(axis=2), a[..., -1]
+        return np.where(alpha > 0, colour, 0) if colour.any() else alpha
+    return a.max(axis=2)
 
 
 def read_mask(path: Path) -> np.ndarray:
-    a = np.asarray(Image.open(path))
-    return (a[..., :3].max(axis=2) if a.ndim == 3 else a) > 0
+    return plane(Image.open(path)) > 0
 
 
 def edge(m: np.ndarray) -> np.ndarray:
@@ -54,13 +85,12 @@ def edge(m: np.ndarray) -> np.ndarray:
 def score(pred: np.ndarray, truth: np.ndarray) -> dict[str, float]:
     """Overlap, boundary and area agreement of a predicted mask with the truth."""
     inter, p, t = float((pred & truth).sum()), float(pred.sum()), float(truth.sum())
-    nan = float("nan")
     out = {
         "dice": 2 * inter / (p + t) if p + t else 1.0,
         "iou": inter / (p + t - inter) if p + t else 1.0,
-        "precision": inter / p if p else nan,
-        "recall": inter / t if t else nan,
-        "area_error": (p - t) / t if t else nan,
+        "precision": inter / p if p else NAN,
+        "recall": inter / t if t else NAN,
+        "area_error": (p - t) / t if t else NAN,
     }
     tol = 0.0075 * float(np.hypot(*truth.shape))
     ys, xs = np.nonzero(pred | truth)
@@ -82,26 +112,79 @@ def score(pred: np.ndarray, truth: np.ndarray) -> dict[str, float]:
     return out
 
 
-def run_engine(rows: list[dict[str, str]], data: Path, dest: Path, weights: Path | None) -> str:
-    """Segment every photograph with the engine's model; masks go to dest."""
+def select(
+    every: list[dict[str, str]], datasets: list[str] | None, every_copy: bool
+) -> list[dict[str, str]]:
+    """The rows of the named datasets, once per photograph unless every_copy:
+    of the copies selected, the first one listed. duplicate_of is followed to
+    the copy the others repeat, even through a chain or into another folder's
+    manifest, so a copy whose first is not selected is still scored."""
+    link = {r["key"]: r["duplicate_of"] for r in every}
+
+    def first(key: str) -> str:
+        seen = set()
+        while link.get(key) and key not in seen:
+            seen.add(key)
+            key = link[key]
+        return key
+
+    rows, taken = [], set()
+    for r in every:
+        if datasets and r["dataset"] not in datasets:
+            continue
+        photo = first(r["key"])
+        if every_copy or photo not in taken:
+            taken.add(photo)
+            rows.append(r)
+    return rows
+
+
+def load_engine(weights: Path | None) -> Any:
+    """The engine's segmentation model; with weights, only if its U-Net loads."""
     sys.path.insert(0, str(ENGINE / "src"))
     from woundscan.ml.boundary_segmentation import BoundarySegmentationModel
 
-    model = (
-        BoundarySegmentationModel.from_weights(weights)
-        if weights
-        else BoundarySegmentationModel.fallback()
-    )
-    print(f"engine model: {model.version}", flush=True)
+    if weights is None:
+        return BoundarySegmentationModel.fallback()
+    if not weights.is_file():
+        sys.exit(f"--weights {weights}: no such file")
+    model = BoundarySegmentationModel.from_weights(weights)
+    model._ensure_loaded()  # the engine falls back to its colour heuristic without saying so
+    if model._unet is None or model._unet.net is None:
+        if importlib.util.find_spec("torch") is None:
+            sys.exit("--weights needs torch, which is not installed: pip install -e '.[ml]'")
+        sys.exit(
+            f"--weights {weights}: torch could not load it as a state dict for the engine's "
+            "U-Net (a trainer checkpoint such as {'state_dict': ...}, or a whole pickled model, "
+            "will not do); the engine would have used its colour heuristic instead"
+        )
+    return model
+
+
+def run_engine(
+    model: Any, rows: list[dict[str, str]], data: Path, dest: Path, max_side: int
+) -> None:
+    """Segment every photograph; masks go to dest, at each photograph's size."""
     for i, r in enumerate(rows, 1):
-        rgb = np.asarray(Image.open(data / r["image"]).convert("RGB"))
-        mask = model.segment(rgb).binary_mask
+        im = Image.open(data / r["image"]).convert("RGB")
+        scale = max_side / max(im.size) if max_side and max(im.size) > max_side else 1.0
+        small = (
+            im.resize(
+                (max(1, round(im.width * scale)), max(1, round(im.height * scale))),
+                Image.BILINEAR,
+            )
+            if scale < 1
+            else im
+        )
+        mask = model.segment(np.asarray(small)).binary_mask
+        found = Image.fromarray(np.where(mask, 255, 0).astype(np.uint8))
+        if scale < 1:
+            found = found.resize(im.size, Image.NEAREST)
         out = dest / r["dataset"] / f"{r['id']}.png"
         out.parent.mkdir(parents=True, exist_ok=True)
-        Image.fromarray(np.where(mask, 255, 0).astype(np.uint8), mode="L").save(out)
+        found.save(out)
         if i % 25 == 0 or i == len(rows):
             print(f"  segmented {i}/{len(rows)}", flush=True)
-    return model.version
 
 
 def clinicians(data: Path) -> list[float]:
@@ -142,11 +225,13 @@ def summarise(group: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def line(name: str, s: dict[str, Any]) -> str:
-    d, b, a = s["dice"], s["boundary_f1"], s["area_error"]
+    def m(metric: str, stat: str = "median") -> float:
+        return float(s[metric].get(stat, NAN))  # undefined where no truth mask has a wound
+
     return (
-        f"{name:28s} {s['n']:4d}  {d['median']:.3f} [{d['q1']:.3f}-{d['q3']:.3f}]  "
-        f"{s['iou']['median']:.3f}  {b['median']:.3f}  {s['precision'].get('median', float('nan')):.3f}"
-        f"  {s['recall']['median']:.3f}  {a['median']:+.2f}  {100 * s['dice_under_0.5']:5.1f} %"
+        f"{name:28s} {s['n']:4d}  {m('dice'):5.3f} [{m('dice', 'q1'):5.3f}-{m('dice', 'q3'):5.3f}]"
+        f"  {m('iou'):5.3f}  {m('boundary_f1'):5.3f}  {m('precision'):5.3f}  {m('recall'):6.3f}"
+        f" {m('area_error'):+5.2f}  {100 * s['dice_under_0.5']:5.1f} %"
     )
 
 
@@ -156,26 +241,44 @@ def main() -> int:
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--pred", type=Path, help="folder of predicted masks, <dataset>/<id>.png")
     src.add_argument("--engine", action="store_true", help="run the engine's segmentation model")
-    ap.add_argument("--weights", type=Path, help="U-Net weights for --engine (else its fallback)")
-    ap.add_argument("--report", type=Path, default=Path("segmentation_report"))
+    ap.add_argument(
+        "--weights", type=Path, help="U-Net state dict for --engine (else its colour heuristic)"
+    )
+    ap.add_argument(
+        "--max-side",
+        type=int,
+        default=1024,
+        help="with --weights, segment photographs at most this many pixels on the long side "
+        "and scale the mask back (default 1024; 0 keeps full size)",
+    )
+    ap.add_argument("--report", type=Path, help="report folder (default: DATA/reports/<run>)")
     ap.add_argument("--datasets", nargs="*", help="score only these datasets")
     ap.add_argument(
         "--all", action="store_true", help="also score photographs repeated across datasets"
     )
     a = ap.parse_args()
-    data = a.data.expanduser()
+    if a.weights and not a.engine:
+        ap.error("--weights goes with --engine")
+    data = a.data.expanduser().resolve()
+    weights = a.weights.expanduser().resolve() if a.weights else None
+    pred = a.pred.expanduser().resolve() if a.pred else None
+    run = f"engine-{weights.stem if weights else 'fallback'}" if a.engine else pred.name
+    report = outside_git(a.report or data / "reports" / run)
     with open(data / "manifest.csv", newline="") as f:
-        rows = [
-            r
-            for r in csv.DictReader(f)
-            if (a.all or not r["duplicate_of"]) and (not a.datasets or r["dataset"] in a.datasets)
-        ]
-    a.report.mkdir(parents=True, exist_ok=True)
-    model = "predictions in " + str(a.pred)
-    pred = a.pred
-    if a.engine:
-        pred = a.report / "pred"
-        model = run_engine(rows, data, pred, a.weights)
+        every = list(csv.DictReader(f))
+    rows = select(every, a.datasets, a.all)
+    if not rows:
+        names = sorted({r["dataset"] for r in every})
+        sys.exit(f"no photographs to score: the manifest's datasets are {', '.join(names)}")
+    max_side = a.max_side if weights else 0  # the heuristic's baseline is at full size
+    model = f"predictions in {pred}"
+    engine = load_engine(weights) if a.engine else None
+    report.mkdir(parents=True, exist_ok=True)
+    if engine is not None:
+        model = engine.version
+        print(f"engine model: {model}", flush=True)
+        pred = report / "pred"
+        run_engine(engine, rows, data, pred, max_side)
 
     results = []
     for r in rows:
@@ -187,55 +290,65 @@ def main() -> int:
         if guess.shape != truth.shape:
             sys.exit(f"{p}: {guess.shape[::-1]} pixels, the photograph is {truth.shape[::-1]}")
         frac = float(truth.mean())
-        band = next(name for lo, hi, name in BANDS if lo <= frac < hi)
         results.append(
-            dict(
-                key=r["key"],
-                dataset=r["dataset"],
-                wound_fraction=frac,
-                band=band,
+            {
+                "key": r["key"],
+                "dataset": r["dataset"],
+                "mask_target": r.get("mask_target") or "wound",
+                "wound_fraction": frac,
+                "band": next(name for lo, hi, name in BANDS if lo <= frac < hi),
                 **score(guess, truth),
-            )
+            }
         )
 
-    with open(a.report / "scores.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["key", "dataset", "wound_fraction", "band", *METRICS])
+    with open(report / "scores.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(results[0]))
         w.writeheader()
         w.writerows(
             {k: (round(v, 6) if isinstance(v, float) else v) for k, v in r.items()} for r in results
         )
-    groups = {"all": results}
+    pooled = [r for r in results if r["mask_target"] == "wound"]
+    apart = sorted(
+        {f"{r['dataset']} ({r['mask_target']})" for r in results if r["mask_target"] != "wound"}
+    )
+    groups = {"all": pooled}
     groups |= {
         f"dataset {d}": [r for r in results if r["dataset"] == d]
         for d in dict.fromkeys(r["dataset"] for r in results)
     }
-    groups |= {f"wound {n}": [r for r in results if r["band"] == n] for _, _, n in BANDS}
+    groups |= {f"wound {n}": [r for r in pooled if r["band"] == n] for _, _, n in BANDS}
     summary = {k: summarise(v) for k, v in groups.items() if v}
     human = clinicians(data)
-    print(f"\n{model}: {len(results)} photographs\n")
-    print(
-        f"{'':28s} {'n':>4s}  {'Dice median [IQR]':22s}  {'IoU':5s}  {'BF1':5s}  {'prec.':5s}  "
-        f"{'recall':6s} {'area':5s}  {'Dice<0.5':8s}"
-    )
-    for k, s in summary.items():
-        print(line(k, s))
-    if human:
-        h = spread(human)
-        print(
-            f"\nfor comparison, five clinicians against one another on LUTSeg's gold subset: Dice "
-            f"median {h['median']:.3f} [{h['q1']:.3f}-{h['q3']:.3f}] over {h['n']} pairs"
-        )
-    with open(a.report / "summary.json", "w") as f:
+    with open(report / "summary.json", "w") as f:
         json.dump(
             {
                 "model": model,
                 "photographs": len(results),
+                "segmented_at_most_px": max_side if a.engine and max_side else None,
+                "scored_apart": apart,
                 "groups": summary,
                 "clinician_pairwise_dice": spread(human) if human else None,
             },
             f,
             indent=1,
         )
+
+    print(f"\n{model}: {len(results)} photographs\n")
+    print(
+        f"{'':28s} {'n':>4s}  {'Dice median [IQR]':19s}  {'IoU':5s}  {'BF1':5s}  {'prec.':5s}  "
+        f"{'recall':6s} {'area':5s}  {'Dice<0.5':8s}"
+    )
+    for k, s in summary.items():
+        print(line(k, s))
+    if apart:
+        print(f"\nscored in their own row only, not in 'all' or the size bands: {', '.join(apart)}")
+    if human:
+        h = spread(human)
+        print(
+            f"\nfor comparison, five clinicians against one another on LUTSeg's gold subset: Dice "
+            f"median {h['median']:.3f} [{h['q1']:.3f}-{h['q3']:.3f}] over {h['n']} pairs"
+        )
+    print(f"\nreport: {report}")
     return 0
 
 
