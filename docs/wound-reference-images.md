@@ -1,12 +1,12 @@
 # Public images of real wounds — sources and licences
 
-Where to find photographs and scans of actual patient wounds to use as references, and what
-each source lets a company do with them. Checked on 26 October 2026: 77 sources were found and
-each was re-opened independently to confirm its licence, contents and links. On 4 November 2026
-the two usable segmentation sets were downloaded and checked image by image (section 5), which
-corrected what is said here about their scale and provenance. A second search that day, for
-segmentation sets in particular, added the rows marked *(4 Nov)* in sections 2–4; none of them is
-cleared for commercial use, and none was downloaded.
+Where to find photographs and scans of actual patient wounds to use as references, and what each
+source lets a company do with them. Checked on 26 October 2026: 77 sources were found and each
+was re-opened independently to confirm its licence, contents and links. On 4 November 2026
+CO2Wounds v1 and LUTSeg (section 1) were downloaded and checked image by image (section 5),
+which corrected what is said here about their scale and provenance. A second search that day,
+for segmentation sets in particular, added the rows marked *(4 Nov)* in sections 2–4; none of
+them is cleared for commercial use, and none was downloaded.
 
 **This file links to images; it does not store any.** Keep patient images out of the
 repository. Download them to a controlled location and record each image's source and licence
@@ -34,6 +34,7 @@ alongside it — `woundscan-engine/scripts/fetch_wound_segmentation_data.py` doe
 | Group | Licences | What we may do |
 |---|---|---|
 | 1. Usable | Public domain, CC0, CC BY, CC BY-SA | Use commercially with attribution. CC BY-SA also requires adaptations to carry the same licence. |
+| 1b. Confirm first | An open licence whose grant is in doubt | Internal testing with attribution. Before any commercial use (the product, its training data or its marketing), get the owners' written confirmation of the licence. |
 | 2. Internal research only | CC BY-NC, CC BY-NC-SA, CC BY-NC-ND, other non-commercial terms | Internal benchmarking at a company is a grey area: get legal sign-off first. Never in the product, in training data for it, or in marketing. |
 | 3. Ask first | No licence stated, or "on request" | No licence means all rights reserved. Write to the owners. |
 | 4. Avoid | Terms that forbid our use outright | Do not download. |
@@ -49,6 +50,11 @@ appears in marketing, labelling or a regulatory submission.
 | Source | Contents | Ground truth | Licence and access |
 |---|---|---|---|
 | [CO2Wounds v1](https://data.mendeley.com/datasets/nkw5gx57hw/1) (Universidad Industrial de Santander; Monroy et al., *Comput Biol Med* 2023;165:107335) | 164 smartphone photos of chronic leprosy ulcers, 69 consenting patients, Colombia, downscaled and padded to 640 × 640 with black bars | Binary wound masks for every image. YOLO boxes: class 0 is the wound and class 1 a calibration card (nothing documents this; it was read from the masks, and all 164 agree). The card's size is not published, so there is no millimetre scale until the authors give it. No depth. | **CC BY 4.0**. Direct download, no registration. |
+
+### Datasets to confirm first (group 1b)
+
+| Source | Contents | Ground truth | Licence and access |
+|---|---|---|---|
 | [LUTSeg](https://huggingface.co/datasets/ksanchez84/LUTSeg) (2026) | 141 photos of leprosy ulcers, 39 patients, followed over 21 months | 6-class tissue masks and wound masks. A 46-image subset was outlined by 5 clinicians separately, so rater disagreement can be measured. No scale, no depth. | **CC BY 4.0 as published; confirm before commercial use.** Direct download. *Caveat:* its card says the images come from CO2Wounds v1 and keep that licence, but only 32 of the 141 are in v1 (matched pixel for pixel). The 21-month span matches CO2Wounds-V2's collection (November 2021 to August 2023), whose current licence is non-commercial; the card's provenance paragraph was added on 17 August 2026, after release, and its "original study" DOI points to an unrelated paper. The uploader is V2's first author, so the grant is plausibly the rights holder's own: fine for internal testing, but get the authors' written confirmation before any commercial use. The fetch script marks every LUTSeg row `confirm-first`, including the 32 photos also in v1, because their masks are LUTSeg's own; for commercial work use the v1 copy. |
 
 Do not mix CO2Wounds v1 with CO2Wounds-V2 (section 2): the second is non-commercial.
@@ -130,7 +136,7 @@ partnership enquiry.
 | University of Wisconsin–Milwaukee / AZH datasets ([segmentation](https://github.com/uwm-bigdata/wound-segmentation), [classification](https://github.com/uwm-bigdata/wound-classification-using-images-and-locations), [tissue](https://github.com/uwm-bigdata/DFUTissueSegNet)) | Foot-ulcer crops with masks; wound-type and body-location labels; 8-class tissue masks | No licence stated |
 | [ComplexWoundDB](https://arxiv.org/abs/2209.12822) (UNESP, Brazil) | Home-care chronic wounds with tissue masks by 4 raters | No licence stated |
 | [PIDIL](https://findanexpert.unimelb.edu.au/project/301920-pressure-injury-(pressure-ulcer-or-bed-sore)-digital-image-library-(pidil)) (University of Melbourne) | Consented, stage-labelled pressure-injury photos, by its description | No images or terms found; outreach lead |
-| **BurnCare** (IIT Roorkee with AIIMS Rishikesh; medRxiv doi:10.64898/2025.12.24.25337638) *(4 Nov)* | 1,003 smartphone photos of burns from 36 consenting patients; skin and burn masks for 441, drawn with SAM2 from a few clicks | No licence stated; a registration form leads to a 2.9 GB download. **The only burn segmentation set found** — ask the authors about terms. |
+| **BurnCare** (IIT Roorkee with AIIMS Rishikesh; medRxiv doi:10.64898/2025.12.24.25337638) *(4 Nov)* | 1,003 smartphone photos of burns from 36 consenting patients; skin and burn masks for 441, drawn with SAM2 from a few clicks | No licence stated; a registration form leads to a 2.9 GB download. **Burn masks on photos of consenting patients** (EBIS, section 4, also has burn masks, but on photos scraped from the web) — ask the authors about terms. |
 | Diabetic-foot photos from patients of colour (Baseman et al., Georgia Tech and Emory, IEEE BHI 2025) *(4 Nov)* | 3,362 photos from 252 patients, more than 80 % Black, with ulcer segmentation in the paper | The abstract says the images are released, but no download was found. Ask the authors: the leprosy sets above are all from one Colombian programme. |
 | Chang et al., *PLOS ONE* 2022 ([figshare 17206904](https://figshare.com/articles/dataset/healing-pressure-ulcer-0013_jpg/17206904), [17206940](https://figshare.com/articles/dataset/images_of_pressure_ulcer_2_/17206940)) *(4 Nov)* | Tissue masks and outlines for 20 Medetec pressure-ulcer photos | CC BY 4.0 covers the annotations only; the photos remain Medetec's (above) |
 | Swift Medical and McGill rater study ([Borealis doi:10.5683/SP3/8C4FDV](https://doi.org/10.5683/SP3/8C4FDV)) *(4 Nov)* | Tissue labels by five clinicians for 58 chronic-wound photos | The labels are CC0, but the photos are not public; ask Swift Medical or McGill for them |
@@ -152,12 +158,13 @@ partnership enquiry.
 
 `woundscan-engine/scripts/fetch_wound_segmentation_data.py --out DIR` downloads CO2Wounds v1 and
 LUTSeg into DIR, which may not lie inside any git work tree, and checks every file against the
-publisher's own hash. It writes each photo beside a 0/255 wound mask of the same size, plus
-LUTSeg's tissue masks. `manifest.csv` gives each photo's licence and use group (`usable` for
-CO2Wounds v1, `confirm-first` for LUTSeg), split, patient, wound share of the frame, what its
-mask covers, provenance note and the first copy of any photo it repeats. `LICENSES.md` says what
-each set allows, the credit to cite, and how the masks were changed (binarised; the published
-files are kept under `raw/`).
+publisher's own hash. It writes each photo, byte for byte but named for its format (CO2Wounds v1
+publishes JPEGs as .png), beside a 0/255 wound mask of the same size, plus LUTSeg's tissue
+masks. `manifest.csv` gives each photo's licence and use group (`usable` for CO2Wounds v1,
+`confirm-first` for LUTSeg), split, patient, wound share of the frame, what its mask covers,
+provenance note and the first copy of any photo it repeats. `LICENSES.md` says what each set
+allows, the credit to cite, and how the masks were changed (binarised; the published files are
+kept under `raw/`).
 
 `evaluate_segmentation.py --data DIR --pred PRED`, or `--engine` to run the engine's own model,
 scores masks per dataset and by wound size: Dice, IoU, precision, recall, boundary F1 and area
@@ -165,7 +172,8 @@ error. Each photo is scored once per run, from the first selected set that lists
 with any predicted masks, goes to `DIR/reports/` unless `--report` names another place outside
 a git work tree. With `--weights`, the run stops unless the engine's U-Net really loads, so a
 fallback result is never filed under a model's name (handoff register
-`engine-ml-quality-validation-G2`).
+`engine-ml-quality-validation-G2`); the report's folder and `summary.json` name the weights
+and their SHA-256, so two checkpoints both called `best.pt` are kept apart.
 
 Measured on 4 November 2026:
 
@@ -180,8 +188,8 @@ Both sets come from one leprosy programme in Colombia, mostly lower-leg and foot
 not cover pressure injuries, surgical wounds or burns. Of the non-commercial sets (section 2),
 WoundSeg adds pressure injuries, surgical and trauma wounds among its eight types, though its
 masks include the peri-wound skin, and FUSeg adds foot ulcers, mostly diabetic. None of them has
-burns: the only burn segmentation set found is BurnCare, and the FEMH burn set has RGB-D scans
-(both section 3, ask first).
+burns. For burns, BurnCare has burn masks and the FEMH burn set has RGB-D scans (both section 3,
+ask first); EBIS also has burn masks, but its photos were scraped from the web (section 4).
 
 ## For StrataMetric
 

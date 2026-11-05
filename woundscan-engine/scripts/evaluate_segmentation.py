@@ -5,20 +5,27 @@ fetch_wound_segmentation_data.py lays out.
     python scripts/evaluate_segmentation.py --data DIR --engine [--weights boundary_v1.pt]
 
 PRED holds one mask per photograph, PRED/<dataset>/<id>.png, at the
-photograph's size and non-zero where the model sees wound (a palette image is
-read by its indices). --engine runs the engine's BoundarySegmentationModel
-instead, keeping its masks in REPORT/pred/; given --weights, it stops unless
-the U-Net really loads, and segments photographs larger than --max-side at that
-size, scaling each mask back. The report goes to --report, by default
-DIR/reports/<run>; it holds masks made from patient photographs, so it is
-refused inside a git work tree. Each photograph is scored once, from the first
-selected dataset that lists it (--all scores every copy).
+photograph's size and non-zero where the model sees wound. An 8-bit greyscale
+PNG is safest; a palette image of greys is read by its grey levels, and one
+with colours by its indices, 0 the background (refused where black is another
+index, as Pillow's quantize() writes a picture). --engine runs the engine's
+BoundarySegmentationModel instead, from the repository in the engine's
+environment, keeping its masks in REPORT/pred/; given --weights, it stops
+unless the U-Net really loads, and segments photographs larger than --max-side
+at that size, scaling each mask back. The report goes to --report, by default
+DIR/reports/<run>: <run> is PRED's folder name, engine-fallback, or
+engine-<weights name>-<first 8 hex digits of their SHA-256>, so two weights
+files that share a name (best.pt) are filed apart. It holds masks made from
+patient photographs, so it is refused inside a git work tree. Each photograph
+is scored once, from the first selected dataset that lists it (--all scores
+every copy).
 
 Per photograph: Dice, IoU, precision, recall, boundary F1 (boundary pixels
 within 0.75 % of the image diagonal of the other boundary) and the signed
 error in wound area. Printed per dataset and by the wound's share of the
 frame, as medians and quartiles with the share of photographs under Dice 0.5,
-and written to REPORT/scores.csv and REPORT/summary.json. A dataset whose masks
+and written to REPORT/scores.csv and REPORT/summary.json (which names the
+weights, with their path and SHA-256, where there are any). A dataset whose masks
 take in more than the wound (WoundSeg's include the peri-wound skin) is scored
 in its own row only, not pooled with the rest. Where LUTSeg's five-clinician
 subset is present, the clinicians' agreement with one another is printed too:
@@ -29,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import importlib.util
 import itertools
 import json
@@ -61,21 +69,76 @@ def outside_git(path: Path) -> Path:
     return p
 
 
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+# palette_greys, inside_out and plane are the same in fetch_wound_segmentation_data.py.
+def palette_greys(im: Image.Image) -> np.ndarray | None:
+    """A palette image's grey level for each index, where every colour in its
+    palette is a grey: how Pillow's quantize() and convert(), and PNG
+    optimisers, store a grey mask, in whatever order. None for any other image,
+    and for a palette with a colour in it, whose indices are labels with 0 the
+    background. The whole palette decides, not only the colours in use, so an
+    empty label mask is read by the same rule as a full one."""
+    if im.mode not in ("P", "PA"):
+        return None
+    pal = np.asarray(im.getpalette() or [], np.uint8).reshape(-1, 3)
+    idx = np.asarray(im)
+    idx = idx if idx.ndim == 2 else idx[..., 0]
+    if not len(pal) or int(idx.max()) >= len(pal) or (pal != pal[:, :1]).any():
+        return None
+    return pal[:, 0]
+
+
+def inside_out(im: Image.Image) -> bool:
+    """Whether a palette image of labels has a colour at index 0 while black is
+    another index in use: how Pillow's quantize() and ADAPTIVE palette store a
+    coloured wound on black, which read by its indices would be inside out."""
+    if im.mode not in ("P", "PA") or palette_greys(im) is not None:
+        return False
+    pal = np.asarray(im.getpalette() or [], np.uint8).reshape(-1, 3)
+    if not len(pal) or not pal[0].any():
+        return False
+    idx = np.asarray(im)
+    used = np.unique(idx if idx.ndim == 2 else idx[..., 0])
+    used = used[(used > 0) & (used < len(pal))]
+    return bool((pal[used].max(axis=1) == 0).any())
+
+
 def plane(im: Image.Image) -> np.ndarray:
-    """A mask image as one 2-D array: a palette image's indices; otherwise its
+    """A mask image as one 2-D array, 0 the background: a palette of greys by
+    its grey levels, one with colours by its indices (labels); otherwise its
     brightest colour channel, transparent pixels counting as background - or
-    the alpha channel itself, where that is all the image holds."""
+    the alpha channel itself, where the colour is one flat value and only the
+    alpha varies. An opaque black image is an empty mask, not a full one."""
     a = np.asarray(im)
+    grey = palette_greys(im)
+    if grey is not None:
+        a = grey[a] if a.ndim == 2 else np.stack([grey[a[..., 0]], a[..., 1]], axis=2)
     if a.ndim == 2:
         return a
     if im.mode in ("LA", "La", "PA", "RGBA", "RGBa"):
         colour, alpha = a[..., :-1].max(axis=2), a[..., -1]
-        return np.where(alpha > 0, colour, 0) if colour.any() else alpha
+        if colour.min() == colour.max() and alpha.min() != alpha.max():
+            return alpha  # one flat colour: the mask is in the alpha channel
+        return np.where(alpha > 0, colour, 0)
     return a.max(axis=2)
 
 
 def read_mask(path: Path) -> np.ndarray:
-    return plane(Image.open(path)) > 0
+    im = Image.open(path)
+    if inside_out(im):
+        sys.exit(
+            f"{path}: a palette image whose index 0 is a colour and whose black is another "
+            "index, as Pillow's quantize() stores a picture; read as labels, 0 the background, "
+            "it would be inside out: save the mask as an 8-bit greyscale PNG"
+        )
+    return plane(im) > 0
 
 
 def edge(m: np.ndarray) -> np.ndarray:
@@ -142,12 +205,23 @@ def select(
 def load_engine(weights: Path | None) -> Any:
     """The engine's segmentation model; with weights, only if its U-Net loads."""
     sys.path.insert(0, str(ENGINE / "src"))
-    from woundscan.ml.boundary_segmentation import BoundarySegmentationModel
-
+    try:
+        from woundscan.ml.boundary_segmentation import BoundarySegmentationModel
+    except ModuleNotFoundError as e:
+        if (e.name or "").partition(".")[0] != "woundscan":
+            raise
+        sys.exit(
+            "--engine needs the WoundScan engine, which is not here: run "
+            "woundscan-engine/scripts/evaluate_segmentation.py from the repository, in the "
+            "engine's environment (in woundscan-engine/: pip install -e .)"
+        )
     if weights is None:
+        if importlib.util.find_spec("skimage") is None:
+            sys.exit(
+                "--engine's colour heuristic needs scikit-image, which is not installed: use "
+                "the engine's environment (in woundscan-engine/: pip install -e .)"
+            )
         return BoundarySegmentationModel.fallback()
-    if not weights.is_file():
-        sys.exit(f"--weights {weights}: no such file")
     model = BoundarySegmentationModel.from_weights(weights)
     model._ensure_loaded()  # the engine falls back to its colour heuristic without saying so
     if model._unet is None or model._unet.net is None:
@@ -262,14 +336,27 @@ def main() -> int:
     data = a.data.expanduser().resolve()
     weights = a.weights.expanduser().resolve() if a.weights else None
     pred = a.pred.expanduser().resolve() if a.pred else None
-    run = f"engine-{weights.stem if weights else 'fallback'}" if a.engine else pred.name
+    if weights and not weights.is_file():
+        sys.exit(f"--weights {weights}: no such file")
+    # Trainers call every checkpoint best.pt: the weights' hash keeps one
+    # model's report from replacing another's.
+    digest = sha256(weights) if weights else ""
+    if not a.engine:
+        run = pred.name
+    else:
+        run = f"engine-{weights.stem}-{digest[:8]}" if weights else "engine-fallback"
     report = outside_git(a.report or data / "reports" / run)
     with open(data / "manifest.csv", newline="") as f:
         every = list(csv.DictReader(f))
+    held = sorted({r["dataset"] for r in every})
+    unknown = sorted(set(a.datasets or []) - set(held))
+    if unknown:
+        sys.exit(
+            f"--datasets {', '.join(unknown)}: not in the manifest, which holds {', '.join(held)}"
+        )
     rows = select(every, a.datasets, a.all)
     if not rows:
-        names = sorted({r["dataset"] for r in every})
-        sys.exit(f"no photographs to score: the manifest's datasets are {', '.join(names)}")
+        sys.exit(f"no photographs to score: the manifest's datasets are {', '.join(held)}")
     max_side = a.max_side if weights else 0  # the heuristic's baseline is at full size
     model = f"predictions in {pred}"
     engine = load_engine(weights) if a.engine else None
@@ -323,6 +410,7 @@ def main() -> int:
         json.dump(
             {
                 "model": model,
+                "weights": {"path": str(weights), "sha256": digest} if weights else None,
                 "photographs": len(results),
                 "segmented_at_most_px": max_side if a.engine and max_side else None,
                 "scored_apart": apart,

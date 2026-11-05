@@ -17,7 +17,9 @@ may not lie inside a git work tree.
 
 For each dataset it writes
     raw/<dataset>/             the files as published, each one verified
-    images/<dataset>/<id>.*    each photograph, byte for byte as published
+    images/<dataset>/<id>.*    each photograph, byte for byte as published, its
+                               suffix naming its format (.jpg for JPEG data:
+                               CO2Wounds v1 publishes its JPEGs as .png)
     masks/<dataset>/<id>.png   its wound mask redrawn at the same size as 0
                                background and 255 wound (LICENSES.md says how)
     tissue/<dataset>/<id>.png  tissue classes as published, where the dataset has them
@@ -63,6 +65,7 @@ LUTSEG_CLASSES = {
     5: "other",
     255: "ignore",
 }
+SUFFIXES = {"JPEG": (".jpg", ".jpeg"), "MPO": (".jpg", ".jpeg"), "PNG": (".png",)}
 Row = dict[str, Any]
 
 
@@ -255,30 +258,75 @@ def github(repo: str, commit: str, prefix: str, raw: Path) -> None:
 
 
 # ------------------------------------------------------------------- masks --
+# palette_greys, inside_out and plane are the same in evaluate_segmentation.py.
+def palette_greys(im: Image.Image) -> np.ndarray | None:
+    """A palette image's grey level for each index, where every colour in its
+    palette is a grey: how Pillow's quantize() and convert(), and PNG
+    optimisers, store a grey mask, in whatever order. None for any other image,
+    and for a palette with a colour in it, whose indices are labels with 0 the
+    background. The whole palette decides, not only the colours in use, so an
+    empty label mask is read by the same rule as a full one."""
+    if im.mode not in ("P", "PA"):
+        return None
+    pal = np.asarray(im.getpalette() or [], np.uint8).reshape(-1, 3)
+    idx = np.asarray(im)
+    idx = idx if idx.ndim == 2 else idx[..., 0]
+    if not len(pal) or int(idx.max()) >= len(pal) or (pal != pal[:, :1]).any():
+        return None
+    return pal[:, 0]
+
+
+def inside_out(im: Image.Image) -> bool:
+    """Whether a palette image of labels has a colour at index 0 while black is
+    another index in use: how Pillow's quantize() and ADAPTIVE palette store a
+    coloured wound on black, which read by its indices would be inside out."""
+    if im.mode not in ("P", "PA") or palette_greys(im) is not None:
+        return False
+    pal = np.asarray(im.getpalette() or [], np.uint8).reshape(-1, 3)
+    if not len(pal) or not pal[0].any():
+        return False
+    idx = np.asarray(im)
+    used = np.unique(idx if idx.ndim == 2 else idx[..., 0])
+    used = used[(used > 0) & (used < len(pal))]
+    return bool((pal[used].max(axis=1) == 0).any())
+
+
 def plane(im: Image.Image) -> np.ndarray:
-    """A mask image as one 2-D array: a palette image's indices; otherwise its
+    """A mask image as one 2-D array, 0 the background: a palette of greys by
+    its grey levels, one with colours by its indices (labels); otherwise its
     brightest colour channel, transparent pixels counting as background - or
-    the alpha channel itself, where that is all the image holds."""
+    the alpha channel itself, where the colour is one flat value and only the
+    alpha varies. An opaque black image is an empty mask, not a full one."""
     a = np.asarray(im)
+    grey = palette_greys(im)
+    if grey is not None:
+        a = grey[a] if a.ndim == 2 else np.stack([grey[a[..., 0]], a[..., 1]], axis=2)
     if a.ndim == 2:
         return a
     if im.mode in ("LA", "La", "PA", "RGBA", "RGBa"):
         colour, alpha = a[..., :-1].max(axis=2), a[..., -1]
-        return np.where(alpha > 0, colour, 0) if colour.any() else alpha
+        if colour.min() == colour.max() and alpha.min() != alpha.max():
+            return alpha  # one flat colour: the mask is in the alpha channel
+        return np.where(alpha > 0, colour, 0)
     return a.max(axis=2)
 
 
 def binary(path: Path) -> np.ndarray:
     """A published mask as a boolean array: wound where it is at or over half
-    scale, or, in a palette image, wherever the index is not 0. A mask that was
-    resized carries grey levels along its edge (CO2Wounds v1: under 0.25 % of
-    pixels); a file with over 1 % of pixels in mid-grey is not a mask, and is
-    refused."""
+    its scale (1, 255, or a 16-bit file's own top value), a palette of greys
+    read by its grey levels; or, in a palette with colours in it, wherever the
+    index is not 0. A mask that was resized carries grey levels along its edge
+    (CO2Wounds v1: under 0.25 % of pixels). A file with over 1 % of pixels in
+    mid-grey is not a mask, nor is a palette image with over 8 labels or one
+    that inside_out() flags: each is refused."""
     im = Image.open(path)
     a = plane(im)
-    if im.mode in ("P", "PA"):  # indices are labels: 0 is background
+    if im.mode in ("P", "PA") and palette_greys(im) is None:  # labels: 0 is background
+        if inside_out(im) or len(np.unique(a)) > 8:
+            raise RuntimeError(f"{path}: a palette image, but not one of mask labels")
         return a != 0
-    a = a.astype(np.float32) / (1.0 if a.max() <= 1 else 255.0)  # some masks store 0 and 1
+    top = float(a.max())  # some masks store 0 and 1; a 16-bit one may run to 65535
+    a = a.astype(np.float32) / (1.0 if top <= 1 else 255.0 if top <= 255 else top)
     if ((a > 0.12) & (a < 0.88)).mean() > 0.01:
         raise RuntimeError(f"{path}: too many mid-grey pixels for a binary mask")
     return a >= 0.5
@@ -292,11 +340,19 @@ def save_mask(mask: np.ndarray, dest: Path) -> None:
 def pair(out: Path, name: str, stem: str, image: Path, mask_file: Path, **extra: Any) -> Row:
     """Copy a photograph, write its normalised mask, and return its row."""
     mask = binary(mask_file)
-    if Image.open(image).size != mask.shape[::-1]:
+    with Image.open(image) as im:
+        size, kind = im.size, im.format
+    if size != mask.shape[::-1]:
         raise RuntimeError(f"{name} {stem}: photograph and mask differ in size")
-    dest = out / "images" / name / f"{stem}{image.suffix.lower()}"
+    # The copy's suffix names what it holds: CO2Wounds v1 publishes JPEG data
+    # under .png names, which readers that go by the suffix refuse.
+    published = image.suffix.lower()
+    real = SUFFIXES.get(kind or "", (published,))
+    dest = out / "images" / name / f"{stem}{published if published in real else real[0]}"
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(image, dest)
+    if published not in real:  # an earlier run's copy, under the published name
+        dest.with_name(f"{stem}{published}").unlink(missing_ok=True)
     save_mask(mask, out / "masks" / name / f"{stem}.png")
     return dict(
         id=stem,
@@ -327,7 +383,7 @@ def box_iou(a: list[float], b: list[float]) -> float:
 
 # ---------------------------------------------------------------- datasets --
 def co2wounds_v1(out: Path, raw: Path) -> list[Row]:
-    """Photographs in JPEGImages/ (PNG files, despite the name), each padded
+    """Photographs in JPEGImages/ (JPEG data under .png names), each padded
     to 640 x 640 with black bars; binary masks in Mask/; YOLO boxes in labels/
     for the wound and the calibration card in frame. Which box class is the
     wound is read from the masks. The card's size is not published, so the
@@ -621,6 +677,17 @@ def mark_repeats(rows: list[Row], earlier: list[Row]) -> None:
                         and float((fine_a * np.rot90(fine_b, k)).sum()) >= 0.97
                     ):
                         b.update(duplicate_of=a["key"], duplicate_turns=k)
+    # A byte-for-byte copy named the first file of its kind in this run before
+    # the thumbnails found that file in an earlier dataset: point it past that
+    # file too, adding the turns (rot90 by t1, then by t2, is rot90 by t1 + t2).
+    by_key = {r["key"]: r for r in earlier + rows}
+    for r in rows:
+        for _ in range(len(by_key)):  # bounded, should a manifest hold a loop
+            up = by_key.get(r["duplicate_of"])
+            if up is None or not up["duplicate_of"]:
+                break
+            turns = int(r.get("duplicate_turns") or 0) + int(up.get("duplicate_turns") or 0)
+            r.update(duplicate_of=up["duplicate_of"], duplicate_turns=turns % 4)
 
 
 COLUMNS = [
@@ -668,10 +735,12 @@ def write_licences(root: Path, names: list[str]) -> None:
         "",
         "Changes made: masks/ holds each published wound mask redrawn as 0 (background) and 255 "
         "(wound), a pixel counting as wound where the published mask is at or over half its "
-        "scale (or, in a palette image, has any index but 0), so grey edge pixels are rounded "
-        "one way or the other. The published files are unchanged under raw/; photographs and "
-        "tissue masks are copied byte for byte. Say so when you share the masks, as the "
-        "licences require: for example, 'wound masks binarised from the published masks'.",
+        "scale (or, in a palette image of coloured labels, has any index but 0), so grey edge "
+        "pixels are rounded one way or the other. The published files are unchanged under "
+        "raw/; photographs and tissue masks are copied byte for byte, each photograph named "
+        "for the format it is in (.jpg for JPEG data, whatever the published suffix). Say so "
+        "when you share the masks, as the licences require: for example, 'wound masks "
+        "binarised from the published masks'.",
         "",
     ]
     for n in names:

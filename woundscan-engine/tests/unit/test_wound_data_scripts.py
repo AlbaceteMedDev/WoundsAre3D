@@ -14,7 +14,7 @@ import sys
 import urllib.error
 import zipfile
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import numpy as np
 import pytest
@@ -97,6 +97,100 @@ def test_mask_modes(tmp_path: Path) -> None:
     for name in ("la", "alpha", "palette"):
         assert evaluate.read_mask(tmp_path / f"{name}.png").sum() == 100, name
         assert fetch.binary(tmp_path / f"{name}.png").sum() == 100, name
+
+
+def test_empty_masks_with_alpha(tmp_path: Path) -> None:
+    """An empty mask written with an opaque alpha channel - as plt.imsave,
+    Image.convert("RGBA") and OpenCV's BGRA write one - reads as empty, as
+    does a wholly transparent one."""
+    empty = np.zeros((40, 40), np.uint8)
+    Image.fromarray(empty).convert("RGBA").save(tmp_path / "rgba.png")
+    Image.fromarray(empty).convert("LA").save(tmp_path / "la.png")
+    Image.fromarray(np.zeros((40, 40, 4), np.uint8)).save(tmp_path / "clear.png")
+    for name in ("rgba", "la", "clear"):
+        assert not evaluate.read_mask(tmp_path / f"{name}.png").any(), name
+        assert not fetch.binary(tmp_path / f"{name}.png").any(), name
+
+
+def test_palette_masks(tmp_path: Path) -> None:
+    """A grey mask stored as a palette image reads as it looks, in whatever
+    order Pillow's quantize() and ADAPTIVE conversion put its colours; a
+    palette of coloured labels reads by index, empty or not; a coloured wound
+    on black quantised the same way, inside out by index, is refused; and so is
+    a photograph stored as a palette image."""
+    for side in (14, 55, 84):  # 2 %, 30 % and 70 % of the frame
+        grey = Image.fromarray(square(100, 100, (0, 0, side, side)))
+        for how, im in (
+            ("quantize", grey.quantize(2)),
+            ("adaptive", grey.convert("P", palette=Image.Palette.ADAPTIVE, colors=2)),
+            ("convert", grey.convert("P")),
+        ):
+            im.save(tmp_path / f"{how}.png")
+            assert fetch.binary(tmp_path / f"{how}.png").sum() == side * side, (how, side)
+            assert evaluate.read_mask(tmp_path / f"{how}.png").sum() == side * side, (how, side)
+    for value, want in ((2, 100), (0, 0)):  # white background at index 0, red wound at 2
+        labels = Image.fromarray(square(40, 40, (10, 10, 20, 20), value=value))
+        labels.putpalette([255, 255, 255, 0, 0, 0, 255, 0, 0])
+        labels.save(tmp_path / "labels.png")
+        assert fetch.binary(tmp_path / "labels.png").sum() == want
+        assert evaluate.read_mask(tmp_path / "labels.png").sum() == want
+    red = np.zeros((40, 40, 3), np.uint8)
+    red[square(40, 40, (10, 10, 20, 20)) > 0] = (255, 0, 0)
+    Image.fromarray(red).convert("P").save(tmp_path / "web.png")  # black at index 0
+    assert evaluate.read_mask(tmp_path / "web.png").sum() == 100
+    assert fetch.binary(tmp_path / "web.png").sum() == 100
+    Image.fromarray(red).quantize(2).save(tmp_path / "inside_out.png")  # red 0, black 1
+    with pytest.raises(SystemExit, match="greyscale"):
+        evaluate.read_mask(tmp_path / "inside_out.png")
+    with pytest.raises(RuntimeError, match="not one of mask labels"):
+        fetch.binary(tmp_path / "inside_out.png")
+    soft = square(40, 40, (8, 8, 32, 32), value=8)  # 3 % and 8 % of scale: background
+    soft[9:31, 9:31] = 20
+    soft[10:30, 10:30] = 255
+    Image.fromarray(soft).convert("P").save(tmp_path / "soft.png")
+    assert fetch.binary(tmp_path / "soft.png").sum() == 400
+    photo = Image.fromarray(scene(1, 50, 50))
+    photo.quantize(256).save(tmp_path / "photo.png")
+    with pytest.raises(RuntimeError, match="not one of mask labels"):
+        fetch.binary(tmp_path / "photo.png")
+    photo.convert("L").convert("P").save(tmp_path / "grey_photo.png")
+    with pytest.raises(RuntimeError, match="mid-grey"):
+        fetch.binary(tmp_path / "grey_photo.png")
+
+
+def test_binary_16_bit_masks(tmp_path: Path) -> None:
+    """A 16-bit grey mask is cut at half of its own scale, and a 16-bit
+    photograph is refused as an 8-bit one is."""
+    soft = square(50, 50, (10, 10, 30, 30)).astype(np.uint16) * 257  # 0 and 65535
+    soft[30, 10:20] = 13107  # a resampled edge at 20 % of scale: background
+    assert fetch.binary(save(soft, tmp_path / "soft16.png")).sum() == 400
+    as255 = square(50, 50, (10, 10, 30, 30)).astype(np.uint16)  # 0 and 255 in 16 bits
+    assert fetch.binary(save(as255, tmp_path / "as255.png")).sum() == 400
+    photo = np.asarray(Image.fromarray(scene(1, 50, 50)).convert("L")).astype(np.uint16) * 257
+    with pytest.raises(RuntimeError, match="mid-grey"):
+        fetch.binary(save(photo, tmp_path / "photo16.png"))
+
+
+def test_photograph_named_for_its_format(tmp_path: Path) -> None:
+    """A photograph published under the wrong suffix (CO2Wounds v1: JPEG data
+    named .png) is copied byte for byte under the suffix of what it holds, a
+    true suffix is kept, and a re-run removes an earlier run's misnamed copy."""
+    raw, out = tmp_path / "raw", tmp_path / "out"
+    raw.mkdir()
+    photo = raw / "1.png"
+    Image.fromarray(scene(1, 40, 30)).save(photo, format="JPEG")
+    mask = save(square(40, 30, (3, 3, 10, 10)), raw / "1_mask.png")
+    stale = out / "images" / "set" / "1.png"
+    stale.parent.mkdir(parents=True)
+    stale.write_bytes(photo.read_bytes())  # where an earlier run put it
+    r = fetch.pair(out, "set", "1", photo, mask)
+    assert r["image"] == "images/set/1.jpg"
+    assert (out / r["image"]).read_bytes() == photo.read_bytes()
+    assert [p.name for p in stale.parent.iterdir()] == ["1.jpg"]
+    jpeg = save(scene(2, 40, 30), raw / "2.JPEG")
+    png = save(scene(3, 40, 30), raw / "3.png")
+    assert fetch.pair(out, "set", "2", jpeg, mask)["image"] == "images/set/2.jpeg"
+    assert fetch.pair(out, "set", "3", png, mask)["image"] == "images/set/3.png"
 
 
 def test_checksums_and_paths(tmp_path: Path) -> None:
@@ -242,6 +336,44 @@ def test_repeats(tmp_path: Path) -> None:
     assert (later[0]["duplicate_of"], later[0]["duplicate_turns"]) == ("one/padded", 2)
 
 
+def test_copies_within_a_dataset_name_the_first(tmp_path: Path) -> None:
+    """Two byte-for-byte copies in a later dataset of a photograph that an
+    earlier dataset holds turned both name the earlier one, with its turns, so
+    LUTSeg's note sends both to CO2Wounds v1; the same goes for a later fetch."""
+
+    def rows_for(items: list[tuple[str, np.ndarray]]) -> list[dict[str, object]]:
+        out = []
+        for key, a in items:
+            p = save(np.ascontiguousarray(a), tmp_path / f"{key}.png")
+            out.append(
+                {
+                    "key": key,
+                    "dataset": key.split("/")[0],
+                    "path": p,
+                    "duplicate_of": "",
+                    "image_sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+                }
+            )
+        return out
+
+    one, two = scene(7, 60, 90), scene(9, 80, 60)
+    turned = np.asarray(Image.fromarray(one).resize((120, 180)))[::-1, ::-1]
+    rows = rows_for(
+        [("co2wounds-v1/1", one), ("lutseg/a", turned), ("lutseg/b", turned), ("lutseg/c", two)]
+    )
+    fetch.mark_repeats(rows, [])
+    found = [(r["duplicate_of"], r.get("duplicate_turns")) for r in rows]
+    assert found == [("", None), ("co2wounds-v1/1", 2), ("co2wounds-v1/1", 2), ("", None)]
+    for r in rows[1:3]:
+        assert "also in CO2Wounds v1" in fetch.lutseg_note(r, {"co2wounds-v1", "lutseg"})
+    # A later fetch holding, twice over, lutseg/c resized and turned a quarter round.
+    quarter = np.rot90(np.asarray(Image.fromarray(two).resize((160, 120))), 1)
+    later = rows_for([("v2/x", quarter), ("v2/y", quarter)])
+    earlier = [{**r, "duplicate_turns": str(r.get("duplicate_turns", ""))} for r in rows]
+    fetch.mark_repeats(later, earlier)
+    assert [(r["duplicate_of"], r["duplicate_turns"]) for r in later] == [("lutseg/c", 3)] * 2
+
+
 def fake_dataset(name: str, seed: int) -> dict[str, object]:
     """A two-photograph stand-in for a DATASETS entry, made without a download."""
 
@@ -384,8 +516,67 @@ def test_evaluate_report_and_groups(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     with pytest.raises(SystemExit, match="git work tree"):
         run("--pred", str(pred), "--report", str(SCRIPTS / "report"))
     assert not (SCRIPTS / "report").exists()
+    with pytest.raises(SystemExit, match="--datasets lutsg: not in the manifest"):
+        run("--pred", str(pred), "--datasets", "set", "lutsg", "--report", str(tmp_path / "typo"))
+    assert not (tmp_path / "typo").exists()
     bad = tmp_path / "boundary_v9.pt"
     bad.write_bytes(b"not a state dict")
     with pytest.raises(SystemExit):
         run("--engine", "--weights", str(bad), "--report", str(tmp_path / "engine"))
     assert not (tmp_path / "engine").exists()
+
+
+def one_photo_set(data: Path) -> None:
+    save(scene(0, 40, 40), data / "images" / "set" / "0.png")
+    save(square(40, 40, (10, 10, 20, 20)), data / "masks" / "set" / "0.png")
+    with open(data / "manifest.csv", "w", newline="") as f:
+        f.write("key,dataset,id,image,mask,duplicate_of\n")
+        f.write("set/0,set,0,images/set/0.png,masks/set/0.png,\n")
+
+
+def test_engine_reports_kept_apart(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two weights files that share a name (best.pt) are reported apart, and
+    each summary names the file it scored and its hash."""
+    data = tmp_path / "data"
+    one_photo_set(data)
+
+    class Model:  # what load_engine returns once a U-Net has loaded
+        version = "best"
+
+        def segment(self, rgb: np.ndarray) -> SimpleNamespace:
+            return SimpleNamespace(binary_mask=np.ones(rgb.shape[:2], bool))
+
+    monkeypatch.setattr(evaluate, "load_engine", lambda weights: Model())
+    files = []
+    for run in ("exp1", "exp2"):
+        files.append(tmp_path / "runs" / run / "best.pt")
+        files[-1].parent.mkdir(parents=True)
+        files[-1].write_bytes(run.encode())
+        argv = ["evaluate", "--data", str(data), "--engine", "--weights", str(files[-1])]
+        monkeypatch.setattr(sys, "argv", argv)
+        assert evaluate.main() == 0
+    assert len(list((data / "reports").iterdir())) == 2
+    for w in files:
+        digest = hashlib.sha256(w.read_bytes()).hexdigest()
+        summary = json.loads(
+            (data / "reports" / f"engine-best-{digest[:8]}" / "summary.json").read_text()
+        )
+        assert summary["weights"] == {"path": str(w), "sha256": digest}
+
+
+def test_engine_needs_the_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """--engine without the engine (as from the pack's tools/), or without
+    scikit-image for its colour heuristic, says what it needs and writes nothing."""
+    data, report = tmp_path / "data", tmp_path / "report"
+    one_photo_set(data)
+    argv = ["evaluate", "--data", str(data), "--engine", "--report", str(report)]
+    monkeypatch.setattr(sys, "argv", argv)
+    for missing, says in [
+        ("woundscan.ml.boundary_segmentation", "needs the WoundScan engine"),
+        ("skimage", "needs scikit-image"),
+    ]:
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, missing, None)
+            with pytest.raises(SystemExit, match=says):
+                evaluate.main()
+    assert not report.exists()
