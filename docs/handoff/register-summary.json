@@ -1,0 +1,82 @@
+{
+ "total": 232,
+ "by_severity": {
+  "blocker": 40,
+  "major": 103,
+  "minor": 77,
+  "info": 12
+ },
+ "canonical_total": 145,
+ "canonical_by_severity": {
+  "blocker": 24,
+  "major": 60,
+  "minor": 52,
+  "info": 9
+ },
+ "duplicate_groups": 50,
+ "duplicate_members": 87,
+ "refuted": 2,
+ "per_source": {
+  "engine-api-auth-storage": {
+   "adjusted": 8,
+   "confirmed": 13
+  },
+  "engine-core-math": {
+   "adjusted": 4,
+   "confirmed": 8
+  },
+  "engine-ml-quality-validation": {
+   "confirmed": 13,
+   "adjusted": 3
+  },
+  "engine-output-business": {
+   "confirmed": 10,
+   "adjusted": 6
+  },
+  "engine-tests-docs-packaging": {
+   "adjusted": 9,
+   "confirmed": 6
+  },
+  "infra-ci-ops": {
+   "confirmed": 10,
+   "adjusted": 8
+  },
+  "ios-app": {
+   "confirmed": 11,
+   "adjusted": 8
+  },
+  "web-marketing": {
+   "confirmed": 8,
+   "adjusted": 5
+  },
+  "web-portal": {
+   "adjusted": 5,
+   "confirmed": 10
+  },
+  "contract-env-secrets": {
+   "confirmed": 6,
+   "adjusted": 9
+  },
+  "contract-ios-engine": {
+   "adjusted": 3,
+   "confirmed": 9
+  },
+  "contract-regulatory": {
+   "confirmed": 4,
+   "adjusted": 6
+  },
+  "contract-security-phi": {
+   "confirmed": 18,
+   "adjusted": 4
+  },
+  "contract-web-engine": {
+   "confirmed": 7,
+   "adjusted": 6
+  },
+  "critic": {
+   "adjusted": 8,
+   "confirmed": 7,
+   "refuted": 2
+  }
+ }
+}

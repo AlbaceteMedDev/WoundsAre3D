@@ -1,0 +1,30 @@
+=== typecheck ===
+
+> woundscan-web@1.0.0 typecheck
+> tsc --noEmit
+
+npm notice
+npm notice New major version of npm available! 10.9.7 -> 12.0.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+npm notice To update run: npm install -g npm@12.0.2
+npm notice
+typecheck exit=0
+
+=== vitest ===
+
+> woundscan-web@1.0.0 test
+> vitest run --passWithNoTests
+
+
+ RUN  v1.6.1 /home/user/WoundsAre3D/woundscan-web
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+watch exclude:  **/node_modules/**, **/dist/**
+No test files found, exiting with code 0
+
+test exit=0
+
+=== test files present? ===
+0
+WEB CHECKS FINISHED

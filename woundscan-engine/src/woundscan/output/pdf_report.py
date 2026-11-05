@@ -43,6 +43,7 @@ class ReportData:
     graft_recommendations: list[dict[str, Any]]
     methodology_notes: str
     provenance_json: str
+    undermining: dict[str, Any] | None = None
     photo_thumbnail_png: bytes | None = None
     confidence_map_png: bytes | None = None
 
@@ -104,6 +105,31 @@ def build_pdf_report(data: ReportData) -> bytes:
         ["Max Depth (cm)", f"{data.max_depth_cm:.2f}", "—"],
         ["Mean Depth (cm)", f"{data.mean_depth_cm:.2f}", "—"],
     ]
+    u = data.undermining
+    if u and u.get("measured"):
+        rows.append(
+            [
+                "Undermined area (cm²) †",
+                f"{u['undermined_area_cm2']:.2f}",
+                f"[{u['undermined_area_ci_95_low_cm2']:.2f}, "
+                f"{u['undermined_area_ci_95_high_cm2']:.2f}]",
+            ]
+        )
+        rows.append(
+            [
+                "Total area incl. undermining (cm²) †",
+                f"{u['total_area_with_undermining_cm2']:.2f}",
+                "—",
+            ]
+        )
+        rows.append(
+            [
+                "Undermined volume (cm³) †",
+                f"{u['undermined_volume_cm3']:.2f}",
+                f"[{u['undermined_volume_ci_95_low_cm3']:.2f}, "
+                f"{u['undermined_volume_ci_95_high_cm3']:.2f}]",
+            ]
+        )
     table = Table(rows, hAlign="LEFT")
     table.setStyle(
         TableStyle(
@@ -115,6 +141,21 @@ def build_pdf_report(data: ReportData) -> bytes:
         )
     )
     story.append(table)
+    if u and u.get("measured"):
+        clocks = ", ".join(f"{c:g}" for c in u.get("involved_clock_positions", []))
+        story.append(Spacer(1, 0.08 * inch))
+        story.append(
+            Paragraph(
+                "† Undermining is entered by the clinician from probe readings; it is not "
+                "observed by the scanner, which cannot see beneath intact skin. Maximum extent "
+                f"{u['max_extent_mm']:.1f} mm at {u['max_extent_clock_hours']:g} o'clock"
+                + (f"; involved clock positions {clocks}." if clocks else ".")
+                + " The undermined volume additionally assumes a pocket height of "
+                f"{u['pocket_height_mm']:.1f} mm ({u['pocket_height_basis']}); the probe does "
+                "not measure pocket height.",
+                styles["BodyText"],
+            )
+        )
     story.append(Spacer(1, 0.15 * inch))
 
     story.append(Paragraph(f"Quality Grade: {data.quality_grade}", styles["Heading2"]))

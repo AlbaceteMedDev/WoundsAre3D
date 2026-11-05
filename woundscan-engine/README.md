@@ -127,3 +127,6 @@ See `docs/validation_protocol.md`. The validation harness consists of:
 - Clinical correlation (continuous in production)
 - Property-based invariants (every commit)
 - Regulatory traceability matrix (`docs/regulatory_traceability.md`)
+- Real-wound segmentation test set: `scripts/fetch_wound_segmentation_data.py` downloads public
+  wound photographs with masks, outside the repository; `scripts/evaluate_segmentation.py` scores
+  a model on them (`../docs/wound-reference-images.md`, section 5)

@@ -1,0 +1,15 @@
+# The lifelike phantoms W1-W8: make_lifelike.py, verify_lifelike.py and
+# render_lifelike.py. The print files in lifelike/ were built with exactly
+# these, on Python 3.11, Linux x86-64, with Debian's DejaVu Sans Mono Bold
+# 2.37 (the reproduction kit bundles that file); with them a rebuild matches
+# byte for byte. preview_design.py needs only numpy, scipy and matplotlib.
+numpy==2.4.6
+scipy==1.17.1
+triangle==20250106
+manifold3d==3.5.4
+cadquery==2.8.0             # the lettering; brings OpenCASCADE
+cadquery-ocp==7.9.3.1.1
+matplotlib==3.11.2          # preview pictures, and a fallback copy of the font
+pillow==13.0.0              # pictures
+vtk==9.6.2                  # pictures; headless Linux also needs libosmesa6
+lib3mf==2.5.0               # optional: verify_lifelike.py's strict 3MF read
