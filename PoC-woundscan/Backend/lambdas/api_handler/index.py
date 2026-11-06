@@ -4,7 +4,8 @@ import boto3
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource("dynamodb")
-s3_client = boto3.client("s3")
+from botocore.config import Config
+s3_client = boto3.client("s3", config=Config(signature_version="s3v4"))
 
 TABLE_NAME = "wound-scan-poc-session-schema"
 BUCKET_NAME = "wound-scan-poc-assets-962524581373-us-east-1-an"
