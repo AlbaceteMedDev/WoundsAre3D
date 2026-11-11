@@ -13,7 +13,7 @@ from botocore.config import Config
 from . import geometry, imaging
 
 MIN_AREA_FRACTION = 0.0005   # 0.05 % of the analysis frame
-MAX_AREA_FRACTION = 0.25     # a wound centred at ~20 cm fills well under a quarter of the frame
+MAX_AREA_FRACTION = 0.50     # large wounds framed close-up can fill up to half the frame
 FALLBACK_MAX_FRACTION = 0.12
 FALLBACK_MAX_PLANE_RMSE_MM = 1.5
 
