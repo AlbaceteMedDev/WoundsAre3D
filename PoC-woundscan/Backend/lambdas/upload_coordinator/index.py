@@ -1,5 +1,7 @@
 import json
 import logging
+from decimal import Decimal
+
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -15,6 +17,16 @@ BUCKET_NAME = "wound-scan-poc-assets-962524581373-us-east-1-an"
 STATE_MACHINE_ARN = "arn:aws:states:us-east-1:962524581373:stateMachine:wound-scan-poc-workflow"
 
 EXPECTED_FILE_COUNT = 25  # 5 frames x 5 file types
+
+
+class DecimalEncoder(json.JSONEncoder):
+    """DynamoDB returns every number as Decimal (e.g. session.frameCount);
+    emit whole numbers as int and the rest as float."""
+
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return int(o) if o == o.to_integral_value() else float(o)
+        return super().default(o)
 
 
 def get_scan_id_from_key(s3_key):
@@ -86,7 +98,7 @@ def start_step_functions(scan_id, session_data):
         "bucket": BUCKET_NAME,
         "prefix": f"scans/{scan_id}/frames/",
         "session": session_data or {},
-    })
+    }, cls=DecimalEncoder)
 
     response = sfn_client.start_execution(
         stateMachineArn=STATE_MACHINE_ARN,
