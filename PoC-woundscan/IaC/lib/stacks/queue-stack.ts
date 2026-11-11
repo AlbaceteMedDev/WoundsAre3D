@@ -38,7 +38,9 @@ export class QueueStack extends cdk.Stack {
             bucketArn: props.assetBucket.bucketArn,
             encryptionKey: props.assetBucketKmsKey,
         });
-        assetBucketRef.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.SqsDestination(assetsQueue.sqs));
+        // Only frame uploads matter to the coordinator; pipeline outputs under processed/ are ignored.
+        assetBucketRef.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.SqsDestination(assetsQueue.sqs),
+            { prefix: 'scans/' });
 
         this.assetsQueue = assetsQueue.sqs;
     }

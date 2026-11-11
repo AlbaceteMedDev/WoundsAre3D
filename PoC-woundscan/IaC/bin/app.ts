@@ -39,7 +39,11 @@ const computeStack = new ComputeStack(app, 'ComputeStack', {
   sessionTableKmsKey: dbStack.dynamoKmsKey,
   assetQueue: queueStack.assetsQueue,
   bedrockGuardrailID: aiStack.guardrailId,
-  bedrockGuardrailVersion: aiStack.guardrailVersion
+  bedrockGuardrailVersion: aiStack.guardrailVersion,
+  stepFunctionsBucket: bucketStack.stepFunctionsBucket,
+  stepFunctionsBucketKmsKey: bucketStack.stepFunctionsBucketKmsKey,
+  samEndpointName: aiStack.samEndpointName,
+  samEndpointArn: aiStack.samEndpointArn
 });
 
 const stepFunctionsStack = new StepFunctionsStack(app, 'StepFunctionsStack', {
@@ -50,5 +54,7 @@ const stepFunctionsStack = new StepFunctionsStack(app, 'StepFunctionsStack', {
   generateDiagramsLambda: computeStack.generateDiagramsLambda,
   narrateLambda: computeStack.narrateLambda,
   stepFunctionsBucket: bucketStack.stepFunctionsBucket,
-  stepFunctionsBucketKmsKey: bucketStack.stepFunctionsBucketKmsKey
+  stepFunctionsBucketKmsKey: bucketStack.stepFunctionsBucketKmsKey,
+  sessionTable: dbStack.sessionTable,
+  sessionTableKmsKey: dbStack.dynamoKmsKey
 });

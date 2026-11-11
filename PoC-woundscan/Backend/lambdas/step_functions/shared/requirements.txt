@@ -1,0 +1,3 @@
+# Lambda layer "pipeline-deps" (python3.13, x86_64). Bundled by ComputeStack.
+numpy==2.5.4
+pillow==12.3.0

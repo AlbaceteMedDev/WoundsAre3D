@@ -8,6 +8,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { StepFunctions } from '../constructs/stepfunctions';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export interface StepFunctionsProps extends EnvironmentConfig {
     preprocessLambda: lambda.Function;
@@ -17,6 +18,8 @@ export interface StepFunctionsProps extends EnvironmentConfig {
     narrateLambda: lambda.Function;
     stepFunctionsBucket: s3.IBucket;
     stepFunctionsBucketKmsKey: kms.IKey;
+    sessionTable: dynamodb.ITableV2;
+    sessionTableKmsKey: kms.IKey;
 }
 
 export class StepFunctionsStack extends cdk.Stack {
@@ -59,7 +62,9 @@ export class StepFunctionsStack extends cdk.Stack {
             step2Lambda: props.segmentLambda,
             step3Lambda: props.computeLambda,
             step4Lambda: props.generateDiagramsLambda,
-            step5Lambda: props.narrateLambda
+            step5Lambda: props.narrateLambda,
+            sessionTable: props.sessionTable,
+            sessionTableKmsKey: props.sessionTableKmsKey
         });
         this.stateMachine = woundScanWorkflow.stateMachine;
 

@@ -49,20 +49,34 @@ def get_scan_record(table, scan_id):
 
 def update_scan_status(table, scan_id, old_status, new_status, extra_attrs=None):
     """
-    Update scan status by deleting the old record and creating a new one.
-    Required because status is a sort key (immutable in DynamoDB).
-    TODO: Andres should change status to a regular attribute to avoid this.
+    Conditionally move a scan from old_status to new_status.
+
+    The table key is `id` only and `status` is a plain attribute, so this is an
+    in-place update_item (the previous delete-by-{id,status} + put failed with a
+    key-schema ValidationException). The condition makes the transition atomic:
+    with 25 S3 events arriving in parallel, only one invocation wins.
+    Returns True if this call performed the transition.
     """
-    # Delete old record
-    table.delete_item(Key={"id": scan_id, "status": old_status})
-
-    # Build new item
-    new_item = {"id": scan_id, "status": new_status}
-    if extra_attrs:
-        new_item.update(extra_attrs)
-
-    table.put_item(Item=new_item)
+    names = {"#s": "status"}
+    values = {":new": new_status, ":old": old_status}
+    sets = ["#s = :new"]
+    for i, (k, v) in enumerate((extra_attrs or {}).items()):
+        names[f"#a{i}"] = k
+        values[f":a{i}"] = v
+        sets.append(f"#a{i} = :a{i}")
+    try:
+        table.update_item(
+            Key={"id": scan_id},
+            UpdateExpression="SET " + ", ".join(sets),
+            ConditionExpression="#s = :old",
+            ExpressionAttributeNames=names,
+            ExpressionAttributeValues=values,
+        )
+    except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+        logger.info(f"Scan {scan_id} is no longer {old_status}; skipping transition to {new_status}.")
+        return False
     logger.info(f"Scan {scan_id} status updated: {old_status} -> {new_status}")
+    return True
 
 
 def start_step_functions(scan_id, session_data):
@@ -123,29 +137,26 @@ def process_s3_event(record):
 
     session_data = scan.get("session", {})
 
+    # Claim the scan first (UPLOADING -> PROCESSING) so parallel invocations
+    # triggered by the last few uploads start the workflow only once.
+    if not update_scan_status(table, scan_id, old_status="UPLOADING", new_status="PROCESSING"):
+        return
+
     try:
         execution_arn = start_step_functions(scan_id, session_data)
-        update_scan_status(
-            table,
-            scan_id,
-            old_status=current_status,
-            new_status="PROCESSING",
-            extra_attrs={
-                "session": session_data,
-                "executionArn": execution_arn,
-            }
+        table.update_item(
+            Key={"id": scan_id},
+            UpdateExpression="SET executionArn = :x",
+            ExpressionAttributeValues={":x": execution_arn},
         )
     except Exception as e:
         logger.error(f"Failed to start workflow for scan {scan_id}: {str(e)}")
         update_scan_status(
             table,
             scan_id,
-            old_status=current_status,
+            old_status="PROCESSING",
             new_status="FAILED",
-            extra_attrs={
-                "session": session_data,
-                "error": str(e),
-            }
+            extra_attrs={"error": f"Failed to start processing: {e}"[:1000]},
         )
         raise
 

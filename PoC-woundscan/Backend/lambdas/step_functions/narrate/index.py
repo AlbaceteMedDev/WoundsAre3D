@@ -1,7 +1,10 @@
-import json
+"""NARRATE - Bedrock plain-language narration with guardrail on the output.
+
+The implementation lives in the shared `woundlib` package (pipeline-deps Lambda layer).
+"""
+
+from woundlib import steps
+
 
 def handler(event, context):
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello World Step Functions/5-NARRATE!')
-    }
+    return steps.run_handler(steps.narrate, event)

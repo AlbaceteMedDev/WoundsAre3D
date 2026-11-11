@@ -40,6 +40,8 @@ export interface LambdaConfig {
     memorySize?: number;
     layerEnabled: boolean;
     environment?: Record<string,string>
+    /** Attach the shared pipeline-deps layer (numpy, Pillow, woundlib). */
+    pipelineLayer?: boolean;
 }
 
 export interface ComputeConfig {
@@ -78,6 +80,30 @@ export interface StepFunctionsConfig {
     };
 }
 
+// ============== AI / ML Config =================
+export interface SamEndpointConfig {
+    /** Endpoint name suffix: `${identifier}-${environment}-${endpointName}`. */
+    endpointName: string;
+    /** SageMaker Hugging Face PyTorch inference image (CPU). */
+    image: string;
+    /** Path (relative to PoC-woundscan/) of the model.tar.gz built by Backend/sagemaker/sam/build_model.py. */
+    modelArtifactPath: string;
+    /** Existing CloudWatch log group for the endpoint (reused, not created). */
+    logGroupName: string;
+    memorySizeInMb: number;
+    maxConcurrency: number;
+}
+
+export interface NarrationConfig {
+    /** Comma-separated Bedrock model / inference-profile IDs, tried in order. */
+    modelIds: string;
+}
+
+export interface AIConfig {
+    sam: SamEndpointConfig;
+    narration: NarrationConfig;
+}
+
 // =============== General Config ================
 export interface EnvironmentConfig {
     account: string;
@@ -94,4 +120,6 @@ export interface EnvironmentConfig {
     sqs: QueueConfig;
 
     stepFunctions: StepFunctionsConfig;
+
+    ai: AIConfig;
 }

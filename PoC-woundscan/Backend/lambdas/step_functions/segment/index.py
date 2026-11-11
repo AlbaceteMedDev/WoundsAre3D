@@ -1,7 +1,10 @@
-import json
+"""SEGMENT - SAM ViT-B (SageMaker Serverless, centre-point prompt) wound mask + 20 mm peri-wound ring mask.
+
+The implementation lives in the shared `woundlib` package (pipeline-deps Lambda layer).
+"""
+
+from woundlib import steps
+
 
 def handler(event, context):
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello World Step Functions/2-SEGMENT!')
-    }
+    return steps.run_handler(steps.segment, event)

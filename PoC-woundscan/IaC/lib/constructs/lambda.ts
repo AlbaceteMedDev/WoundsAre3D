@@ -20,6 +20,8 @@ export interface LambdaProps{
     layerName?: string;
     layerRuntimes?: lambda.Runtime[];
     layerDescription?: string;
+    /** Extra pre-built layers (e.g. the shared pipeline-deps layer). */
+    layers?: lambda.ILayerVersion[];
 }
 
 export class LambdaFunction extends Construct {
@@ -42,7 +44,7 @@ export class LambdaFunction extends Construct {
                 memorySize: (props.memorySize) ? props.memorySize : 128,
                 role: props.role,
                 logGroup: props.logGroup,
-                layers: [layer],
+                layers: [layer, ...(props.layers ?? [])],
                 environment: (props.environment) ? props.environment : {}
             });
 
@@ -56,6 +58,7 @@ export class LambdaFunction extends Construct {
                 memorySize: (props.memorySize) ? props.memorySize : 128,
                 role: props.role,
                 logGroup: props.logGroup,
+                layers: props.layers,
                 environment: (props.environment) ? props.environment : {}
             });
         }

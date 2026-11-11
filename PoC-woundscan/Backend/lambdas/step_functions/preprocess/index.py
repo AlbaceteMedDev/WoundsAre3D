@@ -1,7 +1,10 @@
-import json
+"""PREPROCESS - sharpness scoring, best-frame selection, depth-to-RGB registration.
+
+The implementation lives in the shared `woundlib` package (pipeline-deps Lambda layer).
+"""
+
+from woundlib import steps
+
 
 def handler(event, context):
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello World Step Functions/1-PREPROCESS!')
-    }
+    return steps.run_handler(steps.preprocess, event)
