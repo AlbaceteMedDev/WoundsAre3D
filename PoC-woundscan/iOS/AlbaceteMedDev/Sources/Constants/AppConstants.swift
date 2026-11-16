@@ -50,15 +50,15 @@ enum AppConstants {
         /// How often to poll the status endpoint (seconds)
         static let intervalSeconds: Double = 3.0
 
-        /// Maximum number of poll attempts before giving up
-        /// TODO: Restore to 60 once pipeline Lambdas are live
-        static let maxAttempts = 10
+        /// Maximum number of poll attempts before giving up.
+        /// 60 attempts × 3s = 3 minutes — covers SageMaker cold start (30–90s per SOW).
+        static let maxAttempts = 60
     }
 
     // MARK: - Debug
     enum Debug {
-        /// Set to a real scanId to jump directly to ResultsView without scanning
-        /// Leave nil for normal flow
-        static let previewScanId: String? = "6e5cb8b3-94b6-4bad-be07-8e17339f07ef"
+        /// Set to a real scanId to jump directly to ResultsView without scanning.
+        /// Leave nil for normal flow (required for Stage 6 acceptance runs).
+        static let previewScanId: String? = nil
     }
 }

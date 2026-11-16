@@ -6,24 +6,29 @@ import SwiftUI
 struct ResultsView: View {
 
     let scanId: String
+    let onDismiss: (() -> Void)?
     @StateObject private var viewModel: ResultsViewModel
 
-    init(scanId: String) {
+    init(scanId: String, onDismiss: (() -> Void)? = nil) {
         self.scanId = scanId
+        self.onDismiss = onDismiss
         _viewModel = StateObject(wrappedValue: ResultsViewModel(scanId: scanId))
     }
 
     var body: some View {
-        switch viewModel.state {
-        case .polling:
-            pollingView
-        case .loading:
-            loadingView
-        case .loaded(let results):
-            resultsScrollView(results)
-        case .failed(let message):
-            errorView(message)
+        Group {
+            switch viewModel.state {
+            case .polling:
+                pollingView
+            case .loading:
+                loadingView
+            case .loaded(let results):
+                resultsScrollView(results)
+            case .failed(let message):
+                errorView(message)
+            }
         }
+        .onAppear { viewModel.start() }
     }
 
     // MARK: - States
@@ -36,10 +41,7 @@ struct ResultsView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Scan Results")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.start() }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 
     private var loadingView: some View {
@@ -48,10 +50,7 @@ struct ResultsView: View {
             Text("Loading results…").font(.headline)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Scan Results")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.start() }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 
     private func errorView(_ message: String) -> some View {
@@ -61,21 +60,37 @@ struct ResultsView: View {
             Text("Something went wrong").font(.title3.bold())
             Text(message).font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
+            Button("Go Back") { onDismiss?() }
+                .font(.subheadline.bold())
+                .padding(.horizontal, 24).padding(.vertical, 10)
+                .background(.blue, in: Capsule())
+                .foregroundStyle(.white)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Scan Results")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.start() }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 
     private func resultsScrollView(_ results: ScanResultsResponse) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
 
-                Text("Scan \(scanId.prefix(8))…")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .padding(.horizontal)
+                // Header
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Scan Results")
+                            .font(.title2.bold())
+                        Text("Scan \(scanId.prefix(8))…")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button(action: { onDismiss?() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
 
                 sectionHeader("Measurements")
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -83,12 +98,14 @@ struct ResultsView: View {
                     MeasurementCard.width(results.measurements.widthMm)
                     MeasurementCard.bedArea(results.measurements.bedAreaCm2)
                     MeasurementCard.depth(results.measurements.depthMm)
+                    MeasurementCard.periWoundArea(results.measurements.periWoundAreaCm2)
                 }
                 .padding(.horizontal)
 
                 sectionHeader("Top View Diagram")
                 AsyncSVGView(urlString: results.diagrams.diagramTop)
-                    .frame(maxWidth: .infinity).frame(height: 280)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: UIScreen.main.bounds.width - 32)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding(.horizontal)
 
@@ -111,13 +128,9 @@ struct ResultsView: View {
                 Spacer(minLength: 32)
             }
             .frame(maxWidth: .infinity)
-            .padding(.top, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Scan Results")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear { viewModel.start() }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -144,17 +157,56 @@ import WebKit
 
 struct AsyncSVGView: UIViewRepresentable {
     let urlString: String
+
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.scrollView.isScrollEnabled = false
+        webView.scrollView.bouncesZoom = false
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
+        webView.navigationDelegate = context.coordinator
+        webView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        webView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        webView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        webView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         return webView
     }
+
     func updateUIView(_ webView: WKWebView, context: Context) {
         guard let url = URL(string: urlString) else { return }
         webView.load(URLRequest(url: url))
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: WKWebView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    class Coordinator: NSObject, WKNavigationDelegate {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            let js = """
+                (function() {
+                    var svg = document.querySelector('svg');
+                    if (!svg) return;
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    svg.style.width  = '100%';
+                    svg.style.height = '100%';
+                    svg.style.display = 'block';
+                    var s = document.documentElement.style;
+                    s.height = '100%'; s.margin = '0'; s.padding = '0';
+                    var b = document.body.style;
+                    b.height = '100%'; b.margin = '0'; b.padding = '0';
+                    b.display = 'flex';
+                    b.alignItems = 'center';
+                    b.justifyContent = 'center';
+                    b.backgroundColor = 'transparent';
+                })();
+            """
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
     }
 }
 
@@ -166,11 +218,12 @@ struct AsyncImageView: View {
         AsyncImage(url: URL(string: urlString)) { phase in
             switch phase {
             case .empty:
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(.secondarySystemGroupedBackground))
             case .success(let image):
-                image.resizable().scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity).clipped()
+                image.resizable().scaledToFit()
+                    .frame(maxWidth: .infinity)
             case .failure:
                 VStack(spacing: 8) {
                     Image(systemName: "photo.badge.exclamationmark")
@@ -187,7 +240,5 @@ struct AsyncImageView: View {
 }
 
 #Preview {
-    NavigationStack {
-        ResultsView(scanId: "6e5cb8b3-94b6-4bad-be07-8e17339f07ef")
-    }
+    ResultsView(scanId: "6e5cb8b3-94b6-4bad-be07-8e17339f07ef")
 }

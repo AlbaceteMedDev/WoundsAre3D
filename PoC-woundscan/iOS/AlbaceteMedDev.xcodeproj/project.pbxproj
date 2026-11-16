@@ -20,6 +20,7 @@
 		B011 /* Sources/Results/ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A011 /* Sources/Results/ResultsViewModel.swift */; };
 		B012 /* Sources/Results/MeasurementCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A012 /* Sources/Results/MeasurementCard.swift */; };
 		B013 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A013 /* WebKit.framework */; };
+		B014 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A015 /* Resources/Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		A012 /* Sources/Results/MeasurementCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/Results/MeasurementCard.swift; sourceTree = "<group>"; };
 		A013 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		A014 /* Resources/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Resources/Info.plist; sourceTree = "<group>"; };
+		A015 /* Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,7 @@
 				A011 /* Sources/Results/ResultsViewModel.swift */,
 				A012 /* Sources/Results/MeasurementCard.swift */,
 				A014 /* Resources/Info.plist */,
+				A015 /* Resources/Assets.xcassets */,
 			);
 			path = AlbaceteMedDev;
 			sourceTree = "<group>";
@@ -157,6 +160,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B014 /* Resources/Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,7 +244,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.nclouds.albacete-meddev";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.albacete.woundscan";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -264,7 +268,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.nclouds.albacete-meddev";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.albacete.woundscan";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

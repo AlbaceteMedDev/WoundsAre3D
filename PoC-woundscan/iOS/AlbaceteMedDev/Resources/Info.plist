@@ -19,10 +19,10 @@
 
     <!-- App display name -->
     <key>CFBundleDisplayName</key>
-    <string>Albacete MedDev</string>
+    <string>WoundScan-PoC</string>
 
     <key>CFBundleIdentifier</key>
-    <string>com.nclouds.albacete-meddev</string>
+    <string>com.albacete.woundscan</string>
 
     <key>CFBundleName</key>
     <string>AlbaceteMedDev</string>

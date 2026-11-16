@@ -7,7 +7,7 @@ import ARKit
 struct CaptureView: View {
 
     @StateObject private var viewModel = CaptureViewModel()
-    @State private var navigateToResults = false
+    @State private var showResults = false
 
     private var activeScanId: String? {
         AppConstants.Debug.previewScanId ?? viewModel.completedScanId
@@ -15,9 +15,9 @@ struct CaptureView: View {
 
     var body: some View {
         ZStack {
-            // Camera feed extends behind nav bar and home indicator
+            // Camera feed — truly full screen, edge to edge
             ARViewContainer(session: viewModel.captureSession.arSession)
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all)
 
             // Overlay controls at the bottom
             VStack {
@@ -26,31 +26,24 @@ struct CaptureView: View {
                     statusPanel.padding(.horizontal, 20)
                     scanButton
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, 48)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .navigationTitle("Wound Scan")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarBackground(.black.opacity(0.6), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
-            if AppConstants.Debug.previewScanId != nil {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Preview") { navigateToResults = true }
-                        .foregroundStyle(.white)
-                }
-            }
-        }
+        .ignoresSafeArea(.all)
+        .statusBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear { viewModel.startSession() }
         .onDisappear { viewModel.stopSession() }
         .onChange(of: viewModel.captureState) { newState in
-            if case .done = newState { navigateToResults = true }
+            if case .done = newState { showResults = true }
         }
-        .navigationDestination(isPresented: $navigateToResults) {
+        .onChange(of: AppConstants.Debug.previewScanId) { _ in
+            if AppConstants.Debug.previewScanId != nil { showResults = true }
+        }
+        .fullScreenCover(isPresented: $showResults, onDismiss: { viewModel.reset() }) {
             if let scanId = activeScanId {
-                ResultsView(scanId: scanId)
+                ResultsView(scanId: scanId, onDismiss: { showResults = false })
             }
         }
     }

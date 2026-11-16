@@ -89,6 +89,16 @@ extension MeasurementCard {
             color: .red
         )
     }
+
+    static func periWoundArea(_ cm2: Double) -> MeasurementCard {
+        MeasurementCard(
+            title: "Peri-Wound Area",
+            value: String(format: "%.2f", cm2),
+            unit: "cm²",
+            icon: "circle.dashed",
+            color: .purple
+        )
+    }
 }
 
 // MARK: - Preview
