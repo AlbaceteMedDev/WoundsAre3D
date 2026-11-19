@@ -20,6 +20,20 @@ class ProbeMeasurementInput(BaseModel):
     notes: str = ""
 
 
+class UnderminingInput(BaseModel):
+    """A clinician-probed undermining reading at a clock position.
+
+    Undermining cannot be observed optically -- nothing sees under intact skin
+    -- so these are entered by hand and every derived figure is labelled
+    probe-derived rather than instrument-derived.
+    """
+
+    clock_position_hours: float = Field(..., gt=0.0, le=12.0)
+    extent_mm: float = Field(..., ge=0.0, le=200.0)
+    probe_type: str = Field("cotton_tip", pattern="^(cotton_tip|plastic_gauge|kundin_gauge|other)$")
+    force_category: str = Field("light", pattern="^(light|medium|firm)$")
+
+
 class FiducialDetectionInput(BaseModel):
     marker_id: int
     corners_pix: list[list[float]]
@@ -75,6 +89,7 @@ class CreateMeasurementRequest(BaseModel):
     fiducial_separation_mm: float
     boundary: WoundBoundaryInput
     probe_measurements: list[ProbeMeasurementInput]
+    undermining: list[UnderminingInput] = Field(default_factory=list)
     overlap_delta_cm: float | None = None
     selected_product_ids: list[str] = Field(default_factory=list)
     polarized_capture_s3_key: str | None = None
@@ -100,6 +115,27 @@ class GraftRecommendationOut(BaseModel):
     rationale: str
 
 
+class UnderminingOut(BaseModel):
+    """Undermining derived from clinician probe readings, not from the scan."""
+
+    measured: bool
+    source: str = "clinician probe"
+    undermined_area_cm2: float
+    undermined_area_ci_95_low_cm2: float
+    undermined_area_ci_95_high_cm2: float
+    visible_area_cm2: float
+    total_area_with_undermining_cm2: float
+    undermined_volume_cm3: float
+    undermined_volume_ci_95_low_cm3: float
+    undermined_volume_ci_95_high_cm3: float
+    max_extent_mm: float
+    max_extent_clock_hours: float
+    involved_clock_positions: list[float]
+    pocket_height_mm: float
+    pocket_height_basis: str
+    n_measurements: int
+
+
 class QualityReportOut(BaseModel):
     grade: str
     overall_score: float
@@ -122,6 +158,7 @@ class MeasurementResponse(BaseModel):
     perimeter_cm: float
     footprint_area_cm2: float
     quality: QualityReportOut
+    undermining: UnderminingOut
     graft_recommendations: list[GraftRecommendationOut]
     plausibility_passed: bool
     plausibility_warnings: list[str]

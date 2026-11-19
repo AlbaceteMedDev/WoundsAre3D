@@ -167,11 +167,15 @@ class BoundarySegmentationModel:
     def _segment_unet(self, rgb: np.ndarray) -> SegmentationResult:
         torch = self._unet.torch  # type: ignore[union-attr]
         net = self._unet.net  # type: ignore[union-attr]
+        h, w = rgb.shape[:2]
         x = torch.from_numpy(rgb.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
+        # The net halves the image three times and doubles it back, so both
+        # sides must divide by 8: extend the edge pixels, then crop the output.
+        x = torch.nn.functional.pad(x, (0, -w % 8, 0, -h % 8), mode="replicate")
         x = x.to(self.device)
         with torch.no_grad():
             logits = net(x)
-            prob = torch.softmax(logits, dim=1)[0, 1].cpu().numpy()
+            prob = torch.softmax(logits, dim=1)[0, 1, :h, :w].cpu().numpy()
         mask = prob > 0.5
         return SegmentationResult(
             binary_mask=mask,

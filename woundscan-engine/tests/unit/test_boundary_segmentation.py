@@ -80,6 +80,16 @@ elif scenario == "unet_random":
         unet.torch.save(unet.net.state_dict(), str(ckpt))
         result = BoundarySegmentationModel.from_weights(ckpt).segment(img)
         emit(result)
+elif scenario == "unet_odd_size":
+    # Sides that do not divide by 8, as many phone photographs have.
+    unet = _UNet(n_classes=2)
+    with tempfile.TemporaryDirectory() as td:
+        ckpt = Path(td) / "random_unet.pt"
+        unet.torch.save(unet.net.state_dict(), str(ckpt))
+        odd = np.full((61, 83, 3), 30, dtype=np.uint8)
+        odd[20:40, 30:60, 0] = 200
+        result = BoundarySegmentationModel.from_weights(ckpt).segment(odd)
+        emit(result)
 elif scenario == "corrupt_weights":
     with tempfile.TemporaryDirectory() as td:
         bad = Path(td) / "not_a_checkpoint.pt"
@@ -144,6 +154,12 @@ class TestUNetPath:
         # softmax probability must be in [0, 1].
         assert out["conf_min"] >= 0.0
         assert out["conf_max"] <= 1.0
+        assert out["model_version"] == "random_unet"
+
+    def test_any_image_size(self):
+        out = _run("unet_odd_size")
+        assert out["binary_shape"] == [61, 83]
+        assert out["conf_shape"] == [61, 83]
         assert out["model_version"] == "random_unet"
 
     def test_corrupt_weights_falls_back_silently(self):
