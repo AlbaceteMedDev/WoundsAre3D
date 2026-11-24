@@ -18,6 +18,7 @@ from .s3io import (PipelineError, get_bytes, get_json, get_npz, parse_event, pro
 log = logging.getLogger(__name__)
 FRAME_COUNT = 5
 DEPTH_MIN_M, DEPTH_MAX_M = 0.05, 3.0
+MAX_WOUND_LENGTH_MM = 150.0
 
 
 def _frame_key(prefix, i, kind):
@@ -135,20 +136,37 @@ def segment(event):
     t0 = time.time()
     jpeg = get_bytes(state, work_key(scan_id, "best_rgb.jpg"))
     img = imaging.load_rgb(jpeg)
-    _, valid, K, points = _load_registered(state, scan_id)
+    depth_m, valid, K, points = _load_registered(state, scan_id)
     h, w = valid.shape
     prompt = (w / 2.0, h / 2.0)
 
-    method, score, sam_error, wound = None, None, None, None
+    method, score, sam_error, wound, container = None, None, None, None, None
+    loc, unconfirmed = {}, False
     if segmentation.endpoint_name():
         try:
             cands = segmentation.sam_predict(jpeg, prompt)
-            chosen = segmentation.choose_sam_mask(cands, prompt, (h, w))
-            if chosen is not None:
-                wound = segmentation.clean_mask(chosen[0], prompt)
-                score, method = chosen[1], "sam_vit_b"
+            container, blob, loc = _locate(cands, img, depth_m, valid)
+            if blob is not None:
+                # Second pass: prompt SAM on the located region, negatives on the plate/skin.
+                prompt = loc["prompt"]
+                cands2 = segmentation.sam_predict(jpeg, prompt, loc["negatives"])
+                chosen = segmentation.choose_by_blob(cands + cands2, blob, container)
+                if chosen is not None:
+                    wound = segmentation.clean_mask(chosen[0], prompt)
+                    score, method = chosen[1], "sam_vit_b_located"
+                    loc["iou"] = round(chosen[2], 3)
+                else:
+                    # The locator region alone proved unreliable (glare, texture); refuse
+                    # rather than report numbers for a region SAM does not confirm.
+                    unconfirmed = True
+                    sam_error = "No SAM mask matched the located wound region"
             else:
-                sam_error = "SAM returned no plausible mask for the centre prompt"
+                chosen = segmentation.choose_sam_mask(cands, prompt, (h, w))
+                if chosen is not None:
+                    wound = segmentation.clean_mask(chosen[0], prompt)
+                    score, method = chosen[1], "sam_vit_b"
+                else:
+                    sam_error = "SAM returned no plausible mask for the centre prompt"
         except Exception as e:
             sam_error = f"{type(e).__name__}: {e}"[:300]
             log.warning("SAM call failed (retry %s): %s", retry, sam_error)
@@ -159,6 +177,9 @@ def segment(event):
     else:
         sam_error = "SAGEMAKER_ENDPOINT_NAME not configured"
 
+    retake = "Centre the wound in the frame and rescan."
+    if unconfirmed:
+        raise PipelineError(f"Could not confirm the wound outline: segmentation and the wound locator disagree. {retake}")
     if wound is None or not wound.any():
         wound = segmentation.depth_fallback(points, valid, prompt)
         method = "depth_fallback"
@@ -167,7 +188,14 @@ def segment(event):
 
     frac = float(wound.sum()) / (h * w)
     if not (segmentation.MIN_AREA_FRACTION <= frac <= segmentation.MAX_AREA_FRACTION):
-        raise PipelineError(f"Segmentation produced an implausible wound size ({frac:.2%} of the frame)")
+        raise PipelineError(f"Segmentation produced an implausible wound size ({frac:.2%} of the frame). {retake}")
+    if segmentation._touches_border(wound, tol=0.005):
+        raise PipelineError(f"The segmented region touches the image edge, so it is not an isolated wound. {retake}")
+    if container is not None and wound.sum() > segmentation.WOUND_MAX_CONTAINER_FRACTION * container.sum():
+        raise PipelineError(f"Could not separate the wound from the surface around it. {retake}")
+    solidity, _ = segmentation.shape_stats(wound)
+    if solidity < segmentation.MIN_WOUND_SOLIDITY:
+        raise PipelineError(f"The segmented region is too irregular to be a wound outline (solidity {solidity:.2f}). {retake}")
 
     ring = geometry.peri_wound_ring(points, np.ones_like(valid), wound)
     put_npz(state, work_key(scan_id, "segment.npz"), wound=np.packbits(wound), ring=np.packbits(ring),
@@ -177,9 +205,46 @@ def segment(event):
     put_bytes(state, work_key(scan_id, "overlay.jpg"), segmentation.overlay_jpeg(img, wound, ring), "image/jpeg")
     info = {"method": method, "samScore": score, "samError": sam_error, "prompt": list(prompt),
             "woundFraction": round(frac, 5), "ringPixels": int(ring.sum()), "retryCount": retry,
+            "locator": {k: v for k, v in loc.items() if k != "prompt"},
             "seconds": round(time.time() - t0, 2)}
     put_json(state, work_key(scan_id, "segment.json"), info)
     return {"method": method, "samScore": score, "woundFraction": info["woundFraction"]}
+
+
+def _locate(cands, img, depth_m, valid):
+    """Run the wound locator on SAM's first-pass masks.
+
+    Returns (container, blob, info) at analysis resolution; container/blob are None
+    when not found. info carries the second-pass prompt and negatives (analysis px).
+    """
+    h, w = valid.shape
+    f = segmentation.LOCATOR_SCALE
+    hs, ws = h // f, w // f
+
+    def down(m):
+        return imaging.resample_nearest(m.astype(np.uint8), ws, hs) > 0
+
+    def up(m):
+        return imaging.resample_nearest(m.astype(np.uint8), w, h) > 0
+
+    small = [(down(m), s) for m, s in cands]
+    container_s = segmentation.find_container(small)
+    if container_s is None:
+        return None, None, {"container": None}
+    info = {"containerFraction": round(float(container_s.mean()), 4)}
+    rgb_s = np.asarray(img.resize((ws, hs), resample=2))
+    depth_s = imaging.resample_nearest(depth_m.astype(np.float32), ws, hs) * 1000.0
+    valid_s = down(valid)
+    blob_s = segmentation.locate_wound(rgb_s, depth_s, valid_s, container_s)
+    container = up(container_s)
+    if blob_s is None:
+        info["blob"] = None
+        return container, None, info
+    px, py = segmentation.interior_point(blob_s)
+    info["blobFraction"] = round(float(blob_s.sum() / container_s.sum()), 4)
+    info["prompt"] = ((px + 0.5) * f, (py + 0.5) * f)
+    info["negatives"] = [((x + 0.5) * f, (y + 0.5) * f) for x, y in segmentation.negative_points(container_s, blob_s)]
+    return container, up(blob_s), info
 
 
 def _load_masks(state, scan_id):
@@ -205,6 +270,10 @@ def compute(event):
     for k in ("length_mm", "width_mm", "bed_area_cm2", "peri_wound_area_cm2"):
         if not m[k] > 0:
             raise PipelineError(f"Measurement {k} is zero; the wound region is too small or invalid")
+    if m["length_mm"] > MAX_WOUND_LENGTH_MM:
+        raise PipelineError(f"Measured length {m['length_mm']} mm is implausible for a single wound "
+                            f"(limit {MAX_WOUND_LENGTH_MM} mm); the segmentation picked the background. "
+                            "Centre the wound in the frame and rescan.")
     seg = {}
     try:
         seg = get_json(state, work_key(scan_id, "segment.json"))
