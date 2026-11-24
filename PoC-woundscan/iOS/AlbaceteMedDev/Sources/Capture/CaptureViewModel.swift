@@ -4,6 +4,7 @@
 // State machine for the capture screen.
 // States: idle → scanning → uploading → processing → done / failed
 
+import Combine
 import Foundation
 import SwiftUI
 
@@ -24,9 +25,9 @@ enum CaptureState: Equatable {
     var statusMessage: String {
         switch self {
         case .idle:
-            return "Position the camera over the wound and tap Scan."
+            return "Centre the wound in the circle and tap Scan."
         case .scanning(let count):
-            return "Capturing frame \(count + 1) of \(AppConstants.Capture.frameCount)…"
+            return "Hold still — capturing frame \(min(count + 1, AppConstants.Capture.frameCount)) of \(AppConstants.Capture.frameCount)…"
         case .uploading(let progress):
             let pct = Int(progress * 100)
             return "Uploading… \(pct)%"
@@ -49,11 +50,32 @@ final class CaptureViewModel: ObservableObject {
 
     @Published private(set) var captureState: CaptureState = .idle
     @Published private(set) var completedScanId: String?
+    @Published private(set) var guidance = CaptureGuidance()
+
+    /// Operator label stored with the scan (e.g. "W5 25cm matte"). Remembered between scans
+    /// so a test series only needs the changed part edited.
+    @Published var label: String = UserDefaults.standard.string(forKey: CaptureViewModel.labelKey) ?? "" {
+        didSet { UserDefaults.standard.set(label, forKey: CaptureViewModel.labelKey) }
+    }
+
+    private static let labelKey = "scanLabel"
+    private static let maxConcurrentUploads = 6
 
     // MARK: Dependencies
 
     let captureSession = ARLiDARCaptureSession()
     private let apiClient = ScanAPIClient()
+
+    init() {
+        captureSession.$guidance
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$guidance)
+    }
+
+    /// Scan is allowed when idle and, if guidance is enforced, every live check passes.
+    var canScan: Bool {
+        captureState.isActionable && (!AppConstants.Guidance.enforce || guidance.isReady)
+    }
 
     // MARK: - Public Actions
 
@@ -69,7 +91,7 @@ final class CaptureViewModel: ObservableObject {
 
     /// Main scan action: capture → upload → poll until complete.
     func startScan() {
-        guard captureState.isActionable else { return }
+        guard canScan else { return }
 
         Task {
             await runScanPipeline()
@@ -85,18 +107,24 @@ final class CaptureViewModel: ObservableObject {
     // MARK: - Private Pipeline
 
     private func runScanPipeline() async {
+        let trimmedLabel = label.trimmingCharacters(in: .whitespacesAndNewlines)
+        let scanLabel: String? = trimmedLabel.isEmpty ? nil : trimmedLabel
+        let guidanceAtPress = guidance
+
         do {
-            // Step 1 — Burst capture 5 LiDAR frames
+            // Step 1 — One burst of 5 LiDAR frames
             captureState = .scanning(framesCaptured: 0)
-            let frames = try await captureFrames()
+            let frames = try await captureSession.captureBurst(label: scanLabel) { [weak self] count in
+                self?.captureState = .scanning(framesCaptured: count)
+            }
 
             // Step 2 — Create scan on backend, get presigned URLs
             captureState = .uploading(progress: 0.0)
-            let sessionPayload = buildSessionPayload()
+            let sessionPayload = buildSessionPayload(label: scanLabel, guidance: guidanceAtPress)
             let scanResponse = try await apiClient.createScan(sessionPayload: sessionPayload)
 
             // Step 3 — Upload all 25 files via presigned PUT URLs
-            try await uploadFrames(frames, uploadUrls: scanResponse.uploadUrls, scanId: scanResponse.scanId)
+            try await uploadFrames(frames, uploadUrls: scanResponse.uploadUrls)
 
             // Step 4 — Poll status until COMPLETE or FAILED
             captureState = .processing
@@ -111,71 +139,44 @@ final class CaptureViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Capture
+    // MARK: - Upload
 
-    private func captureFrames() async throws -> [CapturedFrame] {
-        var frames: [CapturedFrame] = []
+    private struct UploadJob: Sendable {
+        let filename: String
+        let data: Data
+        let contentType: String
+        let url: URL
+    }
 
-        // Capture frames one at a time, updating state for each
-        for frameIndex in 1...AppConstants.Capture.frameCount {
-            captureState = .scanning(framesCaptured: frameIndex - 1)
-
-            // Wait for the next valid LiDAR frame from the session
-            let frame = try await waitForValidFrame(index: frameIndex)
-            frames.append(frame)
-
-            if frameIndex < AppConstants.Capture.frameCount {
-                try await Task.sleep(
-                    nanoseconds: UInt64(AppConstants.Capture.frameIntervalSeconds * 1_000_000_000)
-                )
+    /// Uploads every file, a few at a time, updating progress as each one finishes.
+    private func uploadFrames(_ frames: [CapturedFrame], uploadUrls: [String: String]) async throws {
+        var jobs: [UploadJob] = []
+        for frame in frames {
+            for (filename, data, contentType) in try buildUploadFiles(for: frame) {
+                guard let urlString = uploadUrls[filename], let url = URL(string: urlString) else {
+                    throw ScanAPIError.uploadFailed(filename)
+                }
+                jobs.append(UploadJob(filename: filename, data: data, contentType: contentType, url: url))
             }
         }
 
-        captureState = .scanning(framesCaptured: AppConstants.Capture.frameCount)
-        return frames
-    }
+        let client = apiClient
+        let total = jobs.count
+        var finished = 0
+        var pending = jobs.makeIterator()
 
-    private func waitForValidFrame(index: Int) async throws -> CapturedFrame {
-        // Delegate to the ARKit session for the actual frame grab
-        let burst = try await captureSession.captureBurst()
-        guard let frame = burst.first else {
-            throw CaptureError.noDepthDataAvailable
-        }
-        // Return a re-indexed frame
-        return CapturedFrame(
-            index: index,
-            rgbImage: frame.rgbImage,
-            depthData: frame.depthData,
-            confidenceData: frame.confidenceData,
-            intrinsics: frame.intrinsics,
-            metadata: frame.metadata
-        )
-    }
-
-    // MARK: - Upload
-
-    private func uploadFrames(
-        _ frames: [CapturedFrame],
-        uploadUrls: [String: String],
-        scanId: String
-    ) async throws {
-        let totalFiles = AppConstants.Capture.totalFileCount
-        var uploadedCount = 0
-
-        for frame in frames {
-            let files = try buildUploadFiles(for: frame)
-
-            for (filename, data, contentType) in files {
-                guard let urlString = uploadUrls[filename],
-                      let url = URL(string: urlString) else {
-                    throw ScanAPIError.uploadFailed(filename)
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for _ in 0..<min(Self.maxConcurrentUploads, total) {
+                if let job = pending.next() {
+                    group.addTask { try await client.uploadFile(data: job.data, to: job.url, contentType: job.contentType) }
                 }
-
-                try await apiClient.uploadFile(data: data, to: url, contentType: contentType)
-                uploadedCount += 1
-
-                let progress = Double(uploadedCount) / Double(totalFiles)
-                captureState = .uploading(progress: progress)
+            }
+            while try await group.next() != nil {
+                finished += 1
+                captureState = .uploading(progress: Double(finished) / Double(total))
+                if let job = pending.next() {
+                    group.addTask { try await client.uploadFile(data: job.data, to: job.url, contentType: job.contentType) }
+                }
             }
         }
     }
@@ -186,9 +187,10 @@ final class CaptureViewModel: ObservableObject {
         let i = frame.index
 
         // RGB JPEG
-        if let jpegData = frame.rgbImage.jpegData(compressionQuality: 0.92) {
-            files.append(("frame_\(i)_rgb.jpg", jpegData, "image/jpeg"))
+        guard let jpegData = frame.rgbImage.jpegData(compressionQuality: 0.92) else {
+            throw CaptureError.imageConversionFailed
         }
+        files.append(("frame_\(i)_rgb.jpg", jpegData, "image/jpeg"))
 
         // Depth binary
         files.append(("frame_\(i)_depth.bin", frame.depthData, "application/octet-stream"))
@@ -232,14 +234,24 @@ final class CaptureViewModel: ObservableObject {
 
     // MARK: - Session Payload
 
-    private func buildSessionPayload() -> [String: Any] {
+    /// Stored as-is in DynamoDB by POST /scans, so only strings, integers and booleans
+    /// (DynamoDB rejects JSON floats there). Full numeric detail is in each frame's metadata.json.
+    private func buildSessionPayload(label: String?, guidance: CaptureGuidance) -> [String: Any] {
         let formatter = ISO8601DateFormatter()
-        return [
+        var payload: [String: Any] = [
             "capturedAt": formatter.string(from: Date()),
             "frameCount": AppConstants.Capture.frameCount,
             "frameIntervalMs": Int(AppConstants.Capture.frameIntervalSeconds * 1000),
-            "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+            "appVersion": DeviceInfo.appVersion,
+            "deviceModel": DeviceInfo.model,
+            "systemVersion": DeviceInfo.systemVersion,
+            "guidanceEnforced": AppConstants.Guidance.enforce,
+            "captureGuidance": guidance.summary
         ]
+        if let label {
+            payload["label"] = label
+        }
+        return payload
     }
 }
 

@@ -45,6 +45,33 @@ enum AppConstants {
         static var totalFileCount: Int { frameCount * frameFileTypes.count }
     }
 
+    // MARK: - Capture guidance
+    /// Live checks shown on the capture screen. Phantom tests (2026-11-24) showed LiDAR
+    /// reads ~1.3x too far at 15 cm, inflating every length; the distance window below is
+    /// PROVISIONAL until the 15 / 25 / 35 cm test on a matte surface sets it.
+    enum Guidance {
+        /// Acceptable camera-to-wound distance (metres, LiDAR depth at the screen centre).
+        static let minDistanceM: Float = 0.25
+        static let maxDistanceM: Float = 0.40
+
+        /// Max angle between the camera axis and straight down (degrees).
+        static let maxTiltDegrees: Float = 20
+
+        /// Max camera motion while "steady" (metres/second and degrees/second).
+        static let maxSpeedMetersPerSecond: Float = 0.03
+        static let maxAngularSpeedDegreesPerSecond: Float = 10
+
+        /// ARKit ambient intensity (lumens; ~1000 = well lit). Below this we warn.
+        static let minAmbientIntensity: Float = 300
+
+        /// Guidance refresh rate on screen (Hz).
+        static let updateHz: Double = 10
+
+        /// When false the Scan button stays enabled outside the window (warning only), so the
+        /// distance test can still capture at 15 cm. Set true once the window is confirmed.
+        static let enforce = false
+    }
+
     // MARK: - Polling
     enum Polling {
         /// How often to poll the status endpoint (seconds)
