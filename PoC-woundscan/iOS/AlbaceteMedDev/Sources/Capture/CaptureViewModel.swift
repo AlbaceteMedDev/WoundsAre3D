@@ -36,7 +36,7 @@ enum CaptureState: Equatable {
         case .done:
             return "Scan complete."
         case .failed(let message):
-            return "Error: \(message)"
+            return "Scan failed: \(message)"
         }
     }
 }
@@ -219,7 +219,7 @@ final class CaptureViewModel: ObservableObject {
             case .complete:
                 return
             case .failed:
-                throw PipelineError.processingFailed
+                throw PipelineError.processingFailed(reason: statusResponse.error)
             case .uploading, .processing:
                 // Still running — wait and retry
                 if attempt < AppConstants.Polling.maxAttempts - 1 {
@@ -258,12 +258,15 @@ final class CaptureViewModel: ObservableObject {
 // MARK: - Pipeline Errors
 
 enum PipelineError: LocalizedError {
-    case processingFailed
+    case processingFailed(reason: String?)
     case timeout
 
     var errorDescription: String? {
         switch self {
-        case .processingFailed:
+        case .processingFailed(let reason):
+            if let reason, !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return reason
+            }
             return "Scan processing failed on the server."
         case .timeout:
             return "Processing is taking longer than expected. Please try again."

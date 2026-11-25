@@ -15,6 +15,11 @@ struct PostScansResponse: Decodable {
 struct ScanStatusResponse: Decodable {
     let scanId: String
     let status: ScanStatus
+    /// Why the pipeline rejected the scan (only when status is FAILED), e.g.
+    /// "Could not separate the wound from the surface around it. Centre the wound in the frame and rescan."
+    let error: String?
+    /// Pipeline step that failed (PREPROCESS, SEGMENT, COMPUTE, ...), only when FAILED.
+    let failedStep: String?
 }
 
 enum ScanStatus: String, Decodable {
