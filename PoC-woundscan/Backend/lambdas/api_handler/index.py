@@ -116,15 +116,33 @@ def get_scan_status(event):
         }
 
     item = items[-1]
+    body = {
+        "scanId": scan_id,
+        "status": item.get("status"),
+    }
+    if item.get("status") == "FAILED":
+        # Pipeline failures are stored as "<STEP> failed: <reason>"; the reason is
+        # written for the person holding the phone (e.g. "Centre the wound ... rescan").
+        body["error"] = user_error(item.get("error"))
+        if item.get("failedStep"):
+            body["failedStep"] = item["failedStep"]
 
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps({
-            "scanId": scan_id,
-            "status": item.get("status"),
-        })
+        "body": json.dumps(body)
     }
+
+
+def user_error(raw):
+    """Strip the '<STEP> failed: ' prefix MarkFailed adds; fall back to a generic message."""
+    if not raw:
+        return "Scan processing failed."
+    text = str(raw)
+    head, sep, rest = text.partition(" failed: ")
+    if sep and head.isupper() and rest.strip():
+        text = rest.strip()
+    return text[:500]
 
 
 def get_scan_results(event):
@@ -167,7 +185,7 @@ def get_scan_results(event):
             "body": json.dumps({
                 "scanId": scan_id,
                 "status": "FAILED",
-                "error": item.get("error", "Scan processing failed."),
+                "error": user_error(item.get("error")),
             })
         }
 
