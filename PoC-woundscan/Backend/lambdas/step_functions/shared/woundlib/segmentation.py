@@ -103,14 +103,18 @@ def choose_sam_mask(candidates, point_xy, shape):
 LOCATOR_SCALE = 4
 CONTAINER_MIN_FRACTION, CONTAINER_MAX_FRACTION = 0.02, 0.60
 CONTAINER_MIN_SOLIDITY, CONTAINER_MAX_ASPECT = 0.85, 2.5
-BLOB_MIN_FRACTION, BLOB_MAX_FRACTION = 0.01, 0.60      # of the container
+BLOB_MIN_FRACTION, BLOB_MAX_FRACTION = 0.004, 0.60     # of the container (small wounds ~0.5 %)
+BLOB_MERGE_PX = 3              # join salient fragments this close (locator px) into one region
+BLOB_MIN_COLOUR = 0.30         # mean normalised colour difference; relief-only blobs are
+                               # engraved marks (scale bar, text) or LiDAR noise, not wounds
 WOUND_MAX_CONTAINER_FRACTION = 0.60                     # larger = SAM took the plate
 MIN_BLOB_IOU = 0.20
+MIN_BLOB_COVER, MAX_GROWTH = 0.70, 6.0   # or: mask holds >= 70 % of the seed, <= 6x its area
 RELIEF_NOISE_MM = 0.0          # LiDAR relief below this is ignored
 RELIEF_FLOOR_MM = 0.8          # relief normaliser floor, so flat surfaces add no saliency
 RELIEF_WEIGHT = 1.0
 SALIENCY_PERCENTILE = 75
-CENTRE_SIGMA = 0.25            # centre prior, as a fraction of the container size
+CENTRE_SIGMA = 0.20            # centre prior, as a fraction of the container size
 MIN_WOUND_SOLIDITY = 0.60      # ragged masks are background/texture, not a wound
 
 
@@ -219,6 +223,10 @@ def locate_wound(rgb_small, depth_mm_small, valid_small, container):
     lum = rgb.mean(axis=2)
     chroma = rgb / np.maximum(lum[..., None], 1.0)
     colour = np.linalg.norm(chroma - np.median(chroma[core], axis=0), axis=2) * 100.0
+    # Specular glare: bright, washed-out pixels shift chroma without being wound tissue.
+    sat = (rgb.max(axis=2) - rgb.min(axis=2)) / np.maximum(rgb.max(axis=2), 1.0)
+    glare = (lum > np.percentile(lum[core], 90)) & (sat < 0.7 * np.median(sat[core]))
+    colour = np.where(imaging.dilate(glare, 1), 0.0, colour)
     # LiDAR relief: only well inside the container (the 256x192 depth map smears the
     # plate/table step over several mm) and only where it exceeds sensor noise.
     deep = core
@@ -230,20 +238,29 @@ def locate_wound(rgb_small, depth_mm_small, valid_small, container):
         r = np.abs(_robust_quadratic_residual(depth_mm_small, sel, (h, w)))
         relief = np.where(deep, np.clip(r - RELIEF_NOISE_MM, 0, None), 0.0)
         relief = relief / max(np.percentile(relief[deep], 95), RELIEF_FLOOR_MM)
-    saliency = colour / max(np.percentile(colour[core], 95), 1e-3) + RELIEF_WEIGHT * relief
+    colour_n = colour / max(np.percentile(colour[core], 95), 1e-3)
+    saliency = colour_n + RELIEF_WEIGHT * relief
     cy, cx = np.mean(np.nonzero(container), axis=1)
     Y, X = np.mgrid[0:h, 0:w]
     saliency = np.where(core, saliency * np.exp(-((Y - cy) ** 2 + (X - cx) ** 2) / (2 * (CENTRE_SIGMA * size) ** 2)), 0.0)
     cand = core & (saliency > max(np.percentile(saliency[core], SALIENCY_PERCENTILE), 0.6))
-    lab = imaging.label(imaging.open_close(cand, 2))
+    cand = imaging.open_close(cand, 2)
+    # A textured wound (granulation, slough islands) breaks into fragments at the
+    # threshold; group fragments that are within BLOB_MERGE_PX of each other.
+    groups = imaging.label(imaging.dilate(cand, BLOB_MERGE_PX))
     best, best_key = None, None
-    for k in range(1, lab.max() + 1):
-        c = lab == k
+    for k in range(1, groups.max() + 1):
+        frag = cand & (groups == k)
+        if not frag.any():
+            continue
+        c = core & imaging.fill_holes(frag | imaging.erode(imaging.dilate(frag, BLOB_MERGE_PX), BLOB_MERGE_PX))
         f = c.sum() / container.sum()
         if not (BLOB_MIN_FRACTION <= f <= BLOB_MAX_FRACTION):
             continue
         solidity, aspect = shape_stats(c)
         if aspect > 3.5:                                      # scale bar, text, plate edge
+            continue
+        if colour_n[c].mean() < BLOB_MIN_COLOUR:
             continue
         key = float(saliency[c].sum()) * solidity
         if best_key is None or key > best_key:
@@ -284,7 +301,8 @@ def choose_by_blob(candidates, blob, container):
     """SAM mask with the best overlap with the located region, rejecting masks
     that are (most of) the container itself. Returns (mask, score, iou) or None."""
     best, best_key = None, None
-    csum = container.sum()
+    grown, grown_key = None, None
+    csum, bsum = container.sum(), max(1, int(blob.sum()))
     for m, score in candidates:
         if m.shape != blob.shape:
             m = imaging.resample_nearest(m.astype(np.uint8), blob.shape[1], blob.shape[0]) > 0
@@ -293,13 +311,21 @@ def choose_by_blob(candidates, blob, container):
             continue
         if (m & container).sum() < 0.85 * area:               # spills off the plate
             continue
-        iou = float((m & blob).sum() / max(1, (m | blob).sum()))
+        inter = (m & blob).sum()
+        iou = float(inter / max(1, (m | blob).sum()))
         key = iou + 0.05 * score
         if best_key is None or key > best_key:
             best, best_key = (m, score, iou), key
-    if best is None or best[2] < MIN_BLOB_IOU:
-        return None
-    return best
+        # The locator region is a seed, often only the wound's centre (the centre prior
+        # trims elongated wounds): also accept a mask that contains it and is not much larger.
+        cover = inter / bsum
+        if cover >= MIN_BLOB_COVER and area <= MAX_GROWTH * bsum:
+            gkey = cover - 0.02 * area / bsum + 0.05 * score
+            if grown_key is None or gkey > grown_key:
+                grown, grown_key = (m, score, iou), gkey
+    if best is not None and best[2] >= MIN_BLOB_IOU:
+        return best
+    return grown
 
 
 def clean_mask(m, point_xy):

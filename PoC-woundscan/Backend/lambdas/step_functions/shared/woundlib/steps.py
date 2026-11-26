@@ -161,6 +161,12 @@ def segment(event):
                     unconfirmed = True
                     sam_error = "No SAM mask matched the located wound region"
             else:
+                if container is not None:
+                    # The plate/skin region was found but no wound on it: prompt its centre,
+                    # not the image centre, which may be off the plate (e.g. on a scale bar).
+                    cy_, cx_ = np.mean(np.nonzero(container), axis=1)
+                    prompt = (float(cx_), float(cy_))
+                    cands = segmentation.sam_predict(jpeg, prompt)
                 chosen = segmentation.choose_sam_mask(cands, prompt, (h, w))
                 if chosen is not None:
                     wound = segmentation.clean_mask(chosen[0], prompt)
